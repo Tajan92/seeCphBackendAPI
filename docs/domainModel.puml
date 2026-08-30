@@ -1,0 +1,52 @@
+@startuml
+!pragma layout smetana
+'https://plantuml.com/class-diagram
+
+abstract class User{
+- name
+- phone
+- email
+- password
+- role - ENUM
+}
+class Organizer{
+- organizer name
+- List<Advert>
+
+}
+class Admin{}
+class Attendee{
+- List<Event> favorites
+- List<Event> liked
+}
+User --> Organizer
+User --> Admin
+User --> Attendee
+
+class Event {
+- title
+- description
+- startDate
+- endDate
+- time
+- price
+- category - ENUM
+- address
+- location
+- latitude
+- longitude
+}
+Event "*"----"*" Attendee
+Event "*"--"1" Admin
+Event "*"--"1" Organizer
+Event "1"--"*" Advert
+
+class Advert{
+- placement
+- price
+- startDate
+- endDate
+- status
+}
+Organizer "1" -- "*" Advert
+@enduml
