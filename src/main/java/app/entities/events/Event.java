@@ -1,10 +1,13 @@
 package app.entities.events;
 
 import app.entities.Advert;
+import app.entities.users.Admin;
+import app.entities.users.Organizer;
 import app.enums.EventCategory;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -13,15 +16,16 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "event")
+@Entity
 public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "event_id")
     private Long eventId;
-
     private String title;
     private String description;
     private Double price;
+    private boolean isFree;
     private String location;
     private Double latitude;
     private Double longitude;
@@ -44,7 +48,7 @@ public class Event {
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "event_categories", joinColumns = @JoinColumn(name = "event_id"))
     @Column(name = "category")
-    private Set<EventCategory> eventCategory;
+    private Set<EventCategory> categories;
 
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL) //TODO: Decide fetchType and cascadeType
     private Set<Advert> advert;
@@ -55,4 +59,12 @@ public class Event {
             advert.setEvent(this);
         }
     }
+
+    @ManyToOne
+    @Setter
+    private Organizer organizer;
+
+    @ManyToOne
+    @Setter
+    private Admin admin;
 }

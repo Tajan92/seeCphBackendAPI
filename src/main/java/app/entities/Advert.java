@@ -1,6 +1,9 @@
 package app.entities;
 
 import app.entities.events.Event;
+import app.entities.users.Admin;
+import app.entities.users.Organizer;
+import app.entities.users.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,7 +31,15 @@ public class Advert {
     private LocalDate endDate;
     private boolean status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY) //TODO: Decide fetchType and cascadeType
+    @Setter
+    private Organizer organizer;
+
+    @ManyToOne(fetch = FetchType.LAZY) //TODO: Decide fetchType and cascadeType
+    @Setter
+    private Admin admin;
+
+    @ManyToOne(fetch = FetchType.LAZY) //TODO: Decide fetchType and cascadeType
     @Setter
     private Event event;
 }

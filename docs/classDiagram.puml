@@ -54,8 +54,6 @@ class Advert{
 - endDate
 - status ENUM
 }
-Advert -- RecurringEvent
-Advert -- OneTimeEvent
 Organizer "1" -- "*" Advert
 class Controller{}
 Controller -- Main

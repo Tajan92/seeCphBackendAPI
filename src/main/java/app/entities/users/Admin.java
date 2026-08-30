@@ -1,13 +1,37 @@
 package app.entities.users;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import app.entities.Advert;
+import app.entities.events.Event;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "admin")
 public class Admin extends User {
+    @OneToMany(mappedBy = "advert", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    //TODO: Decide fetchType and cascadeType
+    private Set<Advert> adverts;
+
+    private void addAdvert(Advert advert) {
+        this.adverts.add(advert);
+        if (advert != null) {
+            advert.setAdmin(this);
+        }
+    }
+
+    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    //TODO: Decide fetchType and cascadeType
+    private Set<Event> events;
+
+    private void addEvent(Event event) {
+        this.events.add(event);
+        if (event != null) {
+            event.setAdmin(this);
+        }
+    }
 }
