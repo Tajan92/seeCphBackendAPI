@@ -1,7 +1,11 @@
 @startuml
 !pragma layout smetana
+
+
 'https://plantuml.com/class-diagram
 class Main{}
+
+package users{
 abstract class User{
 - name
 - phone
@@ -9,16 +13,16 @@ abstract class User{
 - password
 - role - ENUM
 }
-class Organizer{
-- accountStatus ENUM
-- organizer name
-- List<Advert>
-
-}
 class Admin{}
 class Attendee{
 - List<Event> favorites
 - List<Event> liked
+}
+class Organizer{
+- accountStatus ENUM
+- organizer name
+- List<Advert>
+}
 }
 
 User --|> Organizer
@@ -57,6 +61,7 @@ class Advert{
 Organizer "1" -- "*" Advert
 class Controller{}
 Controller -- Main
+package daos{
 class EventDAO{
 CRUD
 }
@@ -74,6 +79,5 @@ CRUD
 }
 AdvertDAO --> Advert
 AdvertDAO -- Main
-
-
+}
 @enduml

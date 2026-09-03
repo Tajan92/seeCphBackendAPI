@@ -1,19 +1,22 @@
 package app.entities.users;
 
 import app.entities.Advert;
-import app.entities.events.Event;
+import app.entities.Event;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.util.Set;
 
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "admin")
+@SuperBuilder
 public class Admin extends User {
-    @OneToMany(mappedBy = "advert", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "admin", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     //TODO: Decide fetchType and cascadeType
     private Set<Advert> adverts;
 
@@ -24,7 +27,7 @@ public class Admin extends User {
         }
     }
 
-    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "admin", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     //TODO: Decide fetchType and cascadeType
     private Set<Event> events;
 

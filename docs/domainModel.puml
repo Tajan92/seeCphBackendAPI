@@ -36,10 +36,10 @@ class Event {
 - latitude
 - longitude
 }
-Event "*"----"*" Attendee
-Event "*"--"1" Admin
-Event "*"--"1" Organizer
-Event "1"--"*" Advert
+Event ---- Attendee
+Event -- Admin
+Event -- Organizer
+Event -- Advert
 
 class Advert{
 - placement
@@ -48,5 +48,5 @@ class Advert{
 - endDate
 - status
 }
-Organizer "1" -- "*" Advert
+Organizer -- Advert
 @enduml

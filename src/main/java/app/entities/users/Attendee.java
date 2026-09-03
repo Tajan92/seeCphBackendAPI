@@ -1,25 +1,25 @@
 package app.entities.users;
 
-import app.entities.events.Event;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
+import app.entities.Event;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.util.Set;
+
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "attendee")
+@SuperBuilder
+@Entity
 public class Attendee extends User {
-    @Column(name = "favorite_events")
+    @OneToMany(mappedBy = "attendee")
     private Set<Event> favoriteEvents;
-    @Column(name = "liked_events")
+
+    @OneToMany(mappedBy = "attendee")
     private Set<Event> likedEvents;
 
-    @ManyToMany (mappedBy = "events") // TODO: Need more info inn link table??
-    @Setter
-    private Event event;
 }

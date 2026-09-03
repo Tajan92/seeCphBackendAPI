@@ -1,17 +1,13 @@
 package app.entities;
 
-import app.entities.events.Event;
 import app.entities.users.Admin;
 import app.entities.users.Organizer;
-import app.entities.users.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
