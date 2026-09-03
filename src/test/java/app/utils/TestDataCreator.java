@@ -38,7 +38,7 @@ public final class TestDataCreator {
             User organizer5 = Organizer.builder().organizerName("Lego").accountStatus(Status.ACTIVE).name("Lego").email("lego@mail.dk").phone("56789012").password("56789012").userRole(UserRole.ORGANIZER).build();
 
             try {
-                em.createNativeQuery("TRUNCATE TABLE user RESTART IDENTITY CASCADE").executeUpdate();
+                em.createNativeQuery("TRUNCATE TABLE users RESTART IDENTITY CASCADE").executeUpdate();
 
                 em.persist(admin);
                 em.persist(admin2);

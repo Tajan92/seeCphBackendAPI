@@ -9,10 +9,7 @@ import app.enums.Status;
 import app.enums.UserRole;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 
 import java.util.Map;
 
@@ -28,13 +25,13 @@ class UserDAOTest {
     private UserDAO userDAO;
     private Map<String, User> users;
 
-    @BeforeEach
+    @BeforeAll
     void setUp() {
         userDAO = new UserDAO(emf);
         users = TestDataCreator.createUsers(emf);
     }
 
-    @AfterEach
+    @AfterAll
     void tearDown() {
         emf.close();
     }
@@ -48,7 +45,7 @@ class UserDAOTest {
 
         User adminFetched = userDAO.read(adminCreated.getUserId());
         assertThat(adminFetched.getName(), is("Camilla"));
-        assertThat(adminFetched.getUserId(), is(6));
+        assertThat(adminFetched.getUserId(), is(16));
     }
     @Test
     void createAttendee() {
@@ -59,7 +56,7 @@ class UserDAOTest {
 
         User attendeeFetched = userDAO.read(attendeeCreated.getUserId());
         assertThat(attendeeFetched.getName(), is("Peter"));
-        assertThat(attendeeFetched.getUserId(), is(6));
+        assertThat(attendeeFetched.getUserId(), is(17));
     }
 
     @Test
@@ -71,7 +68,7 @@ class UserDAOTest {
 
         User organizerFetched = userDAO.read(organizerCreated.getUserId());
         assertThat(organizerFetched.getName(), is("Maersk"));
-        assertThat(organizerFetched.getUserId(), is(6));
+        assertThat(organizerFetched.getUserId(), is(18));
     }
 
     @Test
