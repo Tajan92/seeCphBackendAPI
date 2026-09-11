@@ -22,7 +22,7 @@ import java.util.Collections;
 public class Main {
     public static void main(String[] args) {
         EntityManagerFactory emf = HibernateConfig.getEntityManagerFactory();
-        UserDAO userDAO = new UserDAO(emf);
+        UserDAO userDAO = new UserDAO(emf );
         EventDAO eventDAO = new EventDAO(emf);
         AdvertDAO advertDAO = new AdvertDAO(emf);
 
@@ -38,7 +38,7 @@ public class Main {
                 .title("Lukas Graham")
                 .description("Lukas performing at Parken")
                 .price(350.00)
-                .isFree(false)
+                .free(false)
                 .location("Parken 1, København")
                 .latitude(55.702724)
                 .longitude(12.571566)

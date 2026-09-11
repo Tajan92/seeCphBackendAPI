@@ -11,6 +11,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class TestDataCreator {
@@ -40,23 +41,12 @@ public final class TestDataCreator {
             try {
                 em.createNativeQuery("TRUNCATE TABLE users RESTART IDENTITY CASCADE").executeUpdate();
 
-                em.persist(admin);
-                em.persist(admin2);
-                em.persist(admin3);
-                em.persist(admin4);
-                em.persist(admin5);
-
-                em.persist(attendee);
-                em.persist(attendee2);
-                em.persist(attendee3);
-                em.persist(attendee4);
-                em.persist(attendee5);
-
-                em.persist(organizer);
-                em.persist(organizer2);
-                em.persist(organizer3);
-                em.persist(organizer4);
-                em.persist(organizer5);
+                List<User> users = List.of(
+                        admin, admin2, admin3, admin4, admin5,
+                        attendee, attendee2, attendee3, attendee4, attendee5,
+                        organizer, organizer2, organizer3, organizer4, organizer5
+                );
+                users.forEach(em::persist);
 
                 em.flush();
             } catch (PersistenceException e) {
