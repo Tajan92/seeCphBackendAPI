@@ -1,10 +1,12 @@
 package app.dao;
 
 import app.config.HibernateTestConfig;
+import app.entities.Advert;
 import app.entities.users.Admin;
 import app.entities.users.Attendee;
 import app.entities.users.Organizer;
 import app.entities.users.User;
+import app.enums.AddPlacement;
 import app.enums.Status;
 import app.enums.UserRole;
 import app.exceptions.DatabaseException;
@@ -145,5 +147,57 @@ class UserDAOTest {
         assertThrows(DatabaseException.class, () -> userDAO.read(admin.getUserId()));
         assertThrows(DatabaseException.class, () -> userDAO.read(attendee.getUserId()));
         assertThrows(DatabaseException.class, () -> userDAO.read(organizer.getUserId()));
+    }
+
+    @Test
+    void create_withNullUser_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.create(null));
+        assertThat(ex.getMessage(), is("User is required"));
+    }
+
+    @Test
+    void getById_withNullId_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.read(null));
+        assertThat(ex.getMessage(), is("ID is required"));
+    }
+
+    @Test
+    void getById_withMissingId_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.read(999_999));
+        assertThat(ex.getMessage(), is("User not found with id: 999999"));
+    }
+
+    @Test
+    void update_withNullUser_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.update(null));
+        assertThat(ex.getMessage(), is("User is required for update"));
+    }
+
+    @Test
+    void update_withMissingId_throwsApiException() {
+        User missing = Admin.builder()
+                .name("Missing")
+                .userId(999_999)
+                .build();
+
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.update(missing));
+        assertThat(ex.getMessage(), is("Updating User failed"));
+    }
+
+    @Test
+    void delete_withNullId_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.delete(null));
+        assertThat(ex.getMessage(), is("User is required for deletion"));
+    }
+
+    @Test
+    void delete_withMissingId_throwsDatabaseException() {
+        User missing = Admin.builder()
+                .name("Missing")
+                .userId(999_999)
+                .build();
+
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.delete(missing));
+        assertThat(ex.getMessage(), is("Delete User failed"));
     }
 }

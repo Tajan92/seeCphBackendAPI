@@ -3,6 +3,7 @@ package app.dao;
 import app.config.HibernateTestConfig;
 import app.entities.Event;
 import app.enums.EventCategory;
+import app.exceptions.ApiException;
 import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
@@ -95,5 +96,57 @@ class EventDAOTest {
         boolean deletedEvent = eventDAO.delete(event);
         assertThat(deletedEvent, is(true));
         assertThrows(DatabaseException.class, () -> eventDAO.read(event.getEventId()));
+    }
+
+    @Test
+    void create_withNullEvent_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.create(null));
+        assertThat(ex.getMessage(), is("Event is required"));
+    }
+
+    @Test
+    void getById_withNullId_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.read(null));
+        assertThat(ex.getMessage(), is("ID is required"));
+    }
+
+    @Test
+    void getById_withMissingId_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.read(999_999));
+        assertThat(ex.getMessage(), is("Event not found with id: 999999"));
+    }
+
+    @Test
+    void update_withNullEvent_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.update(null));
+        assertThat(ex.getMessage(), is("Event is required for update"));
+    }
+
+    @Test
+    void update_withMissingId_throwsApiException() {
+        Event missing = Event.builder()
+                .eventId(999_999)
+                .title("Missing")
+                .build();
+
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.update(missing));
+        assertThat(ex.getMessage(), is("Updating Event failed"));
+    }
+
+    @Test
+    void delete_withNullId_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.delete(null));
+        assertThat(ex.getMessage(), is("Event is required for deletion"));
+    }
+
+    @Test
+    void delete_withMissingId_throwsDatabaseException() {
+        Event missing = Event.builder()
+                .eventId(999_999)
+                .title("Missing")
+                .build();
+
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.delete(missing));
+        assertThat(ex.getMessage(), is("Delete Event failed"));
     }
 }

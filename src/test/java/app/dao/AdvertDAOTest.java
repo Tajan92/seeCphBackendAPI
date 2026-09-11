@@ -2,6 +2,7 @@ package app.dao;
 
 import app.config.HibernateTestConfig;
 import app.entities.Advert;
+import app.entities.Event;
 import app.enums.AddPlacement;
 import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
@@ -90,5 +91,57 @@ class AdvertDAOTest {
         boolean deletedAdvert = advertDAO.delete(advert);
         assertThat(deletedAdvert, is(true));
         assertThrows(DatabaseException.class, () -> advertDAO.read(advert.getAdvertId()));
+    }
+
+    @Test
+    void create_withNullAdvert_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.create(null));
+        assertThat(ex.getMessage(), is("Advert is required"));
+    }
+
+    @Test
+    void getById_withNullId_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.read(null));
+        assertThat(ex.getMessage(), is("ID is required"));
+    }
+
+    @Test
+    void getById_withMissingId_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.read(999_999));
+        assertThat(ex.getMessage(), is("Advert not found with id: 999999"));
+    }
+
+    @Test
+    void update_withNullAdvert_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.update(null));
+        assertThat(ex.getMessage(), is("Advert is required for update"));
+    }
+
+    @Test
+    void update_withMissingId_throwsApiException() {
+        Advert missing = Advert.builder()
+                .advertId(999_999)
+                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
+                .build();
+
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.update(missing));
+        assertThat(ex.getMessage(), is("Updating Advert failed"));
+    }
+
+    @Test
+    void delete_withNullId_throwsDatabaseException() {
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.delete(null));
+        assertThat(ex.getMessage(), is("Advert is required for deletion"));
+    }
+
+    @Test
+    void delete_withMissingId_throwsDatabaseException() {
+        Advert missing = Advert.builder()
+                .advertId(999_999)
+                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
+                .build();
+
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.delete(missing));
+        assertThat(ex.getMessage(), is("Delete Advert failed"));
     }
 }

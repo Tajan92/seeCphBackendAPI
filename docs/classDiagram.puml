@@ -1,6 +1,16 @@
 @startuml
 !pragma layout smetana
-
+!theme reddress-lightblue
+skinparam backgroundColor none
+skinparam ArrowColor white
+skinparam ArrowThickness 2
+skinparam roundcorner 20
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 14
+skinparam package {
+BackgroundColor grey
+BorderColor darkgrey
+}
 
 'https://plantuml.com/class-diagram
 class Main{}
@@ -58,7 +68,7 @@ class Advert{
 - endDate
 - status ENUM
 }
-Organizer "1" -- "*" Advert
+Organizer "1" --- "*" Advert
 class Controller{}
 Controller -- Main
 package daos{
