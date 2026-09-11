@@ -1,4 +1,4 @@
-package app.daos;
+package app.dao;
 
 import app.exceptions.DatabaseException;
 import jakarta.persistence.EntityManager;

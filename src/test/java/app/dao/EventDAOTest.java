@@ -1,11 +1,8 @@
-package app.daos;
+package app.dao;
 
 import app.config.HibernateTestConfig;
 import app.entities.Event;
-import app.entities.users.Admin;
-import app.entities.users.User;
 import app.enums.EventCategory;
-import app.enums.UserRole;
 import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;

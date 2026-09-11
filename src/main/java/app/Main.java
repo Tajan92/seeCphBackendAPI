@@ -1,9 +1,9 @@
 package app;
 
 import app.config.HibernateConfig;
-import app.daos.AdvertDAO;
-import app.daos.EventDAO;
-import app.daos.UserDAO;
+import app.dao.AdvertDAO;
+import app.dao.EventDAO;
+import app.dao.UserDAO;
 import app.entities.Advert;
 import app.entities.Event;
 import app.entities.users.Admin;

@@ -1,4 +1,4 @@
-package app.daos;
+package app.dao;
 
 import app.config.HibernateTestConfig;
 import app.entities.users.Admin;
@@ -7,14 +7,11 @@ import app.entities.users.Organizer;
 import app.entities.users.User;
 import app.enums.Status;
 import app.enums.UserRole;
-import app.exceptions.ApiException;
 import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.*;
 
-import java.time.LocalDate;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 

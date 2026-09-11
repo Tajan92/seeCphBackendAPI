@@ -1,18 +1,14 @@
-package app.daos;
+package app.dao;
 
 import app.config.HibernateTestConfig;
 import app.entities.Advert;
-import app.entities.Event;
-import app.entities.users.User;
 import app.enums.AddPlacement;
-import app.enums.EventCategory;
 import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.Map;
 import java.util.Set;
 

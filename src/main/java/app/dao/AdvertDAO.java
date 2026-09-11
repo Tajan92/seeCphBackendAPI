@@ -1,4 +1,4 @@
-package app.daos;
+package app.dao;
 
 import app.entities.Advert;
 import jakarta.persistence.EntityManagerFactory;
