@@ -10,6 +10,7 @@ import app.entities.users.Admin;
 import app.entities.users.Attendee;
 import app.entities.users.Organizer;
 import app.entities.users.User;
+import app.enums.AddPlacement;
 import app.enums.EventCategory;
 import app.enums.Status;
 import app.enums.UserRole;
@@ -55,7 +56,7 @@ public class Main {
 
     public static void createAdvert(AdvertDAO advertDAO) {
         Advert advert = Advert.builder()
-                .placement("Rolling banner header")
+                .addPlacement(AddPlacement.FRONTPAGEHEADER)
                 .price(500.00)
                 .startDate(LocalDate.of(2026, 11, 15))
                 .endDate(LocalDate.of(2026, 11, 22))

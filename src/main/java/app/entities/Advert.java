@@ -2,6 +2,7 @@ package app.entities;
 
 import app.entities.users.Admin;
 import app.entities.users.Organizer;
+import app.enums.AddPlacement;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@ToString
 @Entity
 @Table(name = "advert")
 public class Advert {
@@ -18,8 +20,7 @@ public class Advert {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "advert_id")
     private Integer advertId;
-
-    private String placement;
+    private AddPlacement addPlacement;
     private Double price;
     @Column(name = "start_date")
     private LocalDate startDate;
@@ -38,4 +39,14 @@ public class Advert {
     @ManyToOne(fetch = FetchType.LAZY) //TODO: Decide fetchType and cascadeType
     @Setter
     private Event event;
+
+    @PrePersist
+    private void prePersist() {
+        this.status = !LocalDate.now().isBefore(startDate) && !LocalDate.now().isAfter(endDate);
+    }
+
+    @PreUpdate
+    private void preUpdate() {
+        this.status = LocalDate.now().isBefore(startDate) && !LocalDate.now().isAfter(endDate);
+    }
 }
