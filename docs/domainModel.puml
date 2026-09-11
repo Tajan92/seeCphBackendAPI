@@ -1,7 +1,17 @@
 @startuml
 !pragma layout smetana
 'https://plantuml.com/class-diagram
-
+!theme reddress-lightblue
+skinparam backgroundColor none
+skinparam ArrowColor white
+skinparam ArrowThickness 2
+skinparam roundcorner 20
+skinparam ArrowFontColor White
+skinparam ArrowFontSize 18
+skinparam package {
+BackgroundColor grey
+BorderColor darkgrey
+}
 abstract class User{
 - name
 - phone

@@ -5,8 +5,8 @@ skinparam backgroundColor none
 skinparam ArrowColor white
 skinparam ArrowThickness 2
 skinparam roundcorner 20
-skinparam ArrowFontColor black
-skinparam ArrowFontSize 14
+skinparam ArrowFontColor White
+skinparam ArrowFontSize 18
 skinparam package {
 BackgroundColor grey
 BorderColor darkgrey

@@ -9,6 +9,7 @@ import app.enums.AddPlacement;
 import app.enums.EventCategory;
 import app.enums.Status;
 import app.enums.UserRole;
+import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.*;
@@ -19,8 +20,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class OrganizorIntegrationTest {
@@ -108,4 +109,48 @@ public class OrganizorIntegrationTest {
         assertThat(savedOrganizer.getAdverts().contains(advert), is(true));
         assertThat(savedOrganizer.getEvents().contains(event), is(true));
     }
+
+    @Test
+    void deleteOrganizer() {
+        Advert advert = Advert.builder()
+                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
+                .price(150.00)
+                .startDate(LocalDate.of(2026, 10, 1))
+                .endDate(LocalDate.of(2026, 10, 31))
+                .build();
+
+        organizer.addAdvert(advert);
+
+        Event event = Event.builder()
+                .title("Copenhagen Marathon")
+                .description("Run through Copenhagen with busy streets")
+                .categories(Set.of(EventCategory.SPORT))
+                .startTime(LocalTime.of(16, 0))
+                .endTime(LocalTime.of(18, 30))
+                .startDates(Set.of(LocalDate.of(2026, 10, 18)))
+                .price(100.00)
+                .location("Copenhagen")
+                .build();
+
+        organizer.addEvent(event);
+
+        Organizer createdOrganizer = (Organizer) userDAO.create(organizer);
+        Integer advertId = createdOrganizer.getAdverts().iterator().next().getAdvertId();
+        Integer eventId = createdOrganizer.getEvents().iterator().next().getEventId();
+        Advert fetchedAdvert = advertDAO.read(advertId);
+        assertThat(fetchedAdvert, is(advert));
+
+        Event fetchedEvent = eventDAO.read(eventId);
+        assertThat(fetchedEvent, is(event));
+
+        boolean deleted = userDAO.delete(createdOrganizer);
+        assertThat(deleted, is(true));
+
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.read(advertId));
+        assertThat(ex.getMessage(), is("Advert not found with id: 3"));
+
+        DatabaseException ex2 = assertThrows(DatabaseException.class, () -> eventDAO.read(eventId));
+        assertThat(ex2.getMessage(), is("Event not found with id: 3"));
+    }
+
 }
