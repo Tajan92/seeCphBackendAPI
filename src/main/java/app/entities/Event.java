@@ -25,7 +25,7 @@ public class Event {
     private String title;
     private String description;
     private Double price;
-    private boolean isFree;
+    private boolean free;
     private String location;
     private Double latitude;
     private Double longitude;
