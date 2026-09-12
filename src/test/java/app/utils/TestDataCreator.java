@@ -83,8 +83,8 @@ public final class TestDataCreator {
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
 
-            Advert advert = Advert.builder().addPlacement(AddPlacement.FRONTPAGEHEADER).price(205.00).startDate(LocalDate.now()).endDate(LocalDate.of(2026, 12, 12)).build();
-            Advert advert2 = Advert.builder().addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT).price(500.00).startDate(LocalDate.of(2026, 11, 15)).endDate(LocalDate.of(2026, 11, 22)).build();
+            Advert advert = Advert.builder().addPlacement(AddPlacement.FRONTPAGEHEADER).price(205.00).startDate(LocalDate.now().plusDays(10)).endDate(LocalDate.now().plusDays(20)).build();
+            Advert advert2 = Advert.builder().addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT).price(500.00).startDate(LocalDate.now().minusDays(5)).endDate(LocalDate.now().plusDays(5)).build();
             try {
                 em.createNativeQuery("TRUNCATE TABLE advert RESTART IDENTITY CASCADE").executeUpdate();
 

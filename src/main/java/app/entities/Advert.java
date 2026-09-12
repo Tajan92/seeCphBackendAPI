@@ -53,7 +53,7 @@ public class Advert {
 
     @PreUpdate
     private void preUpdate() {
-        this.status = LocalDate.now().isBefore(startDate) && !LocalDate.now().isAfter(endDate);
+        this.status = !LocalDate.now().isBefore(startDate) && !LocalDate.now().isAfter(endDate);
     }
 
     @Override

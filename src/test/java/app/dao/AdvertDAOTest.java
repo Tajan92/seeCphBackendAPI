@@ -49,7 +49,7 @@ class AdvertDAOTest {
 
         Advert advertFetched = advertDAO.read(advertCreated.getAdvertId());
         assertThat(advertFetched.getPrice(), equalTo(150.00));
-        assertThat(advertFetched.getAdvertId(), is(3));
+        assertThat(advertFetched.getAdvertId(), is(advertCreated.getAdvertId()));
     }
 
     @Test

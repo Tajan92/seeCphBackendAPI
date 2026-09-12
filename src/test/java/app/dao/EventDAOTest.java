@@ -55,6 +55,14 @@ class EventDAOTest {
         Event eventFetched = eventDAO.read(eventCreated.getEventId());
         assertThat(eventFetched.getTitle(), is(event.getTitle()));
         assertThat(eventFetched.getEventId(), is(3));
+
+        assertThat(eventFetched.getEventId(), is(eventCreated.getEventId()));
+
+        assertThat(eventFetched.getCategories().contains(EventCategory.SPORT), is(true));
+        assertThat(eventFetched.getCategories(), hasSize(1));
+
+        assertThat(eventFetched.getStartDates(), contains(LocalDate.of(2026, 10, 18)));
+        assertThat(eventFetched.getStartDates(), hasSize(1));
     }
 
     @Test

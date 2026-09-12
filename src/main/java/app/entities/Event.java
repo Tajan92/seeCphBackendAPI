@@ -57,13 +57,13 @@ public class Event {
     private Set<LocalDate> endDates;
 
     @Setter
-    @ElementCollection(targetClass = EventCategory.class)//TODO: Decide fetchType
+    @ElementCollection(targetClass = EventCategory.class, fetch = FetchType.EAGER)//TODO: Decide fetchType
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "event_categories", joinColumns = @JoinColumn(name = "event_categories_id"))
     @Column(name = "category")
     private Set<EventCategory> categories;
 
-    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL) //TODO: Decide fetchType and cascadeType
+    @OneToMany(mappedBy = "event", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true) //TODO: Decide fetchType and cascadeType
     private Set<Advert> adverts;
 
     public void addAdvert(Advert advert) {
@@ -75,10 +75,6 @@ public class Event {
             advert.setEvent(this);
         }
     }
-
-    @ManyToOne
-    @Setter
-    private Attendee attendee;
 
     @ManyToOne
     @Setter

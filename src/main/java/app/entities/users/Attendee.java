@@ -33,7 +33,6 @@ public class Attendee extends User {
                 this.favoriteEvents = new HashSet<>();
             }
             this.favoriteEvents.add(event);
-            event.setAttendee(this);
         }
     }
 
@@ -52,7 +51,6 @@ public class Attendee extends User {
                 this.likedEvents = new HashSet<>();
             }
             this.likedEvents.add(event);
-            event.setAttendee(this);
         }
     }
 }
