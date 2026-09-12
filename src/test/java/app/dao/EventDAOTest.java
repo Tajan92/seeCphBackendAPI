@@ -36,11 +36,6 @@ class EventDAOTest {
         eventDAO = new EventDAO(emf);
     }
 
-    @AfterAll
-    void tearDown() {
-        emf.close();
-    }
-
     @Test
     void create() {
         Event event = Event.builder()

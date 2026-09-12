@@ -35,11 +35,6 @@ class AdvertDAOTest {
         advertDAO = new  AdvertDAO(emf);
     }
 
-    @AfterAll
-    void tearDown() {
-        emf.close();
-    }
-
     @Test
     void create() {
         Advert advert = Advert.builder()

@@ -39,11 +39,6 @@ class UserDAOTest {
         userDAO = new UserDAO(emf);
     }
 
-    @AfterAll
-    void tearDown() {
-        emf.close();
-    }
-
     @Test
     void createAdmin() {
         User admin = Admin.builder().name("Camilla").email("camilla@mail.dk").phone("67890123").password("67890123").userRole(UserRole.ADMIN).build();

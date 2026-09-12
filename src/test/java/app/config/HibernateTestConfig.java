@@ -18,6 +18,11 @@ public final class HibernateTestConfig {
                 }
             }
         }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (emf != null && emf.isOpen()) {
+                emf.close();
+            }
+        }));
         return emf;
     }
 

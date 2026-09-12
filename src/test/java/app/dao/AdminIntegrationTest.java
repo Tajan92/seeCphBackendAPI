@@ -3,16 +3,17 @@ package app.dao;
 import app.config.HibernateTestConfig;
 import app.entities.Advert;
 import app.entities.Event;
-import app.entities.users.Organizer;
-import app.entities.users.User;
+import app.entities.users.Admin;
 import app.enums.AddPlacement;
 import app.enums.EventCategory;
-import app.enums.Status;
 import app.enums.UserRole;
 import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -20,30 +21,29 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class OrganizorIntegrationTest {
+public class AdminIntegrationTest {
     private final EntityManagerFactory emf = HibernateTestConfig.getEntityManagerFactory();
     private UserDAO userDAO;
     private AdvertDAO advertDAO;
     private EventDAO eventDAO;
     private Map<String, Event> events;
     private Map<String, Advert> adverts;
-    private Organizer organizer;
+    private Admin admin;
 
     @BeforeEach
     void setUp() {
         events = TestDataCreator.createEvents(emf);
         adverts = TestDataCreator.createAdverts(emf);
-        organizer = Organizer.builder()
-                .organizerName("Run and Fun")
+        admin = Admin.builder()
                 .name("RF")
                 .email("runfun@mail.dk")
                 .password("123456")
-                .userRole(UserRole.ORGANIZER)
-                .accountStatus(Status.ACTIVE)
+                .userRole(UserRole.ADMIN)
                 .phone("89765432")
                 .build();
     }
@@ -56,22 +56,22 @@ public class OrganizorIntegrationTest {
     }
 
     @Test
-    void createOrganizerUpdateWithEventAndAdvert() {
-        Organizer fetchedOrganizer = (Organizer) userDAO.create(organizer);
+    void createAdminUpdateWithEventAndAdvert() {
+        Admin fetchedAdmin = (Admin) userDAO.create(admin);
 
-        fetchedOrganizer.addAdvert(adverts.get("advert"));
-        fetchedOrganizer.addAdvert(adverts.get("advert2"));
+        fetchedAdmin.addAdvert(adverts.get("advert"));
+        fetchedAdmin.addAdvert(adverts.get("advert2"));
 
-        fetchedOrganizer.addEvent(events.get("event"));
-        fetchedOrganizer.addEvent(events.get("event2"));
+        fetchedAdmin.addEvent(events.get("event"));
+        fetchedAdmin.addEvent(events.get("event2"));
 
-        Organizer updatedOrganizer = (Organizer) userDAO.update(fetchedOrganizer);
-        assertThat(updatedOrganizer.getAdverts().size(), is(2));
-        assertThat(updatedOrganizer.getEvents().size(), is(2));
+        Admin updatedAdmin = (Admin) userDAO.update(fetchedAdmin);
+        assertThat(updatedAdmin.getAdverts().size(), is(2));
+        assertThat(updatedAdmin.getEvents().size(), is(2));
     }
 
     @Test
-    void createOrganizerWithCascadePersist() {
+    void createAdminWithCascadePersist() {
         Advert advert = Advert.builder()
                 .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
                 .price(150.00)
@@ -90,21 +90,21 @@ public class OrganizorIntegrationTest {
                 .location("Copenhagen")
                 .build();
 
-        organizer.addAdvert(advert);
-        organizer.addEvent(event);
+        admin.addAdvert(advert);
+        admin.addEvent(event);
 
-        Organizer savedOrganizer = (Organizer) userDAO.create(organizer);
+        Admin savedAdmin = (Admin) userDAO.create(admin);
 
-        assertThat(event.getOrganizer(), is(savedOrganizer));
-        assertThat(savedOrganizer.getUserId(), notNullValue());
-        assertThat(savedOrganizer.getAdverts().size(), is(1));
-        assertThat(savedOrganizer.getEvents().size(), is(1));
-        assertThat(savedOrganizer.getAdverts().contains(advert), is(true));
-        assertThat(savedOrganizer.getEvents().contains(event), is(true));
+        assertThat(event.getAdmin(), is(savedAdmin));
+        assertThat(savedAdmin.getUserId(), notNullValue());
+        assertThat(savedAdmin.getAdverts().size(), is(1));
+        assertThat(savedAdmin.getEvents().size(), is(1));
+        assertThat(savedAdmin.getAdverts().contains(advert), is(true));
+        assertThat(savedAdmin.getEvents().contains(event), is(true));
     }
 
     @Test
-    void deleteOrganizer() {
+    void deleteAdmin() {
         Advert advert = Advert.builder()
                 .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
                 .price(150.00)
@@ -112,7 +112,7 @@ public class OrganizorIntegrationTest {
                 .endDate(LocalDate.of(2026, 10, 31))
                 .build();
 
-        organizer.addAdvert(advert);
+        admin.addAdvert(advert);
 
         Event event = Event.builder()
                 .title("Copenhagen Marathon")
@@ -125,18 +125,18 @@ public class OrganizorIntegrationTest {
                 .location("Copenhagen")
                 .build();
 
-        organizer.addEvent(event);
+        admin.addEvent(event);
 
-        Organizer createdOrganizer = (Organizer) userDAO.create(organizer);
-        Integer advertId = createdOrganizer.getAdverts().iterator().next().getAdvertId();
-        Integer eventId = createdOrganizer.getEvents().iterator().next().getEventId();
+        Admin createdAdmin = (Admin) userDAO.create(admin);
+        Integer advertId = createdAdmin.getAdverts().iterator().next().getAdvertId();
+        Integer eventId = createdAdmin.getEvents().iterator().next().getEventId();
         Advert fetchedAdvert = advertDAO.read(advertId);
         assertThat(fetchedAdvert, is(advert));
 
         Event fetchedEvent = eventDAO.read(eventId);
         assertThat(fetchedEvent, is(event));
 
-        boolean deleted = userDAO.delete(createdOrganizer);
+        boolean deleted = userDAO.delete(createdAdmin);
         assertThat(deleted, is(true));
 
         DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.read(advertId));
@@ -144,8 +144,6 @@ public class OrganizorIntegrationTest {
 
         DatabaseException ex2 = assertThrows(DatabaseException.class, () -> eventDAO.read(eventId));
         assertThat(ex2.getMessage(), is("Event not found with id: "+eventId));
-
-
     }
 
     @Test
@@ -157,7 +155,7 @@ public class OrganizorIntegrationTest {
                 .endDate(LocalDate.of(2026, 10, 31))
                 .build();
 
-        organizer.addAdvert(advert);
+        admin.addAdvert(advert);
 
         Event event = Event.builder()
                 .title("Copenhagen Marathon")
@@ -170,21 +168,20 @@ public class OrganizorIntegrationTest {
                 .location("Copenhagen")
                 .build();
 
-        organizer.addEvent(event);
+        admin.addEvent(event);
 
-        Organizer createdOrganizer = (Organizer) userDAO.create(organizer);
+        Admin createdAdmin = (Admin) userDAO.create(admin);
 
-        Integer advertId = createdOrganizer.getAdverts().iterator().next().getAdvertId();
-        Integer eventId = createdOrganizer.getEvents().iterator().next().getEventId();
+        Integer advertId = createdAdmin.getAdverts().iterator().next().getAdvertId();
+        Integer eventId = createdAdmin.getEvents().iterator().next().getEventId();
         Advert fetchedAdvert = advertDAO.read(advertId);
         Event fetchedEvent = eventDAO.read(eventId);
 
-        createdOrganizer.getAdverts().remove(fetchedAdvert);
-        createdOrganizer.getEvents().remove(fetchedEvent);
+        createdAdmin.getAdverts().remove(fetchedAdvert);
+        createdAdmin.getEvents().remove(fetchedEvent);
 
-        Organizer updatedOrganizer = (Organizer) userDAO.update(organizer);
-        assertThat(updatedOrganizer.getAdverts().size(), is(0));
-        assertThat(updatedOrganizer.getEvents().size(), is(0));
+        Admin updatedAdmin = (Admin) userDAO.update(admin);
+        assertThat(updatedAdmin.getAdverts().size(), is(0));
+        assertThat(updatedAdmin.getEvents().size(), is(0));
     }
-
 }

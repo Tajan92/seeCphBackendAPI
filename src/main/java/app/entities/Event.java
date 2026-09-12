@@ -10,6 +10,7 @@ import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -63,11 +64,14 @@ public class Event {
     private Set<EventCategory> categories;
 
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL) //TODO: Decide fetchType and cascadeType
-    private Set<Advert> advert;
+    private Set<Advert> adverts;
 
-    private void addAdvert(Advert advert) {
-        this.advert.add(advert);
+    public void addAdvert(Advert advert) {
         if (advert != null) {
+            if (this.adverts == null) {
+                this.adverts = new HashSet<>();
+            }
+            this.adverts.add(advert);
             advert.setEvent(this);
         }
     }
