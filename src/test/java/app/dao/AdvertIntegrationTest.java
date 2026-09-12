@@ -23,7 +23,6 @@ import static org.hamcrest.Matchers.is;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AdvertIntegrationTest {
     private final EntityManagerFactory emf = HibernateTestConfig.getEntityManagerFactory();
-    private EventDAO eventDAO;
     private AdvertDAO advertDAO;
     private Map<String, Event> events;
     private Map<String, Advert> adverts;
@@ -39,7 +38,6 @@ public class AdvertIntegrationTest {
 
     @BeforeAll
     void setUpAll() {
-        eventDAO = new EventDAO(emf);
         advertDAO = new AdvertDAO(emf);
     }
 
