@@ -1,4 +1,4 @@
-package app.daos;
+package app.dao;
 
 import app.exceptions.DatabaseException;
 import jakarta.persistence.EntityManager;
@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @AllArgsConstructor
-public abstract class JigDAO<T> implements IDAO<T, Integer> {
+public abstract class GenericDAO<T> implements IDAO<T, Integer> {
     protected EntityManagerFactory emf;
     private final Class<T> clazz;
     private String entityName;

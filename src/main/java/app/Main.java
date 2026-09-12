@@ -1,15 +1,16 @@
 package app;
 
 import app.config.HibernateConfig;
-import app.daos.AdvertDAO;
-import app.daos.EventDAO;
-import app.daos.UserDAO;
+import app.dao.AdvertDAO;
+import app.dao.EventDAO;
+import app.dao.UserDAO;
 import app.entities.Advert;
 import app.entities.Event;
 import app.entities.users.Admin;
 import app.entities.users.Attendee;
 import app.entities.users.Organizer;
 import app.entities.users.User;
+import app.enums.AddPlacement;
 import app.enums.EventCategory;
 import app.enums.Status;
 import app.enums.UserRole;
@@ -55,7 +56,7 @@ public class Main {
 
     public static void createAdvert(AdvertDAO advertDAO) {
         Advert advert = Advert.builder()
-                .placement("Rolling banner header")
+                .addPlacement(AddPlacement.FRONTPAGEHEADER)
                 .price(500.00)
                 .startDate(LocalDate.of(2026, 11, 15))
                 .endDate(LocalDate.of(2026, 11, 22))

@@ -4,11 +4,10 @@ import app.entities.Advert;
 import app.entities.Event;
 import app.enums.Status;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -27,9 +26,12 @@ public class Organizer extends User {
     //TODO: Decide fetchType and cascadeType
     private Set<Advert> adverts;
 
-    private void addAdvert(Advert advert) {
-        this.adverts.add(advert);
+    public void addAdvert(Advert advert) {
         if (advert != null) {
+            if (this.adverts == null) {
+                this.adverts = new HashSet<>();
+            }
+            this.adverts.add(advert);
             advert.setOrganizer(this);
         }
     }
@@ -38,9 +40,12 @@ public class Organizer extends User {
     //TODO: Decide fetchType and cascadeType
     private Set<Event> events;
 
-    private void addEvent(Event event) {
-        this.events.add(event);
+    public void addEvent(Event event) {
         if (event != null) {
+            if (this.events == null) {
+                this.events = new HashSet<>();
+            }
+            this.events.add(event);
             event.setOrganizer(this);
         }
     }

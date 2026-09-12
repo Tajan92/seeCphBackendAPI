@@ -1,18 +1,22 @@
 package app.utils;
 
+import app.entities.Advert;
+import app.entities.Event;
 import app.entities.users.Admin;
 import app.entities.users.Attendee;
 import app.entities.users.Organizer;
 import app.entities.users.User;
+import app.enums.AddPlacement;
+import app.enums.EventCategory;
 import app.enums.Status;
 import app.enums.UserRole;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.*;
 
 public final class TestDataCreator {
 
@@ -72,6 +76,86 @@ public final class TestDataCreator {
             users.put("organizer5", organizer5);
 
             return users;
+        }
+    }
+
+    public static Map<String, Advert> createAdverts(EntityManagerFactory emf) {
+        try (EntityManager em = emf.createEntityManager()) {
+            em.getTransaction().begin();
+
+            Advert advert = Advert.builder().addPlacement(AddPlacement.FRONTPAGEHEADER).price(205.00).startDate(LocalDate.now().plusDays(10)).endDate(LocalDate.now().plusDays(20)).build();
+            Advert advert2 = Advert.builder().addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT).price(500.00).startDate(LocalDate.now().minusDays(5)).endDate(LocalDate.now().plusDays(5)).build();
+            try {
+                em.createNativeQuery("TRUNCATE TABLE advert RESTART IDENTITY CASCADE").executeUpdate();
+
+                List<Advert> adverts = List.of(
+                        advert, advert2
+                );
+                adverts.forEach(em::persist);
+
+                em.flush();
+            } catch (PersistenceException e) {
+                if (em.getTransaction().isActive()) em.getTransaction().rollback();
+                throw e;
+            }
+
+            em.getTransaction().commit();
+
+            Map<String, Advert> advertsMap = new LinkedHashMap<>();
+            advertsMap.put("advert", advert);
+            advertsMap.put("advert2", advert2);
+
+            return advertsMap;
+        }
+    }
+
+    public static Map<String, Event> createEvents(EntityManagerFactory emf) {
+        try (EntityManager em = emf.createEntityManager()) {
+            em.getTransaction().begin();
+
+            Event event = Event.builder()
+                    .title("Lukas Graham")
+                    .description("Enjoy Lukas Graham at Parken")
+                    .categories(Set.of(EventCategory.MUSIC))
+                    .startTime(LocalTime.of(19,30))
+                    .endTime(LocalTime.of(23,30))
+                    .startDates(Set.of(LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 22)))
+                    .price(500.00)
+                    .location("Per Henrik Lings Allé 2, 2100 København")
+                    .build();
+
+            Event event2 = Event.builder()
+                    .title("Stand-up Comedy Night")
+                    .description("An evening of laughs with top Danish comedians")
+                    .categories(Set.of(EventCategory.COMEDY))
+                    .startTime(LocalTime.of(20, 0))
+                    .endTime(LocalTime.of(22, 0))
+                    .startDates(Set.of(LocalDate.of(2026, 12, 5), LocalDate.of(2026, 12, 12)))
+                    .price(250.00)
+                    .location("Cirkusbygningen, 1601 København V")
+                    .build();
+
+            try {
+                em.createNativeQuery("TRUNCATE TABLE event RESTART IDENTITY CASCADE").executeUpdate();
+
+                List<Event> events = List.of(
+                        event, event2
+                );
+                events.forEach(em::persist);
+
+                em.flush();
+            } catch (PersistenceException e) {
+                if (em.getTransaction().isActive()) em.getTransaction().rollback();
+                throw e;
+            }
+
+            em.getTransaction().commit();
+
+            Map<String, Event> eventSet = new LinkedHashMap<>();
+            eventSet.put("event", event);
+            eventSet.put("event2", event2);
+
+            return eventSet;
         }
     }
 }
