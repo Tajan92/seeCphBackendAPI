@@ -1,16 +1,19 @@
 package app.entities;
 
 import app.entities.users.Admin;
-import app.entities.users.Attendee;
 import app.entities.users.Organizer;
 import app.enums.EventCategory;
+import app.enums.EventSubCategory;
+import app.enums.SourceProvider;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -32,38 +35,41 @@ public class Event {
     @Setter
     private Double price;
     private boolean free;
-    private String location;
     @Setter
-    private Double latitude;
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "location_id")
+    private Address location;
     @Setter
-    private Double longitude;
+    private String latitude;
+    @Setter
+    private String longitude;
     @Setter
     @Column(name = "start_time")
     private LocalTime startTime;
     @Setter
-    @Column(name = "end_time")
-    private LocalTime endTime;
-
-    @Setter
-    @ElementCollection(fetch = FetchType.EAGER)//TODO: Decide fetchType
-    @CollectionTable(name = "start_date", joinColumns = @JoinColumn(name = "start_date_id"))
     @Column(name = "start_date")
-    private Set<LocalDate> startDates;
+    private LocalDate startDate;
+    @Setter
+    @Column(name = "source_provider")
+    private SourceProvider sourceProvider;
+    @Setter
+    @Column(name = "source_event_id")
+    private String sourceEventId;
+    @Setter
+    @Column(name = "last_synced_at")
+    private LocalDateTime lastSyncedAt;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private List<ImageUrl> images;
+    @Setter
+    @Column(name = "event_category")
+    private EventCategory category;
 
     @Setter
-    @ElementCollection(fetch = FetchType.EAGER)//TODO: Decide fetchType
-    @CollectionTable(name = "end_date", joinColumns = @JoinColumn(name = "end_date_id"))
-    @Column(name = "end_date")
-    private Set<LocalDate> endDates;
+    @Column(name = "sub_category")
+    private EventSubCategory subCategory;
 
-    @Setter
-    @ElementCollection(targetClass = EventCategory.class, fetch = FetchType.EAGER)//TODO: Decide fetchType
-    @Enumerated(EnumType.STRING)
-    @CollectionTable(name = "event_categories", joinColumns = @JoinColumn(name = "event_categories_id"))
-    @Column(name = "category")
-    private Set<EventCategory> categories;
-
-    @OneToMany(mappedBy = "event", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true) //TODO: Decide fetchType and cascadeType
+    @OneToMany(mappedBy = "event", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Advert> adverts;
 
     public void addAdvert(Advert advert) {
@@ -83,6 +89,16 @@ public class Event {
     @ManyToOne
     @Setter
     private Admin admin;
+
+    @PrePersist
+    public void prePersist() {
+        lastSyncedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        lastSyncedAt = LocalDateTime.now();
+    }
 
     @Override
     public final boolean equals(Object o) {

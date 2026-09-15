@@ -2,7 +2,7 @@ package app.dao;
 
 import app.entities.users.User;
 import jakarta.persistence.EntityManagerFactory;
-
+import lombok.AllArgsConstructor;
 
 public class UserDAO extends GenericDAO<User> {
 

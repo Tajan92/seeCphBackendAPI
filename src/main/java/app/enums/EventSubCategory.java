@@ -1,0 +1,34 @@
+package app.enums;
+
+public enum EventSubCategory {
+    ROCK,
+    POP,
+    HIPHOP_RAP,
+    ELECTRONIC,
+    COUNTRY,
+    OTHER_MUSIC,
+
+    THEATRE,
+    DANCE,
+    FOOD_AND_DRINK,
+    HEALTH,
+
+    PERFORMANCE,
+    ATTRACTIONS,
+    EVENTS,
+
+    ATHLETIC_RACES,
+    BADMINTON,
+    BOXING,
+    CYCLING,
+    ESPORTS,
+    EXTREME,
+    FITNESS,
+    FOOTBALL,
+    GOLF,
+    GYMNASTICS,
+    HANDBALL,
+    MOTORSPORTS_RACING,
+    WRESTLING,
+    OTHER
+}

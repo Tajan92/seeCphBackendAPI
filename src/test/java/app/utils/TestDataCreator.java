@@ -1,15 +1,14 @@
 package app.utils;
 
+import app.entities.Address;
 import app.entities.Advert;
 import app.entities.Event;
+import app.entities.ImageUrl;
 import app.entities.users.Admin;
 import app.entities.users.Attendee;
 import app.entities.users.Organizer;
 import app.entities.users.User;
-import app.enums.AddPlacement;
-import app.enums.EventCategory;
-import app.enums.Status;
-import app.enums.UserRole;
+import app.enums.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
@@ -113,26 +112,38 @@ public final class TestDataCreator {
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
 
+            Address address = Address.builder()
+                    .postalCode("2100")
+                    .city("København")
+                    .address("Per Henrik Lings Allé 2")
+                    .build();
+
             Event event = Event.builder()
                     .title("Lukas Graham")
                     .description("Enjoy Lukas Graham at Parken")
-                    .categories(Set.of(EventCategory.MUSIC))
-                    .startTime(LocalTime.of(19,30))
-                    .endTime(LocalTime.of(23,30))
-                    .startDates(Set.of(LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 22)))
+                    .category(EventCategory.MUSIC)
+                    .subCategory(EventSubCategory.POP)
+                    .startTime(LocalTime.of(19, 30))
+                    .startDate(LocalDate.of(2026, 11, 15))
                     .price(500.00)
-                    .location("Per Henrik Lings Allé 2, 2100 København")
+                    .location(address)
+                    .build();
+
+            Address address2 = Address.builder()
+                    .postalCode("1601")
+                    .city("København V")
+                    .address("Cirkusbygningen")
                     .build();
 
             Event event2 = Event.builder()
                     .title("Stand-up Comedy Night")
                     .description("An evening of laughs with top Danish comedians")
-                    .categories(Set.of(EventCategory.COMEDY))
+                    .category(EventCategory.COMEDY)
+                    .subCategory(EventSubCategory.EVENTS)
                     .startTime(LocalTime.of(20, 0))
-                    .endTime(LocalTime.of(22, 0))
-                    .startDates(Set.of(LocalDate.of(2026, 12, 5), LocalDate.of(2026, 12, 12)))
+                    .startDate(LocalDate.of(2026, 12, 5))
                     .price(250.00)
-                    .location("Cirkusbygningen, 1601 København V")
+                    .location(address2)
                     .build();
 
             try {
@@ -156,6 +167,85 @@ public final class TestDataCreator {
             eventSet.put("event2", event2);
 
             return eventSet;
+        }
+    }
+
+    public static Map<String, Address> createAddresses(EntityManagerFactory emf) {
+        try (EntityManager em = emf.createEntityManager()) {
+            em.getTransaction().begin();
+            Address address1 = Address.builder()
+                    .postalCode("1050")
+                    .city("København K")
+                    .address("Kongens Nytorv 1")
+                    .build();
+
+            Address address2 = Address.builder()
+                    .postalCode("2200")
+                    .city("København N")
+                    .address("Ravnsborggade 8")
+                    .build();
+
+            try {
+                em.createNativeQuery("TRUNCATE TABLE address RESTART IDENTITY CASCADE").executeUpdate();
+
+                List<Address> addresses = List.of(
+                        address1, address2
+                );
+                addresses.forEach(em::persist);
+
+                em.flush();
+            } catch (PersistenceException e) {
+                if (em.getTransaction().isActive()) em.getTransaction().rollback();
+                throw e;
+            }
+            em.getTransaction().commit();
+
+            Map<String, Address> addressMap = new LinkedHashMap<>();
+            addressMap.put("address", address1);
+            addressMap.put("address2", address2);
+
+            return addressMap;
+        }
+    }
+
+    public static Map<String, ImageUrl> createImageUrls(EntityManagerFactory emf) {
+        try (EntityManager em = emf.createEntityManager()) {
+            em.getTransaction().begin();
+
+            ImageUrl imageUrl = ImageUrl.builder()
+                    .url("randomUrl.dk")
+                    .ratio("16_9")
+                    .height(205)
+                    .width(115)
+                    .build();
+
+            ImageUrl imageUrl2 = ImageUrl.builder()
+                    .url("randomUrl2.dk")
+                    .ratio("3_2")
+                    .height(305)
+                    .width(203)
+                    .build();
+
+            try {
+                em.createNativeQuery("TRUNCATE TABLE image_url RESTART IDENTITY CASCADE").executeUpdate();
+
+                List<ImageUrl> imageUrls = List.of(
+                        imageUrl, imageUrl2
+                );
+                imageUrls.forEach(em::persist);
+
+                em.flush();
+            } catch (PersistenceException e) {
+                if (em.getTransaction().isActive()) em.getTransaction().rollback();
+                throw e;
+            }
+            em.getTransaction().commit();
+
+            Map<String, ImageUrl> imageUrlMap = new LinkedHashMap<>();
+            imageUrlMap.put("imageUrl", imageUrl);
+            imageUrlMap.put("imageUrl2", imageUrl2);
+
+            return imageUrlMap;
         }
     }
 }
