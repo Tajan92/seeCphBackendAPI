@@ -1,7 +1,9 @@
 package app.config;
 
+import app.entities.Address;
 import app.entities.Advert;
 import app.entities.Event;
+import app.entities.ImageUrl;
 import app.entities.users.Admin;
 import app.entities.users.Attendee;
 import app.entities.users.Organizer;
@@ -19,5 +21,7 @@ final class EntityRegistry {
         configuration.addAnnotatedClass(Organizer.class);
         configuration.addAnnotatedClass(Event.class);
         configuration.addAnnotatedClass(Advert.class);
+        configuration.addAnnotatedClass(Address.class);
+        configuration.addAnnotatedClass(ImageUrl.class);
     }
 }

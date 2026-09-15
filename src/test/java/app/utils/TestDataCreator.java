@@ -1,15 +1,13 @@
 package app.utils;
 
+import app.entities.Address;
 import app.entities.Advert;
 import app.entities.Event;
 import app.entities.users.Admin;
 import app.entities.users.Attendee;
 import app.entities.users.Organizer;
 import app.entities.users.User;
-import app.enums.AddPlacement;
-import app.enums.EventCategory;
-import app.enums.Status;
-import app.enums.UserRole;
+import app.enums.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
@@ -113,26 +111,38 @@ public final class TestDataCreator {
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
 
+            Address address = Address.builder()
+                    .postalCode("2100")
+                    .city("København")
+                    .address("Per Henrik Lings Allé 2")
+                    .build();
+
             Event event = Event.builder()
                     .title("Lukas Graham")
                     .description("Enjoy Lukas Graham at Parken")
-                    .categories(Set.of(EventCategory.MUSIC))
-                    .startTime(LocalTime.of(19,30))
-                    .endTime(LocalTime.of(23,30))
-                    .startDates(Set.of(LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 22)))
+                    .category(EventCategory.MUSIC)
+                    .subCategory(EventSubCategory.POP)
+                    .startTime(LocalTime.of(19, 30))
+                    .startDate(LocalDate.of(2026, 11, 15))
                     .price(500.00)
-                    .location("Per Henrik Lings Allé 2, 2100 København")
+                    .location(address)
+                    .build();
+
+            Address address2 = Address.builder()
+                    .postalCode("1601")
+                    .city("København V")
+                    .address("Cirkusbygningen")
                     .build();
 
             Event event2 = Event.builder()
                     .title("Stand-up Comedy Night")
                     .description("An evening of laughs with top Danish comedians")
-                    .categories(Set.of(EventCategory.COMEDY))
+                    .category(EventCategory.COMEDY)
+                    .subCategory(EventSubCategory.EVENTS)
                     .startTime(LocalTime.of(20, 0))
-                    .endTime(LocalTime.of(22, 0))
-                    .startDates(Set.of(LocalDate.of(2026, 12, 5), LocalDate.of(2026, 12, 12)))
+                    .startDate(LocalDate.of(2026, 12, 5))
                     .price(250.00)
-                    .location("Cirkusbygningen, 1601 København V")
+                    .location(address2)
                     .build();
 
             try {

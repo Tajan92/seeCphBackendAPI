@@ -1,79 +1,52 @@
 package app;
 
 import app.config.HibernateConfig;
-import app.dao.AdvertDAO;
-import app.dao.EventDAO;
-import app.dao.UserDAO;
-import app.entities.Advert;
-import app.entities.Event;
-import app.entities.users.Admin;
-import app.entities.users.Attendee;
-import app.entities.users.Organizer;
-import app.entities.users.User;
-import app.enums.AddPlacement;
-import app.enums.EventCategory;
-import app.enums.Status;
-import app.enums.UserRole;
+import app.service.APIReader;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManagerFactory;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.Collections;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 
 public class Main {
     public static void main(String[] args) {
         EntityManagerFactory emf = HibernateConfig.getEntityManagerFactory();
-        UserDAO userDAO = new UserDAO(emf );
-        EventDAO eventDAO = new EventDAO(emf);
-        AdvertDAO advertDAO = new AdvertDAO(emf);
 
-        createUsers(userDAO);
-        createEvent(eventDAO);
-        createAdvert(advertDAO);
+        APIReader apiReader = new APIReader();
+        ObjectMapper objectMapper = new ObjectMapper();
 
-        emf.close();
-    }
+        String apiKeyTicketMaster = System.getenv("API_KEY_TICKETMASTER");
+        System.out.println("apiKeyTicketMaster: " + apiKeyTicketMaster);
+        String url = "https://app.ticketmaster.com/discovery/v2/events.json?countryCode=DK&latlong=55.6761,12.5683&radius=15&unit=km&sort=date,asc&size=1&apikey=" + apiKeyTicketMaster;
+        String url2 = "https://app.ticketmaster.com/discovery/v2/classifications?apikey=" + apiKeyTicketMaster;
+        HttpRequest request = null;
+        try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
+            request = HttpRequest.newBuilder()
+                    .uri(new URI(url2))
+                    .timeout(Duration.ofSeconds(10))
+                    .header("Accept", "application/json")
+                    .GET()
+                    .build();
+            try {
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                System.out.println(response.body());
 
-    public static void createEvent(EventDAO eventDAO) {
-        Event event = Event.builder()
-                .title("Lukas Graham")
-                .description("Lukas performing at Parken")
-                .price(350.00)
-                .free(false)
-                .location("Parken 1, København")
-                .latitude(55.702724)
-                .longitude(12.571566)
-                .startTime(LocalTime.of(20, 30))
-                .endTime(LocalTime.of(22, 00))
-                .startDates(Collections.singleton(LocalDate.of(2026, 10, 10)))
-                .endDates(Collections.singleton(LocalDate.of(2026, 10, 10)))
-                .categories(Collections.singleton(EventCategory.MUSIC)).build();
-
-        eventDAO.create(event);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            emf.close();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
 
 
-    }
-
-    public static void createAdvert(AdvertDAO advertDAO) {
-        Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGEHEADER)
-                .price(500.00)
-                .startDate(LocalDate.of(2026, 11, 15))
-                .endDate(LocalDate.of(2026, 11, 22))
-                .status(true).build();
-
-        advertDAO.create(advert);
-    }
-
-    public static void createUsers(UserDAO userDAO) {
-        User user = Admin.builder().name("John").email("john@mail.dk").phone("12345678").password("12345678").userRole(UserRole.ADMIN).build();
-        userDAO.create(user);
-
-        User user2 = Attendee.builder().name("Bo").email("bo@mail.dk").phone("12345678").password("12345678").userRole(UserRole.ATTENDEE).build();
-        userDAO.create(user2);
-
-        User user3 = Organizer.builder().organizerName("Nike").accountStatus(Status.PENDING).name("Nike").email("nike@mail.dk").phone("12345678").password("12345678").userRole(UserRole.ORGANIZER).build();
-        userDAO.create(user3);
     }
 }
 

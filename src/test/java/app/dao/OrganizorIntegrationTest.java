@@ -1,14 +1,11 @@
 package app.dao;
 
 import app.config.HibernateTestConfig;
+import app.entities.Address;
 import app.entities.Advert;
 import app.entities.Event;
 import app.entities.users.Organizer;
-import app.entities.users.User;
-import app.enums.AddPlacement;
-import app.enums.EventCategory;
-import app.enums.Status;
-import app.enums.UserRole;
+import app.enums.*;
 import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
@@ -82,12 +79,12 @@ public class OrganizorIntegrationTest {
         Event event = Event.builder()
                 .title("Copenhagen Marathon")
                 .description("Run through Copenhagen with busy streets")
-                .categories(Set.of(EventCategory.SPORT))
+                .category(EventCategory.SPORTS)
+                .subCategory(EventSubCategory.ATHLETIC_RACES)
                 .startTime(LocalTime.of(16, 0))
-                .endTime(LocalTime.of(18, 30))
-                .startDates(Set.of(LocalDate.of(2026, 10, 18)))
+                .startDate(LocalDate.of(2026, 10, 18))
                 .price(100.00)
-                .location("Copenhagen")
+                .location(Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build())
                 .build();
 
         organizer.addAdvert(advert);
@@ -117,12 +114,12 @@ public class OrganizorIntegrationTest {
         Event event = Event.builder()
                 .title("Copenhagen Marathon")
                 .description("Run through Copenhagen with busy streets")
-                .categories(Set.of(EventCategory.SPORT))
+                .category(EventCategory.SPORTS)
+                .subCategory(EventSubCategory.ATHLETIC_RACES)
                 .startTime(LocalTime.of(16, 0))
-                .endTime(LocalTime.of(18, 30))
-                .startDates(Set.of(LocalDate.of(2026, 10, 18)))
+                .startDate(LocalDate.of(2026, 10, 18))
                 .price(100.00)
-                .location("Copenhagen")
+                .location(Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build())
                 .build();
 
         organizer.addEvent(event);
@@ -162,12 +159,12 @@ public class OrganizorIntegrationTest {
         Event event = Event.builder()
                 .title("Copenhagen Marathon")
                 .description("Run through Copenhagen with busy streets")
-                .categories(Set.of(EventCategory.SPORT))
+                .category(EventCategory.SPORTS)
+                .subCategory(EventSubCategory.ATHLETIC_RACES)
                 .startTime(LocalTime.of(16, 0))
-                .endTime(LocalTime.of(18, 30))
-                .startDates(Set.of(LocalDate.of(2026, 10, 18)))
+                .startDate(LocalDate.of(2026, 10, 18))
                 .price(100.00)
-                .location("Copenhagen")
+                .location(Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build())
                 .build();
 
         organizer.addEvent(event);

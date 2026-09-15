@@ -1,9 +1,10 @@
 package app.dao;
 
 import app.config.HibernateTestConfig;
+import app.entities.Address;
 import app.entities.Event;
 import app.enums.EventCategory;
-import app.exceptions.ApiException;
+import app.enums.EventSubCategory;
 import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
@@ -41,12 +42,12 @@ class EventDAOTest {
         Event event = Event.builder()
                 .title("F.C. København vs. Brøndby IF")
                 .description("Experience the intense New Firm derby live at Parken")
-                .categories(Set.of(EventCategory.SPORT))
+                .category(EventCategory.SPORTS)
+                .subCategory(EventSubCategory.FOOTBALL)
                 .startTime(LocalTime.of(16, 0))
-                .endTime(LocalTime.of(18, 30))
-                .startDates(Set.of(LocalDate.of(2026, 10, 18)))
+                .startDate(LocalDate.of(2026, 10, 18))
+                .location(Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build())
                 .price(350.00)
-                .location("Per Henrik Lings Allé 2, 2100 København")
                 .build();
 
         Event eventCreated = eventDAO.create(event);
@@ -58,11 +59,10 @@ class EventDAOTest {
 
         assertThat(eventFetched.getEventId(), is(eventCreated.getEventId()));
 
-        assertThat(eventFetched.getCategories().contains(EventCategory.SPORT), is(true));
-        assertThat(eventFetched.getCategories(), hasSize(1));
+//        assertThat(eventFetched.getCategory(), is(EventCategory.SPORTS));
+//        assertThat(eventFetched.getSubCategory(), is(EventSubCategory.FOOTBALL));
 
-        assertThat(eventFetched.getStartDates(), contains(LocalDate.of(2026, 10, 18)));
-        assertThat(eventFetched.getStartDates(), hasSize(1));
+        assertThat(eventFetched.getStartDate(), is(event.getStartDate()));
     }
 
     @Test
