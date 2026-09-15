@@ -1,7 +1,7 @@
 package app;
 
 import app.config.HibernateConfig;
-import app.service.APIReader;
+import app.utils.APIReader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManagerFactory;
 

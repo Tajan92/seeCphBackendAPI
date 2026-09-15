@@ -3,6 +3,7 @@ package app.utils;
 import app.entities.Address;
 import app.entities.Advert;
 import app.entities.Event;
+import app.entities.ImageUrl;
 import app.entities.users.Admin;
 import app.entities.users.Attendee;
 import app.entities.users.Organizer;
@@ -166,6 +167,85 @@ public final class TestDataCreator {
             eventSet.put("event2", event2);
 
             return eventSet;
+        }
+    }
+
+    public static Map<String, Address> createAddresses(EntityManagerFactory emf) {
+        try (EntityManager em = emf.createEntityManager()) {
+            em.getTransaction().begin();
+            Address address1 = Address.builder()
+                    .postalCode("1050")
+                    .city("København K")
+                    .address("Kongens Nytorv 1")
+                    .build();
+
+            Address address2 = Address.builder()
+                    .postalCode("2200")
+                    .city("København N")
+                    .address("Ravnsborggade 8")
+                    .build();
+
+            try {
+                em.createNativeQuery("TRUNCATE TABLE address RESTART IDENTITY CASCADE").executeUpdate();
+
+                List<Address> addresses = List.of(
+                        address1, address2
+                );
+                addresses.forEach(em::persist);
+
+                em.flush();
+            } catch (PersistenceException e) {
+                if (em.getTransaction().isActive()) em.getTransaction().rollback();
+                throw e;
+            }
+            em.getTransaction().commit();
+
+            Map<String, Address> addressMap = new LinkedHashMap<>();
+            addressMap.put("address", address1);
+            addressMap.put("address2", address2);
+
+            return addressMap;
+        }
+    }
+
+    public static Map<String, ImageUrl> createImageUrls(EntityManagerFactory emf) {
+        try (EntityManager em = emf.createEntityManager()) {
+            em.getTransaction().begin();
+
+            ImageUrl imageUrl = ImageUrl.builder()
+                    .url("randomUrl.dk")
+                    .ratio("16_9")
+                    .height(205)
+                    .width(115)
+                    .build();
+
+            ImageUrl imageUrl2 = ImageUrl.builder()
+                    .url("randomUrl2.dk")
+                    .ratio("3_2")
+                    .height(305)
+                    .width(203)
+                    .build();
+
+            try {
+                em.createNativeQuery("TRUNCATE TABLE image_url RESTART IDENTITY CASCADE").executeUpdate();
+
+                List<ImageUrl> imageUrls = List.of(
+                        imageUrl, imageUrl2
+                );
+                imageUrls.forEach(em::persist);
+
+                em.flush();
+            } catch (PersistenceException e) {
+                if (em.getTransaction().isActive()) em.getTransaction().rollback();
+                throw e;
+            }
+            em.getTransaction().commit();
+
+            Map<String, ImageUrl> imageUrlMap = new LinkedHashMap<>();
+            imageUrlMap.put("imageUrl", imageUrl);
+            imageUrlMap.put("imageUrl2", imageUrl2);
+
+            return imageUrlMap;
         }
     }
 }

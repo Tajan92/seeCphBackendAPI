@@ -1,9 +1,9 @@
 @startuml
 !pragma layout smetana
 !theme reddress-lightblue
-skinparam backgroundColor none
+skinparam backgroundColor grey
 skinparam ArrowColor white
-skinparam ArrowThickness 2
+skinparam ArrowThickness 1
 skinparam roundcorner 20
 skinparam ArrowFontColor White
 skinparam ArrowFontSize 18
@@ -13,8 +13,30 @@ BorderColor darkgrey
 }
 
 'https://plantuml.com/class-diagram
+package app{
 class Main{}
+package dto {
+package ticketMaster {
+record TickerMasterDTO{
+Embedded embedded
+Page page
+}
+record TmAttraction{}
+record TmClassification{}
+record TmDates{}
+record TmEvent{}
+record TmPriceRange{}
+record TmVenue{}
+TickerMasterDTO -- TmEvent
+TmEvent -- TmClassification
+TmEvent -- TmPriceRange
+TmEvent -- TmVenue
+TmEvent -- TmAttraction
+TmEvent -- TmDates
 
+}
+}
+package entities {
 package users{
 abstract class User{
 - name
@@ -23,37 +45,43 @@ abstract class User{
 - password
 - role - ENUM
 }
-class Admin{}
-class Attendee{
+class Admin extends User{}
+class Attendee extends User{
 - List<Event> favorites
 - List<Event> liked
 }
-class Organizer{
+class Organizer extends User{
 - accountStatus ENUM
 - organizer name
 - List<Advert>
 }
 }
 
-User --|> Organizer
-User --|> Admin
-User --|> Attendee
+
 
 class Event {
-- title
-- description
-- Set<startDate>
-- Set<endDate>
-- time
-- price
-- category - ENUM
-- address
-- location
-- latitude
-- longitude
-- imageURL
-- organizerPageURL
-- sourceType ENUM
+- Integer eventID
+- String title
+- String description
+- Double price
+- boolean free
+- Address location
+- String latitude
+- String longitude
+- LocalTime startTime
+- LocalDate startDate
+- SourceProvider SourceProvider
+- String sourceEventId
+- LocalDateTime lastSyncedAt
+- List<ImageUrl> images
+- EventCategory category - ENUM
+- EventSubCategory subCategory - ENUM
+- Set<Advert> adverts
+- Organizer organizer
+- Admin admin
++ void addAdvert(Advert advert)
++ void prePersist()
++ void preUpdate()
 }
 
 Event "*"----"*" Attendee
@@ -69,25 +97,67 @@ class Advert{
 - status ENUM
 }
 Organizer "1" --- "*" Advert
+class Address{
+- int id
+- String city
+- String postalCode
+- String address
+- Set<Event> events
+}
+class ImageURL{
+- Integer id
+- String url
+- String ratio
+- int width
+- int height
+- Event event
+}
+Event "*"---"1" Address
+Event "1"---"*" ImageURL
+}
 class Controller{}
 Controller -- Main
 package daos{
-class EventDAO{
-CRUD
+interface IDAO{}
+abstract class GenericDAO implements IDAO{
++ T create(T entity)
++ T read(Integer id)
++ Set<T> readAll()
++ T update(T entity)
++ boolean delete(T entity)
+}
+class EventDAO extends GenericDAO{
+
 }
 EventDAO --> Event
 EventDAO -- Main
 
-class UserDAO{
-CRUD
+class UserDAO extends GenericDAO{
+
 }
-UserDAO --> User
+UserDAO --- User
 UserDAO -- Main
 
-class AdvertDAO{
-CRUD
+class AdvertDAO extends GenericDAO{
+
 }
 AdvertDAO --> Advert
 AdvertDAO -- Main
+}
+package service {
+class EventConverter{
++ Event ticketMasterDtoToEvent(TicketMasterDTO ticketMasterDTO)
+- EventCategory categoryPicker(String category)
+- EventSubCategory subCategoryPicker(String category)
+}
+TickerMasterDTO -- EventConverter
+EventConverter -- Event
+}
+package utils {
+class APIReader {
++ <T> T getApiAsDTO(String url, Class<T> tclass)
++ String geminiRequest(String prompt)
+}
+}
 }
 @enduml

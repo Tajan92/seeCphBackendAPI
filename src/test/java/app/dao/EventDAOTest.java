@@ -9,7 +9,6 @@ import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.*;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Map;
@@ -56,13 +55,12 @@ class EventDAOTest {
         Event eventFetched = eventDAO.read(eventCreated.getEventId());
         assertThat(eventFetched.getTitle(), is(event.getTitle()));
         assertThat(eventFetched.getEventId(), is(3));
-
         assertThat(eventFetched.getEventId(), is(eventCreated.getEventId()));
-
-//        assertThat(eventFetched.getCategory(), is(EventCategory.SPORTS));
-//        assertThat(eventFetched.getSubCategory(), is(EventSubCategory.FOOTBALL));
-
+        assertThat(eventFetched.getCategory(), is(EventCategory.SPORTS));
+        assertThat(eventFetched.getSubCategory(), is(EventSubCategory.FOOTBALL));
         assertThat(eventFetched.getStartDate(), is(event.getStartDate()));
+        assertThat(eventFetched.getLastSyncedAt().toLocalDate(), is(LocalDate.now()));
+        assertThat(eventFetched.getLocation(), is(event.getLocation()));
     }
 
     @Test
@@ -87,6 +85,7 @@ class EventDAOTest {
 
         Event fetchedEvent = eventDAO.update(event);
 
+        assertThat(event.getLastSyncedAt(), not(fetchedEvent.getLastSyncedAt()));
         assertThat(fetchedEvent.getEventId(), is(event.getEventId()));
         assertThat(fetchedEvent.getPrice(), is(350.00));
         assertThat(fetchedEvent.getEventId(), is(event.getEventId()));
