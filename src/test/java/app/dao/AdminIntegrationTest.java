@@ -7,7 +7,6 @@ import app.entities.Event;
 import app.entities.users.Admin;
 import app.enums.AddPlacement;
 import app.enums.EventCategory;
-import app.enums.EventSubCategory;
 import app.enums.UserRole;
 import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
@@ -20,7 +19,6 @@ import org.junit.jupiter.api.TestInstance;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Map;
-import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -84,8 +82,7 @@ public class AdminIntegrationTest {
         Event event = Event.builder()
                 .title("Copenhagen Marathon")
                 .description("Run through Copenhagen with busy streets")
-                .category(EventCategory.SPORTS)
-                .subCategory(EventSubCategory.ATHLETIC_RACES)
+                .category(EventCategory.ATHLETIC_RACES)
                 .startTime(LocalTime.of(16, 0))
                 .startDate(LocalDate.of(2026, 10, 18))
                 .price(100.00)
@@ -119,8 +116,7 @@ public class AdminIntegrationTest {
         Event event = Event.builder()
                 .title("Copenhagen Marathon")
                 .description("Run through Copenhagen with busy streets")
-                .category(EventCategory.SPORTS)
-                .subCategory(EventSubCategory.ATHLETIC_RACES)
+                .category(EventCategory.ATHLETIC_RACES)
                 .startTime(LocalTime.of(16, 0))
                 .startDate(LocalDate.of(2026, 10, 18))
                 .price(100.00)
@@ -162,8 +158,7 @@ public class AdminIntegrationTest {
         Event event = Event.builder()
                 .title("Copenhagen Marathon")
                 .description("Run through Copenhagen with busy streets")
-                .category(EventCategory.SPORTS)
-                .subCategory(EventSubCategory.ATHLETIC_RACES)
+                .category(EventCategory.ATHLETIC_RACES)
                 .startTime(LocalTime.of(16, 0))
                 .startDate(LocalDate.of(2026, 10, 18))
                 .price(100.00)

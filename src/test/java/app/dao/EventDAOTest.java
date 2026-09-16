@@ -4,7 +4,6 @@ import app.config.HibernateTestConfig;
 import app.entities.Address;
 import app.entities.Event;
 import app.enums.EventCategory;
-import app.enums.EventSubCategory;
 import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
@@ -41,8 +40,7 @@ class EventDAOTest {
         Event event = Event.builder()
                 .title("F.C. København vs. Brøndby IF")
                 .description("Experience the intense New Firm derby live at Parken")
-                .category(EventCategory.SPORTS)
-                .subCategory(EventSubCategory.FOOTBALL)
+                .category(EventCategory.FOOTBALL)
                 .startTime(LocalTime.of(16, 0))
                 .startDate(LocalDate.of(2026, 10, 18))
                 .location(Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build())
@@ -56,8 +54,7 @@ class EventDAOTest {
         assertThat(eventFetched.getTitle(), is(event.getTitle()));
         assertThat(eventFetched.getEventId(), is(3));
         assertThat(eventFetched.getEventId(), is(eventCreated.getEventId()));
-        assertThat(eventFetched.getCategory(), is(EventCategory.SPORTS));
-        assertThat(eventFetched.getSubCategory(), is(EventSubCategory.FOOTBALL));
+        assertThat(eventFetched.getCategory(), is(EventCategory.FOOTBALL));
         assertThat(eventFetched.getStartDate(), is(event.getStartDate()));
         assertThat(eventFetched.getLastSyncedAt().toLocalDate(), is(LocalDate.now()));
         assertThat(eventFetched.getLocation(), is(event.getLocation()));

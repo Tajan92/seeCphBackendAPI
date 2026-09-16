@@ -20,7 +20,7 @@ public class Main {
         APIReader apiReader = new APIReader();
         ObjectMapper objectMapper = new ObjectMapper();
 
-        String apiKeyTicketMaster = System.getenv("API_KEY_TICKETMASTER");
+        String apiKeyTicketMaster = System.getenv("API_KEY");
         System.out.println("apiKeyTicketMaster: " + apiKeyTicketMaster);
         String url = "https://app.ticketmaster.com/discovery/v2/events.json?countryCode=DK&latlong=55.6761,12.5683&radius=15&unit=km&sort=date,asc&size=1&apikey=" + apiKeyTicketMaster;
         String url2 = "https://app.ticketmaster.com/discovery/v2/classifications?apikey=" + apiKeyTicketMaster;
@@ -48,5 +48,6 @@ public class Main {
 
 
     }
+
 }
 
