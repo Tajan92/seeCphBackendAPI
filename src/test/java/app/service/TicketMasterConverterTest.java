@@ -43,7 +43,7 @@ class TicketMasterConverterTest {
             eventCategory = event.classifications().getFirst().genre().name();
             price = event.priceRanges().getFirst().min();
         }
-        Event convertedEvent = ticketMasterConverter.ticketMasterDtoToEvent(dto);
+        Event convertedEvent = ticketMasterConverter.ticketMasterDtoToEvent(dto).getFirst();
         assertNotNull(convertedEvent);
         assertThat(convertedEvent.getTitle(), is("Copenhagen Rock Festival 2026"));
         assertThat(convertedEvent.getCategory(),is(eventCategory));

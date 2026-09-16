@@ -13,11 +13,13 @@ import lombok.AllArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @AllArgsConstructor
 public class TicketMasterConverter {
-    public Event ticketMasterDtoToEvent(TicketMasterDTO ticketMasterDTO) {
+    public List<Event> ticketMasterDtoToEvent(TicketMasterDTO ticketMasterDTO) {
+       List<Event> events = new ArrayList<>();
         Event eventBuild = new Event();
         for (TmEvent event : ticketMasterDTO.embedded().events()) {
             eventBuild = Event.builder()
@@ -27,16 +29,16 @@ public class TicketMasterConverter {
                     .description(event.info())
                     .price(chechPrice(event))
                     .free(false) //Ticket Master never free
-                    .startDate(LocalDate.parse(event.dates().start().localDate()))
-                    .startTime(LocalTime.parse(event.dates().start().localTime()))
-                    .location(createAddress(event))
+                    .startDate(event.dates().start().localDate() != null ? LocalDate.parse(event.dates().start().localDate()) : null)
+                    .startTime(event.dates().start().localTime() != null ? LocalTime.parse(event.dates().start().localTime()) : null)                    .location(createAddress(event))
                     .longitude(event.embedded().venues().getFirst().location().latitude())
                     .latitude(event.embedded().venues().getFirst().location().longitude())
                     .category(findEventCategory(event))
                     .images(createImageUrls(event))
                     .build();
+            events.add(eventBuild);
         }
-        return eventBuild;
+        return events;
     }
 
     private Address createAddress(TmEvent event) {
@@ -64,10 +66,12 @@ public class TicketMasterConverter {
 
     private Double chechPrice(TmEvent event) {
         Double price = null;
+        if (event.priceRanges() != null){
         for (TmPriceRange priceRange : event.priceRanges()) {
             if (priceRange != null) {
                 price = priceRange.min();
             }
+        }
         }
         return price;
     }
