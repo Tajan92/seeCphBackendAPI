@@ -29,6 +29,7 @@ public class Event {
     @Setter
     private String title;
     @Setter
+    @Column(columnDefinition = "TEXT")
     private String description;
     @Setter
     private Double price;
@@ -60,6 +61,7 @@ public class Event {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private List<ImageUrl> images;
     @Setter
+    @Enumerated(EnumType.STRING)
     @Column(name = "event_category")
     private EventCategory category;
 
