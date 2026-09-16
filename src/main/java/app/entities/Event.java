@@ -3,8 +3,6 @@ package app.entities;
 import app.entities.users.Admin;
 import app.entities.users.Organizer;
 import app.enums.EventCategory;
-import app.enums.EventSubCategory;
-import app.enums.SourceProvider;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
@@ -51,7 +49,7 @@ public class Event {
     private LocalDate startDate;
     @Setter
     @Column(name = "source_provider")
-    private SourceProvider sourceProvider;
+    private String sourceProvider;
     @Setter
     @Column(name = "source_event_id")
     private String sourceEventId;
@@ -64,10 +62,6 @@ public class Event {
     @Setter
     @Column(name = "event_category")
     private EventCategory category;
-
-    @Setter
-    @Column(name = "sub_category")
-    private EventSubCategory subCategory;
 
     @OneToMany(mappedBy = "event", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Advert> adverts;

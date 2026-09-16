@@ -1,5 +1,6 @@
 package app.dto.ticketMaster;
 
+import app.enums.EventCategory;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -13,8 +14,8 @@ public record TmClassification(
     public record TmSegment(String name) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record TmGenre(String name) {}
+    public record TmGenre(EventCategory name) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record TmSubGenre(String name) {}
+    public record TmSubGenre(EventCategory name) {}
 }
