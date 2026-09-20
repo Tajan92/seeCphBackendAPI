@@ -1,6 +1,7 @@
 package app.entities.users;
 
 import app.entities.Event;
+import app.enums.UserRole;
 import app.exceptions.DatabaseException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -52,5 +53,10 @@ public class Attendee extends User {
             }
             this.likedEvents.add(event);
         }
+    }
+
+    @PrePersist
+    public void prePersist() {
+        this.addUserRole(UserRole.ATTENDEE);
     }
 }

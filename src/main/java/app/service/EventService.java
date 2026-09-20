@@ -20,7 +20,7 @@ public class EventService {
         this.converter = new TicketMasterConverter();
     }
 
-    public List<Event> persistEvents() { // TODO: Add page counter to api
+    public List<Event> persistEvents() {
         List<TicketMasterDTO> ticketMasterDTOs = apiReader.getApiAsTmDTO("https://app.ticketmaster.com/discovery/v2/events.json?countryCode=DK&latlong=55.6761,12.5683&radius=15&unit=km&page=$&apikey=" + System.getenv("API_KEY"));
         List<Event> events = new ArrayList<>();
         for (TicketMasterDTO ticketMasterDTO : ticketMasterDTOs) {

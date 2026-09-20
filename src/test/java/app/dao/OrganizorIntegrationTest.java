@@ -38,7 +38,7 @@ public class OrganizorIntegrationTest {
                 .organizerName("Run and Fun")
                 .name("RF")
                 .email("runfun@mail.dk")
-                .password("123456")
+                .password("12345678")
                 .userRole(UserRole.ORGANIZER)
                 .accountStatus(Status.ACTIVE)
                 .phone("89765432")

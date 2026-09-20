@@ -93,36 +93,55 @@ class UserDAOTest {
     @Test
     void updateAdmin() {
         User admin = users.get("admin");
-        admin.setName("newName");
+        Admin newAdmin = Admin.builder()
+                .userId(admin.getUserId())
+                .password("12345678")
+                .name("jason")
+                .email("jason@mail.dk")
+                .phone("67890123")
+                .build();
 
-        User fetchedUpdated = userDAO.update(admin);
+        User fetchedUpdated = userDAO.update(newAdmin);
 
         assertThat(fetchedUpdated.getUserId(), is(admin.getUserId()));
-        assertThat(fetchedUpdated.getName(), is("newName"));
+        assertThat(fetchedUpdated.getName(), is("jason"));
         assertThat(fetchedUpdated.getUserId(), is(admin.getUserId()));
     }
 
     @Test
     void updateAttendee() {
         User attendee = users.get("attendee");
-        attendee.setName("newName");
+        Attendee newAttendee = Attendee.builder()
+                .userId(attendee.getUserId())
+                .name("jason")
+                .password("12345678")
+                .email("jason@mail.dk")
+                .phone("67890123")
+                .build();
 
-        User fetchedUpdated = userDAO.update(attendee);
+        User fetchedUpdated = userDAO.update(newAttendee);
 
         assertThat(fetchedUpdated.getUserId(), is(attendee.getUserId()));
-        assertThat(fetchedUpdated.getName(), is("newName"));
+        assertThat(fetchedUpdated.getName(), is("jason"));
         assertThat(fetchedUpdated.getUserId(), is(attendee.getUserId()));
     }
 
     @Test
     void updateOrganizer() {
         User organizer = users.get("organizer");
-        organizer.setName("newName");
+        Organizer newOrganizer = Organizer.builder()
+                .userId(organizer.getUserId())
+                .name("jason")
+                .email("jason@mail.dk")
+                .password("12345678")
+                .phone("67890123")
+                .userRole(UserRole.ORGANIZER)
+                .build();
 
-        User fetchedUpdated = userDAO.update(organizer);
+        User fetchedUpdated = userDAO.update(newOrganizer);
 
         assertThat(fetchedUpdated.getUserId(), is(organizer.getUserId()));
-        assertThat(fetchedUpdated.getName(), is("newName"));
+        assertThat(fetchedUpdated.getName(), is("jason"));
         assertThat(fetchedUpdated.getUserId(), is(organizer.getUserId()));
     }
 

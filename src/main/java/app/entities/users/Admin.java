@@ -2,6 +2,7 @@ package app.entities.users;
 
 import app.entities.Advert;
 import app.entities.Event;
+import app.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -43,5 +44,9 @@ public class Admin extends User {
             this.events.add(event);
             event.setAdmin(this);
         }
+    }
+    @PrePersist
+    public void prePersist() {
+        this.addUserRole(UserRole.ADMIN);
     }
 }
