@@ -128,19 +128,19 @@ public class AdminIntegrationTest {
         Admin createdAdmin = (Admin) userDAO.create(admin);
         Integer advertId = createdAdmin.getAdverts().iterator().next().getAdvertId();
         Integer eventId = createdAdmin.getEvents().iterator().next().getEventId();
-        Advert fetchedAdvert = advertDAO.read(advertId);
+        Advert fetchedAdvert = advertDAO.readById(advertId);
         assertThat(fetchedAdvert, is(advert));
 
-        Event fetchedEvent = eventDAO.read(eventId);
+        Event fetchedEvent = eventDAO.readById(eventId);
         assertThat(fetchedEvent, is(event));
 
         boolean deleted = userDAO.delete(createdAdmin);
         assertThat(deleted, is(true));
 
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.read(advertId));
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.readById(advertId));
         assertThat(ex.getMessage(), is("Advert not found with id: "+advertId));
 
-        DatabaseException ex2 = assertThrows(DatabaseException.class, () -> eventDAO.read(eventId));
+        DatabaseException ex2 = assertThrows(DatabaseException.class, () -> eventDAO.readById(eventId));
         assertThat(ex2.getMessage(), is("Event not found with id: "+eventId));
     }
 
@@ -171,8 +171,8 @@ public class AdminIntegrationTest {
 
         Integer advertId = createdAdmin.getAdverts().iterator().next().getAdvertId();
         Integer eventId = createdAdmin.getEvents().iterator().next().getEventId();
-        Advert fetchedAdvert = advertDAO.read(advertId);
-        Event fetchedEvent = eventDAO.read(eventId);
+        Advert fetchedAdvert = advertDAO.readById(advertId);
+        Event fetchedEvent = eventDAO.readById(eventId);
 
         createdAdmin.getAdverts().remove(fetchedAdvert);
         createdAdmin.getEvents().remove(fetchedEvent);

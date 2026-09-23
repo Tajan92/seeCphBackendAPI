@@ -1,12 +1,10 @@
 package app.dao;
 
 import app.config.HibernateTestConfig;
-import app.entities.Advert;
 import app.entities.users.Admin;
 import app.entities.users.Attendee;
 import app.entities.users.Organizer;
 import app.entities.users.User;
-import app.enums.AddPlacement;
 import app.enums.Status;
 import app.enums.UserRole;
 import app.exceptions.DatabaseException;
@@ -46,7 +44,7 @@ class UserDAOTest {
 
         assertThat(adminCreated.getUserId(), notNullValue());
 
-        User adminFetched = userDAO.read(adminCreated.getUserId());
+        User adminFetched = userDAO.readById(adminCreated.getUserId());
         assertThat(adminFetched.getName(), is("Camilla"));
         assertThat(adminFetched.getUserId(), is(16));
     }
@@ -58,7 +56,7 @@ class UserDAOTest {
 
         assertThat(attendeeCreated.getUserId(), notNullValue());
 
-        User attendeeFetched = userDAO.read(attendeeCreated.getUserId());
+        User attendeeFetched = userDAO.readById(attendeeCreated.getUserId());
         assertThat(attendeeFetched.getName(), is("Peter"));
         assertThat(attendeeFetched.getUserId(), is(16));
     }
@@ -70,7 +68,7 @@ class UserDAOTest {
 
         assertThat(organizerCreated.getUserId(), notNullValue());
 
-        User organizerFetched = userDAO.read(organizerCreated.getUserId());
+        User organizerFetched = userDAO.readById(organizerCreated.getUserId());
         assertThat(organizerFetched.getName(), is("Maersk"));
         assertThat(organizerFetched.getUserId(), is(16));
     }
@@ -78,7 +76,7 @@ class UserDAOTest {
     @Test
     void read() {
         User user = users.get("attendee4");
-        User fetched = userDAO.read(user.getUserId());
+        User fetched = userDAO.readById(user.getUserId());
         assertThat(fetched.getUserId(), is(user.getUserId()));
         assertThat(fetched.getName(), is(user.getName()));
     }
@@ -158,9 +156,9 @@ class UserDAOTest {
         assertThat(deletedAdmin, is(true));
         assertThat(deletedAttendee, is(true));
         assertThat(deletedOrganizer, is(true));
-        assertThrows(DatabaseException.class, () -> userDAO.read(admin.getUserId()));
-        assertThrows(DatabaseException.class, () -> userDAO.read(attendee.getUserId()));
-        assertThrows(DatabaseException.class, () -> userDAO.read(organizer.getUserId()));
+        assertThrows(DatabaseException.class, () -> userDAO.readById(admin.getUserId()));
+        assertThrows(DatabaseException.class, () -> userDAO.readById(attendee.getUserId()));
+        assertThrows(DatabaseException.class, () -> userDAO.readById(organizer.getUserId()));
     }
 
     @Test
@@ -171,13 +169,13 @@ class UserDAOTest {
 
     @Test
     void getById_withNullId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.read(null));
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.readById(null));
         assertThat(ex.getMessage(), is("ID is required"));
     }
 
     @Test
     void getById_withMissingId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.read(999_999));
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.readById(999_999));
         assertThat(ex.getMessage(), is("User not found with id: 999999"));
     }
 

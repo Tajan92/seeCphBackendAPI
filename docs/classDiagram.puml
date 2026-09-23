@@ -1,7 +1,7 @@
 @startuml
 !pragma layout smetana
 !theme reddress-lightblue
-skinparam backgroundColor grey
+skinparam backgroundColor none
 skinparam ArrowColor white
 skinparam ArrowThickness 1
 skinparam roundcorner 20

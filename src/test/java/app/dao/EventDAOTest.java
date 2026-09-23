@@ -50,7 +50,7 @@ class EventDAOTest {
         Event eventCreated = eventDAO.create(event);
         assertThat(eventCreated.getEventId(), notNullValue());
 
-        Event eventFetched = eventDAO.read(eventCreated.getEventId());
+        Event eventFetched = eventDAO.readById(eventCreated.getEventId());
         assertThat(eventFetched.getTitle(), is(event.getTitle()));
         assertThat(eventFetched.getEventId(), is(3));
         assertThat(eventFetched.getEventId(), is(eventCreated.getEventId()));
@@ -63,7 +63,7 @@ class EventDAOTest {
     @Test
     void read() {
         Event event = events.get("event");
-        Event eventFetched = eventDAO.read(event.getEventId());
+        Event eventFetched = eventDAO.readById(event.getEventId());
         assertThat(eventFetched.getTitle(), is(event.getTitle()));
         assertThat(eventFetched.getEventId(), is(event.getEventId()));
     }
@@ -94,7 +94,7 @@ class EventDAOTest {
 
         boolean deletedEvent = eventDAO.delete(event);
         assertThat(deletedEvent, is(true));
-        assertThrows(DatabaseException.class, () -> eventDAO.read(event.getEventId()));
+        assertThrows(DatabaseException.class, () -> eventDAO.readById(event.getEventId()));
     }
 
     @Test
@@ -105,13 +105,13 @@ class EventDAOTest {
 
     @Test
     void getById_withNullId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.read(null));
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.readById(null));
         assertThat(ex.getMessage(), is("ID is required"));
     }
 
     @Test
     void getById_withMissingId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.read(999_999));
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.readById(999_999));
         assertThat(ex.getMessage(), is("Event not found with id: 999999"));
     }
 

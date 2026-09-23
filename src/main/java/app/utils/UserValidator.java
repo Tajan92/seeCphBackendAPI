@@ -1,88 +1,61 @@
 package app.utils;
 
-import app.entities.users.User;
-import app.enums.UserRole;
-
+import app.dto.user.UserRegisterDTO;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserValidator {
-    static List<String> message = new ArrayList<>();
+public class UserValidator { // TODO: Needs a lot of work to take in validation annotation
+    public List<String> validate(UserRegisterDTO userRegisterDTO) {
+        List<String> message = new ArrayList<>();
 
-//    public static boolean isAdmin(Context ctx) {
-//        UserResponseDTO user = ctx.sessionAttribute("currentUser");
-//        return user != null && user.getRole().equals("ADMIN");
-//    }
-//
-//    public static boolean isCustomer(Context ctx) {
-//        UserResponseDTO user = ctx.sessionAttribute("currentUser");
-//        return user != null && user.getRole().equals("CUSTOMER");
-//    }
-//
-//    public static UserRole checkUserRole(User user) {
-//        return user.getUserRole();
-//    }
-//    public static List<String> validate(CustomerRequestDTO customerRequestDTO) {
-//        //Clears messages each time method is called
-//        message.clear();
-//        String email = customerRequestDTO.getEmail();
-//        String password = customerRequestDTO.getPassword();
-//        String passwordCheck = customerRequestDTO.getPasswordCheck();
-//
-//        validateEmailNotEmpty(email);
-//        validatePassword(password);
-//        tooShortPassword(password);
-//        passwordMustContainNumber(password);
-//        shouldRejectPasswordWithoutSpecialCharacter(password);
-//        passwordsMustMatch(password, passwordCheck);
-//        validateEmail(email);
-//        return message;
-//    }
+        if (userRegisterDTO == null) {
+            message.add("All fields are required");
+            return message;
+        }
 
-    public static void passwordsMustMatch(String password, String passwordCheck) {
+        String email = userRegisterDTO.getEmail();
+        String phone = userRegisterDTO.getPhone();
+        String password = userRegisterDTO.getPassword();
+        String passwordCheck = userRegisterDTO.getPasswordCheck();
+
+        validatePhoneNumber(phone, message);
+        passwordMustContainNumber(password, message);
+        shouldRejectPasswordWithoutSpecialCharacter(password, message);
+        passwordsMustMatch(password, passwordCheck, message);
+        validateEmail(email, message);
+        return message;
+    }
+
+    private void passwordsMustMatch(String password, String passwordCheck, List<String> message) {
         if (!password.equals(passwordCheck)) {
-            message.add("Adgangskoder skal være ens");
+            message.add("Passwords do not match");
         }
     }
 
-    public static void validateEmailNotEmpty(String email) {
-        if (email.isBlank()) {
-            message.add("Email skal udfyldes");
+    private void passwordMustContainNumber(String password, List<String> message) {
+        if (!password.chars().anyMatch(Character::isDigit)) {
+            message.add("Password must contain a number");
         }
     }
 
-    public static void validatePassword(String password) {
-        if (password.isBlank() || password == null) {
-            message.add("Adgangskode skal udfyldes");
+    private void shouldRejectPasswordWithoutSpecialCharacter(String password, List<String> message) {
+        if (!password.chars().anyMatch(c -> !Character.isLetterOrDigit(c))) {
+            message.add("Password must contain a special character");
         }
     }
 
-    public static void validateEmail(String email) {
+    private void validateEmail(String email, List<String> message) {
         String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
         if (!email.matches(emailRegex)) {
-            message.add("Email skal indeholde @ og .");
+            message.add("Email-format not right");
         }
     }
 
-    public static void tooShortPassword(String password) {
-        if (password.length() < 8) {
-            message.add("Adgangskode er for kort");
+    private void validatePhoneNumber(String phoneNumber, List<String> message) {
+        String phoneRegexDK = "^[0-9]{8}$";
+        String phoneNumberRegex = "^(?:\\+|00)[1-9][0-9]{1,2}[0-9]{4,12}$";
+        if (!phoneNumber.matches(phoneNumberRegex) && !phoneNumber.matches(phoneRegexDK)) {
+            message.add("Phone number format not right");
         }
-    }
-
-    public static void passwordMustContainNumber(String password) {
-        if (!password.chars().anyMatch(Character::isDigit)) {
-            message.add("Adgangskode skal indeholde tal");
-        }
-    }
-
-    public static void shouldRejectPasswordWithoutSpecialCharacter(String password) {
-        if (!password.chars().anyMatch(c -> !Character.isLetterOrDigit(c))) {
-            message.add("Adgangskode skal indeholde mindst et specialtegn");
-        }
-    }
-
-    public static List<String> getMessage() {
-        return message;
     }
 }

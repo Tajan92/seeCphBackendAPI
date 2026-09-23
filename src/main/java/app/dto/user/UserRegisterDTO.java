@@ -4,9 +4,11 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
+import lombok.Getter;
 
+@Getter
 @Builder
-public class UserRequestDTO {
+public class UserRegisterDTO {
     @NotBlank(message = "Please enter name")
     private String name;
     @Email(message = "Email-format not right")

@@ -1,8 +1,6 @@
 package app.dao;
 
 import app.config.HibernateTestConfig;
-import app.entities.Address;
-import app.entities.Event;
 import app.entities.ImageUrl;
 import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
@@ -48,7 +46,7 @@ class ImageUrlDAOTest {
         ImageUrl imageUrlCreated = imageUrlDAO.create(imageUrl);
         assertThat(imageUrlCreated.getId(), notNullValue());
 
-        ImageUrl imageUrlFetched = imageUrlDAO.read(imageUrlCreated.getId());
+        ImageUrl imageUrlFetched = imageUrlDAO.readById(imageUrlCreated.getId());
         assertThat(imageUrlFetched, is(imageUrlCreated));
         assertThat(imageUrlFetched.getUrl(), is(imageUrlCreated.getUrl()));
         assertThat(imageUrlFetched.getId(), is(imageUrlCreated.getId()));
@@ -57,7 +55,7 @@ class ImageUrlDAOTest {
     @Test
     void read() {
         ImageUrl imageUrl = imageUrlMap.get("imageUrl");
-        ImageUrl imageUrlFetched = imageUrlDAO.read(imageUrl.getId());
+        ImageUrl imageUrlFetched = imageUrlDAO.readById(imageUrl.getId());
 
         assertThat(imageUrlFetched.getId(), is(imageUrl.getId()));
         assertThat(imageUrlFetched.getUrl(), is(imageUrl.getUrl()));
@@ -98,13 +96,13 @@ class ImageUrlDAOTest {
 
     @Test
     void getById_withNullId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> imageUrlDAO.read(null));
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> imageUrlDAO.readById(null));
         assertThat(ex.getMessage(), is("ID is required"));
     }
 
     @Test
     void getById_withMissingId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> imageUrlDAO.read(999_999));
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> imageUrlDAO.readById(999_999));
         assertThat(ex.getMessage(), is("ImageUrl not found with id: 999999"));
     }
 
