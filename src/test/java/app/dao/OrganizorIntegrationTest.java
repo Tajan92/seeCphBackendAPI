@@ -14,7 +14,6 @@ import org.junit.jupiter.api.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Map;
-import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -38,7 +37,7 @@ public class OrganizorIntegrationTest {
                 .organizerName("Run and Fun")
                 .name("RF")
                 .email("runfun@mail.dk")
-                .password("123456")
+                .password("12345678")
                 .userRole(UserRole.ORGANIZER)
                 .accountStatus(Status.ACTIVE)
                 .phone("89765432")
@@ -125,19 +124,19 @@ public class OrganizorIntegrationTest {
         Organizer createdOrganizer = (Organizer) userDAO.create(organizer);
         Integer advertId = createdOrganizer.getAdverts().iterator().next().getAdvertId();
         Integer eventId = createdOrganizer.getEvents().iterator().next().getEventId();
-        Advert fetchedAdvert = advertDAO.read(advertId);
+        Advert fetchedAdvert = advertDAO.readById(advertId);
         assertThat(fetchedAdvert, is(advert));
 
-        Event fetchedEvent = eventDAO.read(eventId);
+        Event fetchedEvent = eventDAO.readById(eventId);
         assertThat(fetchedEvent, is(event));
 
         boolean deleted = userDAO.delete(createdOrganizer);
         assertThat(deleted, is(true));
 
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.read(advertId));
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.readById(advertId));
         assertThat(ex.getMessage(), is("Advert not found with id: "+advertId));
 
-        DatabaseException ex2 = assertThrows(DatabaseException.class, () -> eventDAO.read(eventId));
+        DatabaseException ex2 = assertThrows(DatabaseException.class, () -> eventDAO.readById(eventId));
         assertThat(ex2.getMessage(), is("Event not found with id: "+eventId));
 
 
@@ -170,8 +169,8 @@ public class OrganizorIntegrationTest {
 
         Integer advertId = createdOrganizer.getAdverts().iterator().next().getAdvertId();
         Integer eventId = createdOrganizer.getEvents().iterator().next().getEventId();
-        Advert fetchedAdvert = advertDAO.read(advertId);
-        Event fetchedEvent = eventDAO.read(eventId);
+        Advert fetchedAdvert = advertDAO.readById(advertId);
+        Event fetchedEvent = eventDAO.readById(eventId);
 
         createdOrganizer.getAdverts().remove(fetchedAdvert);
         createdOrganizer.getEvents().remove(fetchedEvent);

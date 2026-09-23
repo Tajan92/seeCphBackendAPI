@@ -2,7 +2,6 @@ package app.dao;
 
 import app.config.HibernateTestConfig;
 import app.entities.Advert;
-import app.entities.Event;
 import app.enums.AddPlacement;
 import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
@@ -47,7 +46,7 @@ class AdvertDAOTest {
         Advert advertCreated = advertDAO.create(advert);
         assertThat(advertCreated.getAdvertId(), notNullValue());
 
-        Advert advertFetched = advertDAO.read(advertCreated.getAdvertId());
+        Advert advertFetched = advertDAO.readById(advertCreated.getAdvertId());
         assertThat(advertFetched.getPrice(), equalTo(150.00));
         assertThat(advertFetched.getAdvertId(), is(advertCreated.getAdvertId()));
     }
@@ -55,7 +54,7 @@ class AdvertDAOTest {
     @Test
     void read() {
         Advert advert = adverts.get("advert");
-        Advert advertFetched = advertDAO.read(advert.getAdvertId());
+        Advert advertFetched = advertDAO.readById(advert.getAdvertId());
         assertThat(advertFetched.getPrice(), equalTo(205.00));
         assertThat(advertFetched.getAdvertId(), is(advert.getAdvertId()));
     }
@@ -85,7 +84,7 @@ class AdvertDAOTest {
 
         boolean deletedAdvert = advertDAO.delete(advert);
         assertThat(deletedAdvert, is(true));
-        assertThrows(DatabaseException.class, () -> advertDAO.read(advert.getAdvertId()));
+        assertThrows(DatabaseException.class, () -> advertDAO.readById(advert.getAdvertId()));
     }
 
     @Test
@@ -96,13 +95,13 @@ class AdvertDAOTest {
 
     @Test
     void getById_withNullId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.read(null));
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.readById(null));
         assertThat(ex.getMessage(), is("ID is required"));
     }
 
     @Test
     void getById_withMissingId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.read(999_999));
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.readById(999_999));
         assertThat(ex.getMessage(), is("Advert not found with id: 999999"));
     }
 

@@ -1,6 +1,7 @@
 package app.utils;
 
 import app.dto.ticketMaster.TicketMasterDTO;
+import app.dto.ticketMaster.TmEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,7 +18,7 @@ import java.util.Map;
 
 public class APIReader {
     private final ObjectMapper objectMapper = new ObjectMapper();
-    String apiKey = System.getenv("GEMINI_API_KEY");
+    String geminiApiKey = System.getenv("geminiApiKey");
 
     public <T> T getApiAsDTO(String url, Class<T> tclass) {
         try {
@@ -49,10 +50,53 @@ public class APIReader {
         } catch (IOException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
+
         return ticketMasterDTOs;
     }
 
-    public String geminiRequest(String prompt) {
+    // TODO: Gemini token pr minute reached and output when using gemini seems strange
+    // TODO: Maybe setup threads and add sleep time.
+    public String geminiDescriptionCreator(String name, String address, String url) {
+        String prompt = "Make a description in english with title: "+name+" ,address: "+address+" ,link: "+url;
+
+        Map<String, Object> body = Map.of(
+                "contents", List.of(
+                        Map.of("parts", List.of(
+                                Map.of("text", prompt)))),
+                "generationConfig", Map.of("responseMimeType", "application/json", "maxOutputTokens", 100)
+        );
+        String jsonBody = null;
+        try {
+            jsonBody = objectMapper.writeValueAsString(body);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        String model = "gemini-3.5-flash-lite";
+        String endpoint =
+                "https://generativelanguage.googleapis.com/v1beta/models/"
+                        + model
+                        + ":generateContent";
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(endpoint))
+                .header("Content-Type", "application/json")
+                .header("x-goog-api-key", geminiApiKey)
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .build();
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpResponse<String> response = null;
+        try {
+            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return response.body()+" This description was made by AI";
+    }
+
+
+    public String geminiRequestGenericPrompt(String prompt) {
         Map<String, Object> body = Map.of(
                 "contents", List.of(
                         Map.of("parts", List.of(
@@ -76,7 +120,7 @@ public class APIReader {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(endpoint))
                 .header("Content-Type", "application/json")
-                .header("x-goog-api-key", apiKey)
+                .header("x-goog-api-key", geminiApiKey)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
 

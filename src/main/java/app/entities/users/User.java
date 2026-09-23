@@ -2,13 +2,16 @@ package app.entities.users;
 
 import app.enums.UserRole;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.proxy.HibernateProxy;
-
 import java.util.Objects;
 
 @Getter
@@ -18,19 +21,21 @@ import java.util.Objects;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @SuperBuilder
 @Table(name = "users")
-public abstract class User {
+public abstract class User { // TODO: Remove @Setter and refactor test
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Integer userId;
 
-    @Setter
+    @NotBlank(message = "Please enter name")
     private String name;
-    @Setter
+    @Email(message = "Email-format not right")
+    @NotBlank(message = "Please enter email")
     private String email;
-    @Setter
+    @NotBlank(message = "Please enter phone number")
     private String phone;
-    @Setter
+    @NotBlank(message = "Please enter password (minimum length 8)")
+    @Size(min = 8, max = 50)
     private String password;
     @Enumerated(EnumType.STRING)
     @Column(name = "user_role")
@@ -58,5 +63,9 @@ public abstract class User {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer()
                 .getPersistentClass()
                 .hashCode() : getClass().hashCode();
+    }
+
+    public void  addUserRole(UserRole userRole) {
+        this.userRole = userRole;
     }
 }

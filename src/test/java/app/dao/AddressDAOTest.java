@@ -2,9 +2,6 @@ package app.dao;
 
 import app.config.HibernateTestConfig;
 import app.entities.Address;
-import app.entities.Advert;
-import app.entities.Event;
-import app.enums.AddPlacement;
 import app.exceptions.DatabaseException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
@@ -13,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -49,7 +45,7 @@ class AddressDAOTest {
         Address addressCreated = addressDAO.create(address);
         assertThat(addressCreated.getId(), notNullValue());
 
-        Address fetchedAddress = addressDAO.read(addressCreated.getId());
+        Address fetchedAddress = addressDAO.readById(addressCreated.getId());
         assertThat(fetchedAddress.getAddress(), equalTo(address.getAddress()));
         assertThat(fetchedAddress.getId(), is(addressCreated.getId()));
     }
@@ -57,7 +53,7 @@ class AddressDAOTest {
     @Test
     void read() {
         Address address = addressMap.get("address");
-        Address addressFetched = addressDAO.read(address.getId());
+        Address addressFetched = addressDAO.readById(address.getId());
         assertThat(addressFetched.getAddress(), equalTo(address.getAddress()));
         assertThat(addressFetched.getPostalCode(), equalTo(address.getPostalCode()));
         assertThat(addressFetched.getCity(), equalTo(address.getCity()));
@@ -98,13 +94,13 @@ class AddressDAOTest {
 
     @Test
     void getById_withNullId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> addressDAO.read(null));
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> addressDAO.readById(null));
         assertThat(ex.getMessage(), is("ID is required"));
     }
 
     @Test
     void getById_withMissingId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> addressDAO.read(999_999));
+        DatabaseException ex = assertThrows(DatabaseException.class, () -> addressDAO.readById(999_999));
         assertThat(ex.getMessage(), is("Address not found with id: 999999"));
     }
 

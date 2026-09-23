@@ -1,5 +1,6 @@
 package app.utils;
 
+import app.dto.ticketMaster.TicketMasterDTO;
 import app.entities.Address;
 import app.entities.Advert;
 import app.entities.Event;
@@ -245,5 +246,10 @@ public final class TestDataCreator {
 
             return imageUrlMap;
         }
+    }
+
+    public static Map<String, TicketMasterDTO> createTicketMasterDTOs () {
+        Map<String, TicketMasterDTO> ticketMasterDTOMap = new LinkedHashMap<>();
+        return null;
     }
 }

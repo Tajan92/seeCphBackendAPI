@@ -13,7 +13,6 @@ import lombok.AllArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @AllArgsConstructor
@@ -35,6 +34,7 @@ public class TicketMasterConverter {
                     .latitude(event.embedded().venues().getFirst().location().longitude())
                     .category(findEventCategory(event))
                     .images(createImageUrls(event))
+                    .url(event.url())
                     .build();
             events.add(eventBuild);
         }

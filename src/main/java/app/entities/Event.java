@@ -48,6 +48,7 @@ public class Event {
     @Setter
     @Column(name = "start_date")
     private LocalDate startDate;
+    private String url;
     @Setter
     @Column(name = "source_provider")
     private String sourceProvider;
@@ -94,6 +95,10 @@ public class Event {
     @PreUpdate
     public void preUpdate() {
         lastSyncedAt = LocalDateTime.now();
+    }
+
+    public void addDescription(String description) {
+        this.description = this.description + description;
     }
 
     @Override

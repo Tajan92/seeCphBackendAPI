@@ -31,7 +31,7 @@ public abstract class GenericDAO<T> implements IDAO<T, Integer> {
     }
 
     @Override
-    public T read(Integer id) {
+    public T readById(Integer id) {
         if (id == null) {
             throw new DatabaseException("ID is required");
         }

@@ -3,6 +3,7 @@ package app.entities.users;
 import app.entities.Advert;
 import app.entities.Event;
 import app.enums.Status;
+import app.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -34,6 +35,12 @@ public class Organizer extends User {
             this.adverts.add(advert);
             advert.setOrganizer(this);
         }
+    }
+
+
+    @PrePersist
+    public void prePersist() {
+        this.addUserRole(UserRole.ORGANIZER);
     }
 
     @OneToMany(mappedBy = "organizer", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
