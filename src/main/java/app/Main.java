@@ -1,10 +1,8 @@
 package app;
 
+import app.config.ApplicationConfig;
 import app.config.HibernateConfig;
-import app.controller.EventHandler;
 import app.dao.*;
-import app.service.EventService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;
 import io.javalin.json.JavalinJackson;
 import jakarta.persistence.EntityManagerFactory;
@@ -13,35 +11,15 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 public class Main {
     public static void main(String[] args) {
         EntityManagerFactory emf = HibernateConfig.getEntityManagerFactory();
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
+        ApplicationConfig applicationConfig = new ApplicationConfig(emf);
 
         Javalin app = Javalin.create(config -> {
             config.jsonMapper(new JavalinJackson().updateMapper(mapper -> {
                 mapper.registerModule(new JavaTimeModule());
             }));
+            config.router.apiBuilder(applicationConfig::addEndpoints);
         });
         app.start(7070);
-
-        // DAOs
-        AddressDAO addressDAO = new AddressDAO(emf);
-        AdvertDAO advertDAO = new AdvertDAO(emf);
-        EventDAO eventDAO = new EventDAO(emf);
-        ImageUrlDAO imageUrlDAO = new ImageUrlDAO(emf);
-        UserDAO userDAO = new UserDAO(emf);
-
-        // Services
-        EventService eventService = new EventService(eventDAO);
-
-
-        // Handlers
-        EventHandler eventHandler = new EventHandler(eventDAO);
-
-        // Routes
-
-
-
     }
 }
 //        eventService.persistEvents();

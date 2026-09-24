@@ -13,8 +13,8 @@ import java.util.List;
 public class EventHandler {
     EventService eventService;
 
-    public EventHandler(EventDAO eventDAO) {
-        this.eventService = new EventService(eventDAO);
+    public EventHandler(EventService eventService) {
+        this.eventService = eventService;
     }
 
     public void createEvent(Context ctx) {
