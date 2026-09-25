@@ -4,7 +4,6 @@ import app.dto.ticketMaster.TicketMasterDTO;
 import app.entities.Address;
 import app.entities.Advert;
 import app.entities.Event;
-import app.entities.ImageUrl;
 import app.entities.users.Admin;
 import app.entities.users.Attendee;
 import app.entities.users.Organizer;
@@ -127,6 +126,7 @@ public final class TestDataCreator {
                     .startDate(LocalDate.of(2026, 11, 15))
                     .price(500.00)
                     .location(address)
+                    .imageUrl("https://s1.ticketm.net/dam/a/d75/0453e4d0-2642-4d80-8fca-a94e7dd40d75_SOURCE")
                     .build();
 
             Address address2 = Address.builder()
@@ -143,6 +143,7 @@ public final class TestDataCreator {
                     .startDate(LocalDate.of(2026, 12, 5))
                     .price(250.00)
                     .location(address2)
+                    .imageUrl("https://s1.ticketm.net/dam/a/d75/0453e4d0-2642-4d80-8fca-a94e7dd40d75_SOURCE")
                     .build();
 
             try {
@@ -205,51 +206,5 @@ public final class TestDataCreator {
 
             return addressMap;
         }
-    }
-
-    public static Map<String, ImageUrl> createImageUrls(EntityManagerFactory emf) {
-        try (EntityManager em = emf.createEntityManager()) {
-            em.getTransaction().begin();
-
-            ImageUrl imageUrl = ImageUrl.builder()
-                    .url("randomUrl.dk")
-                    .ratio("16_9")
-                    .height(205)
-                    .width(115)
-                    .build();
-
-            ImageUrl imageUrl2 = ImageUrl.builder()
-                    .url("randomUrl2.dk")
-                    .ratio("3_2")
-                    .height(305)
-                    .width(203)
-                    .build();
-
-            try {
-                em.createNativeQuery("TRUNCATE TABLE image_url RESTART IDENTITY CASCADE").executeUpdate();
-
-                List<ImageUrl> imageUrls = List.of(
-                        imageUrl, imageUrl2
-                );
-                imageUrls.forEach(em::persist);
-
-                em.flush();
-            } catch (PersistenceException e) {
-                if (em.getTransaction().isActive()) em.getTransaction().rollback();
-                throw e;
-            }
-            em.getTransaction().commit();
-
-            Map<String, ImageUrl> imageUrlMap = new LinkedHashMap<>();
-            imageUrlMap.put("imageUrl", imageUrl);
-            imageUrlMap.put("imageUrl2", imageUrl2);
-
-            return imageUrlMap;
-        }
-    }
-
-    public static Map<String, TicketMasterDTO> createTicketMasterDTOs () {
-        Map<String, TicketMasterDTO> ticketMasterDTOMap = new LinkedHashMap<>();
-        return null;
     }
 }

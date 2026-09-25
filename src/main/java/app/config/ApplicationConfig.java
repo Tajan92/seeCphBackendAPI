@@ -20,7 +20,6 @@ public class ApplicationConfig implements EndpointGroup {
         AddressDAO addressDAO = new AddressDAO(emf);
         AdvertDAO advertDAO = new AdvertDAO(emf);
         EventDAO eventDAO = new EventDAO(emf);
-        ImageUrlDAO imageUrlDAO = new ImageUrlDAO(emf);
         UserDAO userDAO = new UserDAO(emf);
 
         // Services

@@ -3,6 +3,7 @@ package app.entities;
 import app.entities.users.Admin;
 import app.entities.users.Organizer;
 import app.enums.EventCategory;
+import app.enums.SourceProvider;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
@@ -11,7 +12,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -48,19 +48,20 @@ public class Event {
     @Setter
     @Column(name = "start_date")
     private LocalDate startDate;
+    @Setter
     private String url;
     @Setter
     @Column(name = "source_provider")
-    private String sourceProvider;
+    private SourceProvider sourceProvider;
     @Setter
     @Column(name = "source_event_id")
     private String sourceEventId;
     @Setter
     @Column(name = "last_synced_at")
     private LocalDateTime lastSyncedAt;
-
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    private List<ImageUrl> images;
+    @Setter
+    @Column(name = "image_url")
+    private String imageUrl;
     @Setter
     @Enumerated(EnumType.STRING)
     @Column(name = "event_category")

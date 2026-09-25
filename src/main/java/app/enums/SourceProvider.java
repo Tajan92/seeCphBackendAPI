@@ -1,5 +1,5 @@
 package app.enums;
 
-public enum SourceType {
+public enum SourceProvider {
     API, SCRAPPING, ORGANIZER, ADMIN
 }

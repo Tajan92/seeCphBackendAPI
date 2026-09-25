@@ -21,7 +21,7 @@ import java.util.Objects;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @SuperBuilder
 @Table(name = "users")
-public abstract class User { // TODO: Remove @Setter and refactor test
+public abstract class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
