@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 @Getter
-public class EventService {
+public class EventService implements IService<EventDTORequest, EventDTOResponse> {
     private EventDAO eventDAO;
     private APIReader apiReader;
     private TicketMasterConverter converter;
@@ -28,35 +28,8 @@ public class EventService {
 
 //apiReader.getApiAsTmDTO("https://app.ticketmaster.com/discovery/v2/events.json?countryCode=DK&latlong=55.6761,12.5683&radius=15&unit=km&page=$&apikey="+System.getenv("API_KEY"));
 
-    public List<Event> persistTmEvents(List<TicketMasterDTO> ticketMasterDTOs) {
-        List<Event> events = new ArrayList<>();
-
-        for (TicketMasterDTO ticketMasterDTO : ticketMasterDTOs) {
-            if (ticketMasterDTO != null && ticketMasterDTO.embedded() != null && ticketMasterDTO.embedded().events() != null) {
-                events.addAll(converter.ticketMasterDtoToEvent(ticketMasterDTO));
-            }
-        }
-
-        String description = null;
-        for (Event event : events) {
-            description = checkForDescription(event);
-            if (description != null) {
-                event.addDescription(description);
-            }
-            eventDAO.create(event);
-        }
-        return events;
-    }
-
-    public String checkForDescription(Event event) {
-        String description = null;
-        if (event.getDescription() == null || event.getDescription().isEmpty()) {
-            description = apiReader.geminiDescriptionCreator(event.getTitle(), event.getLocation().getAddress(), event.getUrl());
-        }
-        return description;
-    }
-
-    public EventDTOResponse createEvent(EventDTORequest input) {
+    @Override
+    public EventDTOResponse create(EventDTORequest input) {
         Address address = Address.builder()
                 .postalCode(input.postalCode())
                 .city(input.city())
@@ -89,19 +62,22 @@ public class EventService {
         return new EventDTOResponse(createdEvent);
     }
 
-    public EventDTOResponse updateEventById(int id, EventDTORequest input) {
+    @Override
+    public EventDTOResponse updateById(int id, EventDTORequest input) {
         Event event = eventDAO.readById(id);
         // TODO: Setters fra input til event
         Event updatedEvent = eventDAO.update(event);
         return new EventDTOResponse(updatedEvent);
     }
 
-    public EventDTOResponse getEventById(int id) {
+    @Override
+    public EventDTOResponse getById(int id) {
         Event event = eventDAO.readById(id);
         return new EventDTOResponse(event);
     }
 
-    public List<EventDTOResponse> getAllEvents() {
+    @Override
+    public List<EventDTOResponse> getAll() {
         Set<Event> events = eventDAO.readAll();
         List<EventDTOResponse> eventDTOs = new ArrayList<>();
         if (events != null && !events.isEmpty()) {
@@ -112,8 +88,37 @@ public class EventService {
         return eventDTOs;
     }
 
-    public boolean deleteEventById(int id) {
+    @Override
+    public boolean deleteById(int id) {
         Event event = eventDAO.readById(id);
         return eventDAO.delete(event);
+    }
+
+    public List<Event> persistTmEvents(List<TicketMasterDTO> ticketMasterDTOs) {
+        List<Event> events = new ArrayList<>();
+
+        for (TicketMasterDTO ticketMasterDTO : ticketMasterDTOs) {
+            if (ticketMasterDTO != null && ticketMasterDTO.embedded() != null && ticketMasterDTO.embedded().events() != null) {
+                events.addAll(converter.ticketMasterDtoToEvent(ticketMasterDTO));
+            }
+        }
+
+        String description = null;
+        for (Event event : events) {
+            description = checkForDescription(event);
+            if (description != null) {
+                event.addDescription(description);
+            }
+            eventDAO.create(event);
+        }
+        return events;
+    }
+
+    public String checkForDescription(Event event) {
+        String description = null;
+        if (event.getDescription() == null || event.getDescription().isEmpty()) {
+            description = apiReader.geminiDescriptionCreator(event.getTitle(), event.getLocation().getAddress(), event.getUrl());
+        }
+        return description;
     }
 }

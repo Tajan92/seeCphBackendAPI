@@ -1,11 +1,11 @@
 package app.utils;
 
-import app.dto.user.UserRegisterDTO;
+import app.dto.user.UserDTORequest;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserValidator { // TODO: Needs a lot of work to take in validation annotation
-    public List<String> validate(UserRegisterDTO userRegisterDTO) {
+    public List<String> validate(UserDTORequest userRegisterDTO) {
         List<String> message = new ArrayList<>();
 
         if (userRegisterDTO == null) {

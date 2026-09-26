@@ -5,6 +5,7 @@ import app.config.HibernateConfig;
 import app.dao.*;
 import io.javalin.Javalin;
 import io.javalin.json.JavalinJackson;
+import io.javalin.validation.ValidationException;
 import jakarta.persistence.EntityManagerFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
@@ -17,8 +18,15 @@ public class Main {
             config.jsonMapper(new JavalinJackson().updateMapper(mapper -> {
                 mapper.registerModule(new JavaTimeModule());
             }));
+
             config.router.apiBuilder(applicationConfig::addEndpoints);
         });
+        app.exception(ValidationException.class, (e, ctx) -> {
+            ctx.status(400).json(e.getErrors());
+        });
+//        app.exception(Exception.class, (e, ctx) -> { // TODO: First check if validating of LocalDate fail with eg. "tomorrow" String instead of 2026-05-05 else use this to catch it
+//            ctx.status(400).json(Map.of("ERROR", List.of("Invalid request body: " + e.getMessage())));
+//        });
         app.start(7070);
     }
 }

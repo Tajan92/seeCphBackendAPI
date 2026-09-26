@@ -8,7 +8,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class UserRegisterDTO {
+public class UserDTORequest {
     @NotBlank(message = "Please enter name")
     private String name;
     @Email(message = "Email-format not right")

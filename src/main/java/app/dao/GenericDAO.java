@@ -1,6 +1,7 @@
 package app.dao;
 
 import app.exceptions.DatabaseException;
+import app.exceptions.DatabaseIdException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
@@ -18,22 +19,27 @@ public abstract class GenericDAO<T> implements IDAO<T, Integer> {
     @Override
     public T create(T entity) {
         if (entity == null) {
-            throw new DatabaseException(entityName+" is required");
+            throw new DatabaseException(entityName + " is required");
         }
         try (EntityManager em = emf.createEntityManager()) {
-            em.getTransaction().begin();
-            em.persist(entity);
-            em.getTransaction().commit();
-            return entity;
-        } catch (Exception e) {
-            throw new DatabaseException("Error creating "+entityName, e);
+            try {
+                em.getTransaction().begin();
+                em.persist(entity);
+                em.getTransaction().commit();
+                return entity;
+            } catch (Exception e) {
+                if (em.getTransaction().isActive()) {
+                    em.getTransaction().rollback();
+                }
+                throw new DatabaseException("Error creating " + entityName, e);
+            }
         }
     }
 
     @Override
     public T readById(Integer id) {
         if (id == null) {
-            throw new DatabaseException("ID is required");
+            throw new DatabaseIdException("ID is required");
         }
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
@@ -42,9 +48,9 @@ public abstract class GenericDAO<T> implements IDAO<T, Integer> {
             if (entity != null) {
                 return entity;
             }
-            throw new DatabaseException(entityName+" not found with id: " + id);
+            throw new DatabaseIdException(entityName + " not found with id: " + id);
         } catch (PersistenceException e) {
-            throw new DatabaseException("Reading "+entityName+" failed", e);
+            throw new DatabaseException("Reading " + entityName + " failed", e);
         }
     }
 
@@ -57,29 +63,34 @@ public abstract class GenericDAO<T> implements IDAO<T, Integer> {
             em.getTransaction().commit();
             return entities;
         } catch (Exception e) {
-            throw new DatabaseException("Reading all "+entityName+"s failed", e);
+            throw new DatabaseException("Reading all " + entityName + "s failed", e);
         }
     }
 
     @Override
     public T update(T entity) {
         if (entity == null) {
-            throw new DatabaseException(entityName+" is required for update");
+            throw new DatabaseException(entityName + " is required for update");
         }
         try (EntityManager em = emf.createEntityManager()) {
-            em.getTransaction().begin();
-            T merged = em.merge(entity);
-            em.getTransaction().commit();
-            return merged;
-        } catch (Exception e) {
-            throw new DatabaseException("Updating "+entityName+" failed", e);
+            try {
+                em.getTransaction().begin();
+                T merged = em.merge(entity);
+                em.getTransaction().commit();
+                return merged;
+            } catch (Exception e) {
+                if (em.getTransaction().isActive()) {
+                    em.getTransaction().rollback();
+                }
+                throw new DatabaseException("Updating " + entityName + " failed", e);
+            }
         }
     }
 
     @Override
     public boolean delete(T entity) {
         if (entity == null) {
-            throw new DatabaseException(entityName+" is required for deletion");
+            throw new DatabaseException(entityName + " is required for deletion");
         }
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
@@ -90,18 +101,13 @@ public abstract class GenericDAO<T> implements IDAO<T, Integer> {
                     em.getTransaction().commit();
                     return true;
                 } else {
-                    throw new DatabaseException(entityName+" not found for deletion");
+                    throw new DatabaseException(entityName + " not found for deletion");
                 }
-            } catch (PersistenceException e) {
-                if (em.getTransaction().isActive()) {
-                    em.getTransaction().rollback();
-                }
-                throw new DatabaseException("Delete "+entityName+" failed", e);
             } catch (RuntimeException e) {
                 if (em.getTransaction().isActive()) {
                     em.getTransaction().rollback();
                 }
-                throw e;
+                throw new DatabaseException("Delete " + entityName + " failed", e);
             }
         }
     }

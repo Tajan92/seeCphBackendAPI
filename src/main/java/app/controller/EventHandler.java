@@ -20,13 +20,13 @@ public class EventHandler {
     public void createEvent(Context ctx) {
         EventInputValidator(ctx);
         EventDTORequest input = EventInputValidator(ctx);
-        eventService.createEvent(input);
+        eventService.create(input);
         ctx.status(HttpStatus.CREATED);
     }
 
     public void getEventById(Context ctx) {
         int id = ctx.pathParamAsClass("id", Integer.class).check(value -> value > 0, "Id must be positive").get();
-        EventDTOResponse eventDTO = eventService.getEventById(id);
+        EventDTOResponse eventDTO = eventService.getById(id);
         if (eventDTO == null) {
             ctx.status(HttpStatus.NOT_FOUND);
             return;
@@ -36,7 +36,7 @@ public class EventHandler {
     }
 
     public void getAllEvents(Context ctx) {
-        List<EventDTOResponse> eventDTOS = eventService.getAllEvents();
+        List<EventDTOResponse> eventDTOS = eventService.getAll();
         if (eventDTOS.isEmpty()) {
             ctx.status(HttpStatus.NOT_FOUND);
         }
@@ -47,14 +47,14 @@ public class EventHandler {
     public void updateEventById(Context ctx) {
         int id = ctx.pathParamAsClass("id", Integer.class).check(value -> value > 0, "Id must be positive").get();
         EventDTORequest input = EventInputValidator(ctx);
-        eventService.updateEventById(id, input);
+        eventService.updateById(id, input);
         ctx.status(HttpStatus.OK);
     }
 
     public void deleteEventById(Context ctx) {
         int id = ctx.pathParamAsClass("id", Integer.class).check(value -> value > 0, "Id must be positive").get();
 
-        boolean deleted = eventService.deleteEventById(id);
+        boolean deleted = eventService.deleteById(id);
         if (!deleted) {
             ctx.status(HttpStatus.NOT_FOUND);
         }
