@@ -1,10 +1,8 @@
 package app.config;
 
-import app.controller.EventController;
-import app.controller.EventHandler;
-import app.controller.UserController;
-import app.controller.UserHandler;
+import app.controller.*;
 import app.dao.*;
+import app.service.AdvertService;
 import app.service.EventService;
 import app.service.UserService;
 import io.javalin.apibuilder.EndpointGroup;
@@ -14,6 +12,7 @@ public class ApplicationConfig implements EndpointGroup {
 
     private final EventController eventController;
     private final UserController userController;
+    private final AdvertController advertController;
 
     public ApplicationConfig(EntityManagerFactory emf) {
         // DAOs
@@ -25,19 +24,23 @@ public class ApplicationConfig implements EndpointGroup {
         // Services
         EventService eventService = new EventService(eventDAO);
         UserService userService = new UserService(userDAO);
+        AdvertService advertService = new AdvertService(advertDAO);
 
         // Handlers
         EventHandler eventHandler = new EventHandler(eventService);
         UserHandler userHandler = new UserHandler(userService);
+        AdvertHandler advertHandler = new AdvertHandler(advertService);
 
         // Controllers
         this.eventController = new EventController(eventHandler);
         this.userController = new UserController(userHandler);
+        this.advertController = new AdvertController(advertHandler);
     }
 
     @Override
     public void addEndpoints() {
         eventController.addEndpoints();
         userController.addEndpoints();
+        advertController.addEndpoints();
     }
 }
