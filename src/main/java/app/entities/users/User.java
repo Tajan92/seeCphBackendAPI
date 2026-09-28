@@ -1,15 +1,14 @@
 package app.entities.users;
 
+import app.entities.IGetId;
 import app.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.proxy.HibernateProxy;
 import java.util.Objects;
@@ -21,7 +20,7 @@ import java.util.Objects;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @SuperBuilder
 @Table(name = "users")
-public abstract class User {
+public abstract class User implements IGetId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
@@ -67,5 +66,9 @@ public abstract class User {
 
     public void  addUserRole(UserRole userRole) {
         this.userRole = userRole;
+    }
+
+    public Integer getId(){
+        return this.userId;
     }
 }

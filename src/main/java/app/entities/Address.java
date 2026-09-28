@@ -15,7 +15,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table
-public class Address {
+public class Address implements IGetId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

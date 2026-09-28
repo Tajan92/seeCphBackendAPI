@@ -18,7 +18,7 @@ import java.util.Set;
 @Entity
 @SuperBuilder
 public class Admin extends User {
-    @OneToMany(mappedBy = "admin", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "admin", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     //TODO: Decide fetchType and cascadeType
     private Set<Advert> adverts;
 
@@ -32,7 +32,7 @@ public class Admin extends User {
         }
     }
 
-    @OneToMany(mappedBy = "admin", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "admin", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     //TODO: Decide fetchType and cascadeType
     private Set<Event> events;
 

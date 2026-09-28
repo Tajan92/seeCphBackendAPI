@@ -21,7 +21,7 @@ import java.util.Set;
 @Builder
 @Table(name = "event")
 @Entity
-public class Event {
+public class Event implements IGetId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "event_id")
@@ -123,5 +123,10 @@ public class Event {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer()
                 .getPersistentClass()
                 .hashCode() : getClass().hashCode();
+    }
+
+    @Override
+    public Integer getId() {
+        return eventId;
     }
 }

@@ -23,7 +23,7 @@ public class Organizer extends User {
     @Enumerated(EnumType.STRING)
     private Status accountStatus;
 
-    @OneToMany(mappedBy = "organizer", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "organizer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     //TODO: Decide fetchType and cascadeType
     private Set<Advert> adverts;
 
@@ -43,7 +43,7 @@ public class Organizer extends User {
         this.addUserRole(UserRole.ORGANIZER);
     }
 
-    @OneToMany(mappedBy = "organizer", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "organizer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     //TODO: Decide fetchType and cascadeType
     private Set<Event> events;
 
