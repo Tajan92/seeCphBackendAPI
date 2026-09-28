@@ -4,11 +4,13 @@ import app.config.HibernateTestConfig;
 import app.entities.Advert;
 import app.enums.AddPlacement;
 import app.exceptions.DatabaseException;
+import app.exceptions.DatabaseIdException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,8 +39,7 @@ class AdvertDAOTest {
     @Test
     void create() {
         Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-                .price(150.00)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.of(2026, 10, 1))
                 .endDate(LocalDate.of(2026, 10, 31))
                 .build();
@@ -47,7 +48,7 @@ class AdvertDAOTest {
         assertThat(advertCreated.getAdvertId(), notNullValue());
 
         Advert advertFetched = advertDAO.readById(advertCreated.getAdvertId());
-        assertThat(advertFetched.getPrice(), equalTo(150.00));
+        assertThat(advertFetched.getAddPlacement().getPrice(), equalTo(500.00));
         assertThat(advertFetched.getAdvertId(), is(advertCreated.getAdvertId()));
     }
 
@@ -55,13 +56,13 @@ class AdvertDAOTest {
     void read() {
         Advert advert = adverts.get("advert");
         Advert advertFetched = advertDAO.readById(advert.getAdvertId());
-        assertThat(advertFetched.getPrice(), equalTo(205.00));
+        assertThat(advertFetched.getAddPlacement().getPrice(), equalTo(300.00));
         assertThat(advertFetched.getAdvertId(), is(advert.getAdvertId()));
     }
 
     @Test
     void readAll() {
-        Set<Advert> allAdverts = advertDAO.readAll();
+        List<Advert> allAdverts = advertDAO.readAll();
         assertThat(allAdverts, hasSize(2));
         assertThat(allAdverts, containsInAnyOrder(adverts.values().toArray()));
     }
@@ -69,12 +70,16 @@ class AdvertDAOTest {
     @Test
     void update() {
         Advert advert = adverts.get("advert");
-        advert.setPrice(50.00);
+        Advert advertToUpdate = Advert.builder()
+                .advertId(advert.getAdvertId())
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
+                .startDate(LocalDate.of(2026,5,5))
+                .endDate(LocalDate.of(2026,7,7)).build();
 
-        Advert fetchedAdvert = advertDAO.update(advert);
+        Advert fetchedAdvert = advertDAO.update(advertToUpdate);
 
         assertThat(fetchedAdvert.getAdvertId(), is(advert.getAdvertId()));
-        assertThat(fetchedAdvert.getPrice(), is(50.00));
+        assertThat(fetchedAdvert.getAddPlacement().getPrice(), is(500.00));
         assertThat(fetchedAdvert.getAdvertId(), is(advert.getAdvertId()));
     }
 
@@ -84,7 +89,7 @@ class AdvertDAOTest {
 
         boolean deletedAdvert = advertDAO.delete(advert);
         assertThat(deletedAdvert, is(true));
-        assertThrows(DatabaseException.class, () -> advertDAO.readById(advert.getAdvertId()));
+        assertThrows(DatabaseIdException.class, () -> advertDAO.readById(advert.getAdvertId()));
     }
 
     @Test
@@ -95,13 +100,13 @@ class AdvertDAOTest {
 
     @Test
     void getById_withNullId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.readById(null));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> advertDAO.readById(null));
         assertThat(ex.getMessage(), is("ID is required"));
     }
 
     @Test
     void getById_withMissingId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.readById(999_999));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> advertDAO.readById(999_999));
         assertThat(ex.getMessage(), is("Advert not found with id: 999999"));
     }
 
@@ -115,27 +120,27 @@ class AdvertDAOTest {
     void update_withMissingId_throwsApiException() {
         Advert missing = Advert.builder()
                 .advertId(999_999)
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .build();
 
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.update(missing));
-        assertThat(ex.getMessage(), is("Updating Advert failed"));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> advertDAO.update(missing));
+        assertThat(ex.getMessage(), is("Advert not found with id: "+missing.getAdvertId()));
     }
 
     @Test
     void delete_withNullId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.delete(null));
-        assertThat(ex.getMessage(), is("Advert is required for deletion"));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> advertDAO.delete(Advert.builder().addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT).build()));
+        assertThat(ex.getMessage(), is("Advert id is required for deleting"));
     }
 
     @Test
     void delete_withMissingId_throwsDatabaseException() {
         Advert missing = Advert.builder()
                 .advertId(999_999)
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .build();
 
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.delete(missing));
-        assertThat(ex.getMessage(), is("Delete Advert failed"));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> advertDAO.delete(missing));
+        assertThat(ex.getMessage(), is("Advert not found with id: "+missing.getAdvertId()));
     }
 }

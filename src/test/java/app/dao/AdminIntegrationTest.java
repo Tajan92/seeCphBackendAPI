@@ -9,6 +9,7 @@ import app.enums.AddPlacement;
 import app.enums.EventCategory;
 import app.enums.UserRole;
 import app.exceptions.DatabaseException;
+import app.exceptions.DatabaseIdException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.BeforeAll;
@@ -73,8 +74,7 @@ public class AdminIntegrationTest {
     @Test
     void createAdminWithCascadePersist() {
         Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-                .price(150.00)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.of(2026, 10, 1))
                 .endDate(LocalDate.of(2026, 10, 31))
                 .build();
@@ -105,8 +105,7 @@ public class AdminIntegrationTest {
     @Test
     void deleteAdmin() {
         Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-                .price(150.00)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.of(2026, 10, 1))
                 .endDate(LocalDate.of(2026, 10, 31))
                 .build();
@@ -137,18 +136,17 @@ public class AdminIntegrationTest {
         boolean deleted = userDAO.delete(createdAdmin);
         assertThat(deleted, is(true));
 
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.readById(advertId));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> advertDAO.readById(advertId));
         assertThat(ex.getMessage(), is("Advert not found with id: "+advertId));
 
-        DatabaseException ex2 = assertThrows(DatabaseException.class, () -> eventDAO.readById(eventId));
+        DatabaseIdException ex2 = assertThrows(DatabaseIdException.class, () -> eventDAO.readById(eventId));
         assertThat(ex2.getMessage(), is("Event not found with id: "+eventId));
     }
 
     @Test
     void deleteAdvertAndEvent() {
         Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-                .price(150.00)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.of(2026, 10, 1))
                 .endDate(LocalDate.of(2026, 10, 31))
                 .build();

@@ -42,8 +42,7 @@ public class EventIntegrationTest {
         Event event = events.get("event");
 
         Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-                .price(500.00)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.of(2026, 11, 15))
                 .endDate(LocalDate.of(2026, 11, 22))
                 .build();

@@ -7,6 +7,7 @@ import app.entities.Event;
 import app.entities.users.Organizer;
 import app.enums.*;
 import app.exceptions.DatabaseException;
+import app.exceptions.DatabaseIdException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.*;
@@ -69,8 +70,7 @@ public class OrganizorIntegrationTest {
     @Test
     void createOrganizerWithCascadePersist() {
         Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-                .price(150.00)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.of(2026, 10, 1))
                 .endDate(LocalDate.of(2026, 10, 31))
                 .build();
@@ -101,8 +101,7 @@ public class OrganizorIntegrationTest {
     @Test
     void deleteOrganizer() {
         Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-                .price(150.00)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.of(2026, 10, 1))
                 .endDate(LocalDate.of(2026, 10, 31))
                 .build();
@@ -133,10 +132,10 @@ public class OrganizorIntegrationTest {
         boolean deleted = userDAO.delete(createdOrganizer);
         assertThat(deleted, is(true));
 
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> advertDAO.readById(advertId));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> advertDAO.readById(advertId));
         assertThat(ex.getMessage(), is("Advert not found with id: "+advertId));
 
-        DatabaseException ex2 = assertThrows(DatabaseException.class, () -> eventDAO.readById(eventId));
+        DatabaseIdException ex2 = assertThrows(DatabaseIdException.class, () -> eventDAO.readById(eventId));
         assertThat(ex2.getMessage(), is("Event not found with id: "+eventId));
 
 
@@ -145,8 +144,7 @@ public class OrganizorIntegrationTest {
     @Test
     void deleteAdvertAndEvent() {
         Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-                .price(150.00)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.of(2026, 10, 1))
                 .endDate(LocalDate.of(2026, 10, 31))
                 .build();
@@ -172,10 +170,13 @@ public class OrganizorIntegrationTest {
         Advert fetchedAdvert = advertDAO.readById(advertId);
         Event fetchedEvent = eventDAO.readById(eventId);
 
+        // Modify the managed/created organizer
         createdOrganizer.getAdverts().remove(fetchedAdvert);
         createdOrganizer.getEvents().remove(fetchedEvent);
 
-        Organizer updatedOrganizer = (Organizer) userDAO.update(organizer);
+        // Pass createdOrganizer to update
+        Organizer updatedOrganizer = (Organizer) userDAO.update(createdOrganizer);
+
         assertThat(updatedOrganizer.getAdverts().size(), is(0));
         assertThat(updatedOrganizer.getEvents().size(), is(0));
     }

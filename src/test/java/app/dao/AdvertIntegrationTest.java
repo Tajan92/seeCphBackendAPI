@@ -43,22 +43,20 @@ public class AdvertIntegrationTest {
 
     @Test
     void checkPrePersistStatusTrue() {
-       Advert advert = Advert.builder()
-               .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-               .price(500.00)
-               .startDate(LocalDate.now().minusDays(10))
-               .endDate(LocalDate.now().plusDays(10))
-               .build();
+        Advert advert = Advert.builder()
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
+                .startDate(LocalDate.now().minusDays(10))
+                .endDate(LocalDate.now().plusDays(10))
+                .build();
 
-       Advert createdAdvert = advertDAO.create(advert);
-       assertThat(createdAdvert.isStatus(), is(true));
+        Advert createdAdvert = advertDAO.create(advert);
+        assertThat(createdAdvert.isStatus(), is(true));
     }
 
     @Test
     void checkPrePersistStatusFalse() {
         Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-                .price(500.00)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.now().plusDays(2))
                 .endDate(LocalDate.now().plusDays(10))
                 .build();
@@ -71,11 +69,14 @@ public class AdvertIntegrationTest {
     void checkPreUpdateStatusTrue() {
         Advert advert = adverts.get("advert");
         assertThat(advert.isStatus(), is(false));
+        Advert advertToUpdate = Advert.builder()
+                .advertId(advert.getAdvertId())
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
+                .startDate(LocalDate.now().minusDays(10))
+                .endDate(LocalDate.now().plusDays(10))
+                .build();
 
-        advert.setStartDate(LocalDate.now().minusDays(10));
-        advert.setEndDate(LocalDate.now().plusDays(10));
-
-        Advert updatedAdvert = advertDAO.update(advert);
+        Advert updatedAdvert = advertDAO.update(advertToUpdate);
 
         assertThat(updatedAdvert.isStatus(), is(true));
     }
@@ -85,10 +86,14 @@ public class AdvertIntegrationTest {
         Advert advert = adverts.get("advert2");
         assertThat(advert.isStatus(), is(true));
 
-        advert.setStartDate(LocalDate.now().plusDays(10));
-        advert.setEndDate(LocalDate.now().plusDays(20));
+        Advert advertToUpdate = Advert.builder()
+                .advertId(advert.getAdvertId())
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
+                .startDate(LocalDate.now().minusDays(10))
+                .endDate(LocalDate.now().minusDays(5))
+                .build();
 
-        Advert updatedAdvert = advertDAO.update(advert);
+        Advert updatedAdvert = advertDAO.update(advertToUpdate);
 
         assertThat(updatedAdvert.isStatus(), is(false));
     }
@@ -96,8 +101,7 @@ public class AdvertIntegrationTest {
     @Test
     void CheckRelations() {
         Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-                .price(500.00)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.of(2026, 11, 15))
                 .endDate(LocalDate.of(2026, 11, 22))
                 .build();
