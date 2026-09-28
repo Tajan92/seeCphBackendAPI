@@ -7,6 +7,7 @@ import app.dto.ticketMaster.TmPriceRange;
 import app.entities.Address;
 import app.entities.Event;
 import app.enums.EventCategory;
+import app.enums.SourceProvider;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
@@ -30,7 +31,7 @@ public class TicketMasterConverter {
             }
             eventBuild = Event.builder()
                     .sourceEventId(event.id())
-                    .sourceProvider("Ticket Master")
+                    .sourceProvider(SourceProvider.API_TICKETMASTER)
                     .title(event.name())
                     .description(event.info())
                     .price(chechPrice(event))

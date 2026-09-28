@@ -1,6 +1,5 @@
 package app.utils;
 
-import app.dto.ticketMaster.TicketMasterDTO;
 import app.entities.Address;
 import app.entities.Advert;
 import app.entities.Event;
@@ -82,8 +81,8 @@ public final class TestDataCreator {
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
 
-            Advert advert = Advert.builder().addPlacement(AddPlacement.FRONTPAGEHEADER).price(205.00).startDate(LocalDate.now().plusDays(10)).endDate(LocalDate.now().plusDays(20)).build();
-            Advert advert2 = Advert.builder().addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT).price(500.00).startDate(LocalDate.now().minusDays(5)).endDate(LocalDate.now().plusDays(5)).build();
+            Advert advert = Advert.builder().addPlacement(AddPlacement.FRONTPAGE_HEADER).startDate(LocalDate.now().plusDays(10)).endDate(LocalDate.now().plusDays(20)).build();
+            Advert advert2 = Advert.builder().addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT).startDate(LocalDate.now().minusDays(5)).endDate(LocalDate.now().plusDays(5)).build();
             try {
                 em.createNativeQuery("TRUNCATE TABLE advert RESTART IDENTITY CASCADE").executeUpdate();
 

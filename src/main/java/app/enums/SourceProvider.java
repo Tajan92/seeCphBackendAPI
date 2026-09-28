@@ -1,5 +1,9 @@
 package app.enums;
 
 public enum SourceProvider {
-    API, SCRAPPING, ORGANIZER, ADMIN
+    API,
+    API_TICKETMASTER,
+    SCRAPPING,
+    ORGANIZER,
+    ADMIN
 }

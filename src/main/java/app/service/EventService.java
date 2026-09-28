@@ -16,9 +16,9 @@ import java.util.Set;
 
 @Getter
 public class EventService implements IService<EventDTORequest, EventDTOResponse> {
-    private EventDAO eventDAO;
-    private APIReader apiReader;
-    private TicketMasterConverter converter;
+    private final EventDAO eventDAO;
+    private final APIReader apiReader;
+    private final TicketMasterConverter converter;
 
     public EventService(EventDAO eventDAO) {
         this.eventDAO = eventDAO;
@@ -78,7 +78,7 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
 
     @Override
     public List<EventDTOResponse> getAll() {
-        Set<Event> events = eventDAO.readAll();
+        List<Event> events = eventDAO.readAll();
         List<EventDTOResponse> eventDTOs = new ArrayList<>();
         if (events != null && !events.isEmpty()) {
             for (Event event : events) {
