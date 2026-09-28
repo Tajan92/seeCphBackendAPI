@@ -17,32 +17,28 @@ import java.util.Objects;
 @ToString
 @Entity
 @Table(name = "advert")
-public class Advert {
+public class Advert implements IGetId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "advert_id")
     private Integer advertId;
-    @Setter
+    @Enumerated(EnumType.STRING)
     private AddPlacement addPlacement;
-    @Setter
-    private Double price;
-    @Setter
     @Column(name = "start_date")
     private LocalDate startDate;
-    @Setter
     @Column(name = "end_date")
     private LocalDate endDate;
     private boolean status;
 
-    @ManyToOne(fetch = FetchType.LAZY) //TODO: Decide fetchType and cascadeType
+    @ManyToOne(fetch = FetchType.EAGER) //TODO: Decide fetchType and cascadeType
     @Setter
     private Organizer organizer;
 
-    @ManyToOne(fetch = FetchType.LAZY) //TODO: Decide fetchType and cascadeType
+    @ManyToOne(fetch = FetchType.EAGER) //TODO: Decide fetchType and cascadeType
     @Setter
     private Admin admin;
 
-    @ManyToOne(fetch = FetchType.LAZY) //TODO: Decide fetchType and cascadeType
+    @ManyToOne(fetch = FetchType.EAGER) //TODO: Decide fetchType and cascadeType
     @Setter
     private Event event;
 
@@ -77,5 +73,10 @@ public class Advert {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer()
                 .getPersistentClass()
                 .hashCode() : getClass().hashCode();
+    }
+
+    @Override
+    public Integer getId() {
+        return advertId;
     }
 }
