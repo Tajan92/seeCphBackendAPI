@@ -3,31 +3,30 @@ package app.service;
 import app.config.HibernateTestConfig;
 import app.dao.AddressDAO;
 import app.dao.EventDAO;
-import app.entities.Event;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import app.dto.event.EventDTORequest;
+import app.dto.event.EventDTOResponse;
+import app.enums.EventCategory;
+import app.exceptions.DatabaseIdException;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import java.util.Map;
-
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EventServiceTest {
     private final EntityManagerFactory emf = HibernateTestConfig.getEntityManagerFactory();
-    private ObjectMapper objectMapper;
     private EventService eventService;
     private EventDAO eventDAO;
     private AddressDAO addressDAO;
     private AddressService addressService;
-    private Map<String, Event> events;
-
-    @BeforeEach
-    void setUp() {
-        objectMapper = new ObjectMapper();
-        addressService = new AddressService(addressDAO);
-        eventService = new EventService(eventDAO, addressService);
-    }
 
     @BeforeAll
     void setUpAll() {
@@ -35,5 +34,137 @@ class EventServiceTest {
         addressDAO = new AddressDAO(emf);
     }
 
+    @BeforeEach
+    void setUp() {
+        addressService = new AddressService(addressDAO);
+        eventService = new EventService(eventDAO, addressService);
+    }
 
+    @Test
+    public void create() {
+        EventDTORequest eventDTORequest = new EventDTORequest(
+                "Copenhagen Jazz Night",
+                "A fantastic evening with live jazz music in the heart of Copenhagen.",
+                150.0,
+                false,
+                "København V",
+                "1553",
+                "H.C. Andersens Boulevard 44",
+                LocalTime.of(19, 30),
+                LocalDate.of(2026, 10, 15),
+                "https://example.com/jazz-night",
+                "https://example.com/images/jazz.jpg",
+                false,
+                EventCategory.MUSIC);
+
+        EventDTOResponse eventDTOResponse = eventService.create(eventDTORequest);
+
+        assertNotNull(eventDTOResponse);
+        assertThat(eventDTOResponse.title(), is("Copenhagen Jazz Night"));
+        assertThat(eventDTOResponse.price(), is(150.0));
+        assertThat(eventDTOResponse.category().toLowerCase(), is(EventCategory.MUSIC.getLabel().toLowerCase()));
+    }
+
+    @Test
+    public void getById() {
+        EventDTORequest eventDTORequest = new EventDTORequest(
+                "Rock Concert",
+                "Loud rock music",
+                250.0,
+                false,
+                "København K",
+                "1050",
+                "Nyhavn 1",
+                LocalTime.of(20, 0),
+                LocalDate.of(2026, 11, 1),
+                "https://example.com/rock",
+                "https://example.com/images/rock.jpg",
+                false,
+                EventCategory.MUSIC);
+
+        EventDTOResponse created = eventService.create(eventDTORequest);
+
+        EventDTOResponse fetched = eventService.getById(created.id());
+
+        assertNotNull(fetched);
+        assertThat(fetched.id(), is(created.id()));
+        assertThat(fetched.title(), is("Rock Concert"));
+    }
+
+    @Test
+    public void getAll() {
+        List<EventDTOResponse> allEvents = eventService.getAll();
+
+        assertNotNull(allEvents);
+        assertThat(allEvents.size(), is(not(0)));
+    }
+
+    @Test
+    public void updateById() {
+        EventDTORequest initialRequest = new EventDTORequest(
+                "Old Title",
+                "Old Description",
+                100.0,
+                true,
+                "København S",
+                "2300",
+                "Amager Strandvej 1",
+                LocalTime.of(12, 0),
+                LocalDate.of(2026, 12, 1),
+                "https://example.com/old",
+                "https://example.com/images/old.jpg",
+                true,
+                EventCategory.ATHLETIC_RACES);
+
+        EventDTOResponse created = eventService.create(initialRequest);
+
+        EventDTORequest updateRequest = new EventDTORequest(
+                "Updated Jazz Festival",
+                "New updated description",
+                200.0,
+                false,
+                "København V",
+                "1553",
+                "Vesterbrogade 10",
+                LocalTime.of(18, 0),
+                LocalDate.of(2026, 12, 2),
+                "https://example.com/updated",
+                "https://example.com/images/updated.jpg",
+                false,
+                EventCategory.MUSIC);
+
+        EventDTOResponse updated = eventService.updateById(created.id(), updateRequest);
+
+        assertNotNull(updated);
+        assertThat(updated.title(), is("Updated Jazz Festival"));
+        assertThat(updated.description(), is("New updated description"));
+        assertThat(updated.price(), is(200.0));
+        assertThat(updated.category().toLowerCase(), is(EventCategory.MUSIC.getLabel().toLowerCase()));
+    }
+
+    @Test
+    public void deleteById() {
+        EventDTORequest eventDTORequest = new EventDTORequest(
+                "Temporary Event",
+                "To be deleted",
+                50.0,
+                false,
+                "Frederiksberg",
+                "2000",
+                "Gammel Kongevej 1",
+                LocalTime.of(14, 0),
+                LocalDate.of(2026, 9, 1),
+                "https://example.com/temp",
+                "https://example.com/images/temp.jpg",
+                false,
+                EventCategory.CULTURAL);
+
+        EventDTOResponse created = eventService.create(eventDTORequest);
+        int eventId = created.id();
+
+        boolean isDeleted = eventService.deleteById(eventId);
+        assertThat(isDeleted, is(true));
+
+        assertThrows(DatabaseIdException.class, () -> {eventService.getById(eventId);});
+    }
 }

@@ -1,8 +1,11 @@
 package app.dao;
 
 import app.config.HibernateTestConfig;
+import app.entities.Address;
 import app.entities.Advert;
+import app.entities.Event;
 import app.enums.AddPlacement;
+import app.enums.EventCategory;
 import app.exceptions.DatabaseException;
 import app.exceptions.DatabaseIdException;
 import app.utils.TestDataCreator;
@@ -12,11 +15,9 @@ import org.junit.jupiter.api.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -24,6 +25,8 @@ class AdvertDAOTest {
     private final EntityManagerFactory emf = HibernateTestConfig.getEntityManagerFactory();
 
     private AdvertDAO advertDAO;
+    private EventDAO eventDAO;
+    private AddressDAO addressDAO;
     private Map<String, Advert> adverts;
 
     @BeforeEach
@@ -33,15 +36,33 @@ class AdvertDAOTest {
 
     @BeforeAll
     void setUpAll() {
-        advertDAO = new  AdvertDAO(emf);
+        advertDAO = new AdvertDAO(emf);
+        eventDAO = new EventDAO(emf);
+        addressDAO = new AddressDAO(emf);
     }
 
     @Test
     void create() {
+        Address address = Address.builder()
+                .postalCode("2100")
+                .city("København")
+                .address("Testvej 1")
+                .build();
+        Address createdAddress = addressDAO.create(address);
+
+        Event event = Event.builder()
+                .title("Test Event")
+                .category(EventCategory.MUSIC)
+                .location(createdAddress)
+                .startDate(LocalDate.now().plusDays(1))
+                .build();
+        Event createdEvent = eventDAO.create(event);
+
         Advert advert = Advert.builder()
                 .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.of(2026, 10, 1))
                 .endDate(LocalDate.of(2026, 10, 31))
+                .event(createdEvent)
                 .build();
 
         Advert advertCreated = advertDAO.create(advert);
@@ -73,14 +94,15 @@ class AdvertDAOTest {
         Advert advertToUpdate = Advert.builder()
                 .advertId(advert.getAdvertId())
                 .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
-                .startDate(LocalDate.of(2026,5,5))
-                .endDate(LocalDate.of(2026,7,7)).build();
+                .startDate(LocalDate.of(2026, 5, 5))
+                .endDate(LocalDate.of(2026, 7, 7))
+                .event(advert.getEvent())
+                .build();
 
         Advert fetchedAdvert = advertDAO.update(advertToUpdate);
 
         assertThat(fetchedAdvert.getAdvertId(), is(advert.getAdvertId()));
         assertThat(fetchedAdvert.getAddPlacement().getPrice(), is(500.00));
-        assertThat(fetchedAdvert.getAdvertId(), is(advert.getAdvertId()));
     }
 
     @Test
@@ -124,7 +146,7 @@ class AdvertDAOTest {
                 .build();
 
         DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> advertDAO.update(missing));
-        assertThat(ex.getMessage(), is("Advert not found with id: "+missing.getAdvertId()));
+        assertThat(ex.getMessage(), is("Advert not found with id: " + missing.getAdvertId()));
     }
 
     @Test
@@ -141,6 +163,6 @@ class AdvertDAOTest {
                 .build();
 
         DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> advertDAO.delete(missing));
-        assertThat(ex.getMessage(), is("Advert not found with id: "+missing.getAdvertId()));
+        assertThat(ex.getMessage(), is("Advert not found with id: " + missing.getAdvertId()));
     }
 }

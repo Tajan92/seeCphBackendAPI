@@ -8,7 +8,6 @@ import app.entities.users.Admin;
 import app.enums.AddPlacement;
 import app.enums.EventCategory;
 import app.enums.UserRole;
-import app.exceptions.DatabaseException;
 import app.exceptions.DatabaseIdException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
@@ -32,6 +31,7 @@ public class AdminIntegrationTest {
     private UserDAO userDAO;
     private AdvertDAO advertDAO;
     private EventDAO eventDAO;
+    private AddressDAO addressDAO;
     private Map<String, Event> events;
     private Map<String, Advert> adverts;
     private Admin admin;
@@ -54,6 +54,7 @@ public class AdminIntegrationTest {
         userDAO = new UserDAO(emf);
         eventDAO = new EventDAO(emf);
         advertDAO = new AdvertDAO(emf);
+        addressDAO = new AddressDAO(emf);
     }
 
     @Test
@@ -73,11 +74,8 @@ public class AdminIntegrationTest {
 
     @Test
     void createAdminWithCascadePersist() {
-        Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
-                .startDate(LocalDate.of(2026, 10, 1))
-                .endDate(LocalDate.of(2026, 10, 31))
-                .build();
+        Address address = Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build();
+        Address createdAddress = addressDAO.create(address);
 
         Event event = Event.builder()
                 .title("Copenhagen Marathon")
@@ -86,7 +84,14 @@ public class AdminIntegrationTest {
                 .startTime(LocalTime.of(16, 0))
                 .startDate(LocalDate.of(2026, 10, 18))
                 .price(100.00)
-                .location(Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build())
+                .location(createdAddress)
+                .build();
+
+        Advert advert = Advert.builder()
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
+                .startDate(LocalDate.of(2026, 10, 1))
+                .endDate(LocalDate.of(2026, 10, 31))
+                .event(event)
                 .build();
 
         admin.addAdvert(advert);
@@ -104,13 +109,8 @@ public class AdminIntegrationTest {
 
     @Test
     void deleteAdmin() {
-        Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
-                .startDate(LocalDate.of(2026, 10, 1))
-                .endDate(LocalDate.of(2026, 10, 31))
-                .build();
-
-        admin.addAdvert(advert);
+        Address address = Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build();
+        Address createdAddress = addressDAO.create(address);
 
         Event event = Event.builder()
                 .title("Copenhagen Marathon")
@@ -119,9 +119,17 @@ public class AdminIntegrationTest {
                 .startTime(LocalTime.of(16, 0))
                 .startDate(LocalDate.of(2026, 10, 18))
                 .price(100.00)
-                .location(Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build())
+                .location(createdAddress)
                 .build();
 
+        Advert advert = Advert.builder()
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
+                .startDate(LocalDate.of(2026, 10, 1))
+                .endDate(LocalDate.of(2026, 10, 31))
+                .event(event)
+                .build();
+
+        admin.addAdvert(advert);
         admin.addEvent(event);
 
         Admin createdAdmin = (Admin) userDAO.create(admin);
@@ -145,13 +153,8 @@ public class AdminIntegrationTest {
 
     @Test
     void deleteAdvertAndEvent() {
-        Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
-                .startDate(LocalDate.of(2026, 10, 1))
-                .endDate(LocalDate.of(2026, 10, 31))
-                .build();
-
-        admin.addAdvert(advert);
+        Address address = Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build();
+        Address createdAddress = addressDAO.create(address);
 
         Event event = Event.builder()
                 .title("Copenhagen Marathon")
@@ -160,9 +163,17 @@ public class AdminIntegrationTest {
                 .startTime(LocalTime.of(16, 0))
                 .startDate(LocalDate.of(2026, 10, 18))
                 .price(100.00)
-                .location(Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build())
+                .location(createdAddress)
                 .build();
 
+        Advert advert = Advert.builder()
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
+                .startDate(LocalDate.of(2026, 10, 1))
+                .endDate(LocalDate.of(2026, 10, 31))
+                .event(event)
+                .build();
+
+        admin.addAdvert(advert);
         admin.addEvent(event);
 
         Admin createdAdmin = (Admin) userDAO.create(admin);
@@ -175,7 +186,7 @@ public class AdminIntegrationTest {
         createdAdmin.getAdverts().remove(fetchedAdvert);
         createdAdmin.getEvents().remove(fetchedEvent);
 
-        Admin updatedAdmin = (Admin) userDAO.update(admin);
+        Admin updatedAdmin = (Admin) userDAO.update(createdAdmin);
         assertThat(updatedAdmin.getAdverts().size(), is(0));
         assertThat(updatedAdmin.getEvents().size(), is(0));
     }

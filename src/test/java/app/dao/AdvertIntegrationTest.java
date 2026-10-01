@@ -28,7 +28,6 @@ public class AdvertIntegrationTest {
     private Map<String, Advert> adverts;
     private Map<String, User> users;
 
-
     @BeforeEach
     void setUp() {
         users = TestDataCreator.createUsers(emf);
@@ -43,10 +42,13 @@ public class AdvertIntegrationTest {
 
     @Test
     void checkPrePersistStatusTrue() {
+        Event event = events.get("event");
+
         Advert advert = Advert.builder()
                 .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.now().minusDays(10))
                 .endDate(LocalDate.now().plusDays(10))
+                .event(event)
                 .build();
 
         Advert createdAdvert = advertDAO.create(advert);
@@ -55,10 +57,13 @@ public class AdvertIntegrationTest {
 
     @Test
     void checkPrePersistStatusFalse() {
+        Event event = events.get("event");
+
         Advert advert = Advert.builder()
                 .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.now().plusDays(2))
                 .endDate(LocalDate.now().plusDays(10))
+                .event(event)
                 .build();
 
         Advert createdAdvert = advertDAO.create(advert);
@@ -69,11 +74,13 @@ public class AdvertIntegrationTest {
     void checkPreUpdateStatusTrue() {
         Advert advert = adverts.get("advert");
         assertThat(advert.isStatus(), is(false));
+
         Advert advertToUpdate = Advert.builder()
                 .advertId(advert.getAdvertId())
                 .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.now().minusDays(10))
                 .endDate(LocalDate.now().plusDays(10))
+                .event(advert.getEvent())
                 .build();
 
         Advert updatedAdvert = advertDAO.update(advertToUpdate);
@@ -91,6 +98,7 @@ public class AdvertIntegrationTest {
                 .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.now().minusDays(10))
                 .endDate(LocalDate.now().minusDays(5))
+                .event(advert.getEvent())
                 .build();
 
         Advert updatedAdvert = advertDAO.update(advertToUpdate);
@@ -100,18 +108,19 @@ public class AdvertIntegrationTest {
 
     @Test
     void CheckRelations() {
+        Event event = events.get("event");
+
         Advert advert = Advert.builder()
                 .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.of(2026, 11, 15))
                 .endDate(LocalDate.of(2026, 11, 22))
+                .event(event)
                 .build();
 
         Advert savedAdvert = advertDAO.create(advert);
-        Event event = events.get("event");
         Organizer organizer = (Organizer) users.get("organizer");
         Admin admin = (Admin) users.get("admin");
 
-        savedAdvert.setEvent(event);
         savedAdvert.setOrganizer(organizer);
         savedAdvert.setAdmin(admin);
         Advert updatedAdvert = advertDAO.update(savedAdvert);

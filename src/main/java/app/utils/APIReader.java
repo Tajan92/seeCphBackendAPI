@@ -57,7 +57,7 @@ public class APIReader {
     // TODO: Gemini token pr minute reached and output when using gemini seems strange
     // TODO: Maybe setup threads and add sleep time.
     public String geminiDescriptionCreator(String name, String address, String url) {
-        String prompt = "Make a description in english with title: "+name+" ,address: "+address+" ,link: "+url;
+        String prompt = "Make a description in english using title: "+name+" ,address: "+address+" ,link: "+url;
 
         Map<String, Object> body = Map.of(
                 "contents", List.of(
@@ -92,7 +92,7 @@ public class APIReader {
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
-        return response.body()+" This description was made by AI";
+        return response.body()+" by Gemini AI";
     }
 
 

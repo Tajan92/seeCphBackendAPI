@@ -25,6 +25,7 @@ class EventDAOTest {
     private final EntityManagerFactory emf = HibernateTestConfig.getEntityManagerFactory();
 
     private EventDAO eventDAO;
+    private AddressDAO addressDAO;
     private Map<String, Event> events;
 
     @BeforeEach
@@ -35,17 +36,21 @@ class EventDAOTest {
     @BeforeAll
     void setUpAll() {
         eventDAO = new EventDAO(emf);
+        addressDAO = new AddressDAO(emf);
     }
 
     @Test
     void create() {
+        Address address = Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build();
+        Address createdAddress = addressDAO.create(address);
+
         Event event = Event.builder()
                 .title("F.C. København vs. Brøndby IF")
                 .description("Experience the intense New Firm derby live at Parken")
                 .category(EventCategory.FOOTBALL)
                 .startTime(LocalTime.of(16, 0))
                 .startDate(LocalDate.of(2026, 10, 18))
-                .location(Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build())
+                .location(address)
                 .price(350.00)
                 .build();
 

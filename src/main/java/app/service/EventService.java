@@ -63,7 +63,28 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
     @Override
     public EventDTOResponse updateById(int id, EventDTORequest input) {
         Event event = eventDAO.readById(id);
-        // TODO: Setters fra input til event
+
+        Address address = addressService.createOrFindAddress(input.postalCode(), input.city(), input.address());
+        GeoUtil.Coordinates coordinates = GeoUtil.findCoordinates(address);
+
+        String primaryImageUrl = input.primaryImageUrl();
+        if (input.useDefaultImage()) {
+            primaryImageUrl = "resources/images/default.jpg";
+        }
+
+        event.setTitle(input.title());
+        event.setDescription(input.description());
+        event.setPrice(input.price());
+        event.setFree(input.free());
+        event.setLocation(address);
+        event.setLongitude(coordinates.longitude());
+        event.setLatitude(coordinates.latitude());
+        event.setStartTime(input.startTime());
+        event.setStartDate(input.startDate());
+        event.setUrl(input.url());
+        event.setImageUrl(primaryImageUrl);
+        event.setCategory(input.category());
+
         Event updatedEvent = eventDAO.update(event);
         return new EventDTOResponse(updatedEvent);
     }

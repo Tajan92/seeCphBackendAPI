@@ -23,9 +23,9 @@ public class Organizer extends User {
     @Enumerated(EnumType.STRING)
     private Status accountStatus;
 
-    @OneToMany(mappedBy = "organizer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    //TODO: Decide fetchType and cascadeType
-    private Set<Advert> adverts;
+    @OneToMany(mappedBy = "organizer", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<Advert> adverts = new HashSet<>();
 
     public void addAdvert(Advert advert) {
         if (advert != null) {
@@ -43,9 +43,9 @@ public class Organizer extends User {
         this.addUserRole(UserRole.ORGANIZER);
     }
 
-    @OneToMany(mappedBy = "organizer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    //TODO: Decide fetchType and cascadeType
-    private Set<Event> events;
+    @OneToMany(mappedBy = "organizer", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<Event> events = new HashSet<>();
 
     public void addEvent(Event event) {
         if (event != null) {

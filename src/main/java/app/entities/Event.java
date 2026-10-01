@@ -33,9 +33,10 @@ public class Event implements IGetId {
     private String description;
     @Setter
     private Double price;
+    @Setter
     private boolean free;
     @Setter
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToOne(cascade = {CascadeType.MERGE})
     @JoinColumn(name = "location_id")
     private Address location;
     @Setter
@@ -68,7 +69,8 @@ public class Event implements IGetId {
     private EventCategory category;
 
     @OneToMany(mappedBy = "event", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Advert> adverts;
+    @Builder.Default
+    private Set<Advert> adverts = new HashSet<>();
 
     public void addAdvert(Advert advert) {
         if (advert != null) {
@@ -77,6 +79,13 @@ public class Event implements IGetId {
             }
             this.adverts.add(advert);
             advert.setEvent(this);
+        }
+    }
+
+    public void removeAdvert(Advert advert) {
+        if (advert != null && this.adverts != null) {
+            this.adverts.remove(advert);
+            advert.setEvent(null);
         }
     }
 

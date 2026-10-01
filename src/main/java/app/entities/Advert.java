@@ -38,7 +38,8 @@ public class Advert implements IGetId {
     @Setter
     private Admin admin;
 
-    @ManyToOne(fetch = FetchType.EAGER) //TODO: Decide fetchType and cascadeType
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "event_id", nullable = false)
     @Setter
     private Event event;
 
@@ -50,6 +51,14 @@ public class Advert implements IGetId {
     @PreUpdate
     private void preUpdate() {
         this.status = !LocalDate.now().isBefore(startDate) && !LocalDate.now().isAfter(endDate);
+    }
+
+    @PreRemove
+    public void preRemove() {
+        if (event != null && event.getAdverts() != null) {
+            event.getAdverts().remove(this);
+            this.event = null;
+        }
     }
 
     @Override

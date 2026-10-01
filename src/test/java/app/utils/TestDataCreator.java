@@ -81,8 +81,36 @@ public final class TestDataCreator {
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
 
-            Advert advert = Advert.builder().addPlacement(AddPlacement.FRONTPAGE_HEADER).startDate(LocalDate.now().plusDays(10)).endDate(LocalDate.now().plusDays(20)).build();
-            Advert advert2 = Advert.builder().addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT).startDate(LocalDate.now().minusDays(5)).endDate(LocalDate.now().plusDays(5)).build();
+            // Advert kræver nu et Event pga. optional = false / nullable = false
+            Address address = Address.builder()
+                    .postalCode("1050")
+                    .city("København K")
+                    .address("Kongens Nytorv 1")
+                    .build();
+            em.persist(address);
+
+            Event event = Event.builder()
+                    .title("Test Event for Adverts")
+                    .category(EventCategory.MUSIC)
+                    .location(address)
+                    .startDate(LocalDate.now().plusDays(5))
+                    .build();
+            em.persist(event);
+
+            Advert advert = Advert.builder()
+                    .addPlacement(AddPlacement.FRONTPAGE_HEADER)
+                    .startDate(LocalDate.now().plusDays(10))
+                    .endDate(LocalDate.now().plusDays(20))
+                    .event(event)
+                    .build();
+
+            Advert advert2 = Advert.builder()
+                    .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
+                    .startDate(LocalDate.now().minusDays(5))
+                    .endDate(LocalDate.now().plusDays(5))
+                    .event(event)
+                    .build();
+
             try {
                 em.createNativeQuery("TRUNCATE TABLE advert RESTART IDENTITY CASCADE").executeUpdate();
 
@@ -117,6 +145,16 @@ public final class TestDataCreator {
                     .address("Per Henrik Lings Allé 2")
                     .build();
 
+            Address address2 = Address.builder()
+                    .postalCode("1601")
+                    .city("København V")
+                    .address("Cirkusbygningen")
+                    .build();
+
+            // Persist begge adresser først, så de ikke er transient
+            em.persist(address);
+            em.persist(address2);
+
             Event event = Event.builder()
                     .title("Lukas Graham")
                     .description("Enjoy Lukas Graham at Parken")
@@ -126,12 +164,6 @@ public final class TestDataCreator {
                     .price(500.00)
                     .location(address)
                     .imageUrl("https://s1.ticketm.net/dam/a/d75/0453e4d0-2642-4d80-8fca-a94e7dd40d75_SOURCE")
-                    .build();
-
-            Address address2 = Address.builder()
-                    .postalCode("1601")
-                    .city("København V")
-                    .address("Cirkusbygningen")
                     .build();
 
             Event event2 = Event.builder()
