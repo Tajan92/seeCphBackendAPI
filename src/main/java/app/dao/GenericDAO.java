@@ -108,11 +108,11 @@ public abstract class GenericDAO<T extends IGetId> implements IDAO<T, Integer> {
         }
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
-            if (em.find(clazz, entity.getId()) == null) {
+            T managed = em.find(clazz, entity.getId());
+            if (managed == null) {
                 throw new DatabaseIdException(entityName + " not found with id: " + entity.getId());
             }
             try {
-                T managed = em.contains(entity) ? entity : em.merge(entity);
                 em.remove(managed);
                 em.getTransaction().commit();
                 return true;
