@@ -1,4 +1,6 @@
 package app.dto.user;
 
-public class UserDTOResponse {
+import app.enums.UserRole;
+
+public record UserDTOResponse(int id, String firstName, String email, String phone, UserRole userRole) {
 }

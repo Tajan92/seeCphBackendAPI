@@ -1,5 +1,6 @@
 package app.dto.user;
 
+import app.enums.UserRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -22,4 +23,5 @@ public class UserDTORequest {
     @NotBlank(message = "Please enter password match (Length between 8-50)")
     @Size(min = 8, max = 50)
     private String passwordCheck;
+    private UserRole userRole;
 }

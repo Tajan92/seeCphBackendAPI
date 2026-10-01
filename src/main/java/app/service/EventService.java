@@ -6,35 +6,33 @@ import app.dto.event.EventDTORequest;
 import app.dto.ticketMaster.TicketMasterDTO;
 import app.entities.Address;
 import app.entities.Event;
+import app.mapper.TicketMasterConverter;
 import app.utils.APIReader;
 import app.utils.GeoUtil;
 import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Getter
 public class EventService implements IService<EventDTORequest, EventDTOResponse> {
     private final EventDAO eventDAO;
+    private final AddressService addressService;
     private final APIReader apiReader;
     private final TicketMasterConverter converter;
 
-    public EventService(EventDAO eventDAO) {
+    public EventService(EventDAO eventDAO, AddressService addressService) {
         this.eventDAO = eventDAO;
+        this.addressService = addressService;
         this.apiReader = new APIReader();
-        this.converter = new TicketMasterConverter();
+        this.converter = new TicketMasterConverter(addressService);
     }
 
 //apiReader.getApiAsTmDTO("https://app.ticketmaster.com/discovery/v2/events.json?countryCode=DK&latlong=55.6761,12.5683&radius=15&unit=km&page=$&apikey="+System.getenv("API_KEY"));
 
     @Override
     public EventDTOResponse create(EventDTORequest input) {
-        Address address = Address.builder()
-                .postalCode(input.postalCode())
-                .city(input.city())
-                .address(input.address())
-                .build();
+        Address address = addressService.createOrFindAddress(input.postalCode(), input.city(), input.address());
 
         String primaryImageUrl = input.primaryImageUrl();
         if (input.useDefaultImage()) {

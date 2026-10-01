@@ -1,13 +1,13 @@
-package app.service;
+package app.mapper;
 
 import app.dto.ticketMaster.TicketMasterDTO;
 import app.dto.ticketMaster.TmClassification;
 import app.dto.ticketMaster.TmEvent;
 import app.dto.ticketMaster.TmPriceRange;
-import app.entities.Address;
 import app.entities.Event;
 import app.enums.EventCategory;
 import app.enums.SourceProvider;
+import app.service.AddressService;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
@@ -17,47 +17,42 @@ import java.util.List;
 
 @AllArgsConstructor
 public class TicketMasterConverter {
+    private final AddressService addressService;
+
     public List<Event> ticketMasterDtoToEvent(TicketMasterDTO ticketMasterDTO) {
         List<Event> events = new ArrayList<>();
         Event eventBuild = new Event();
-        for (TmEvent event : ticketMasterDTO.embedded().events()) {
+        for (TmEvent eventDTO : ticketMasterDTO.embedded().events()) {
             String url = null;
-            if (!event.images().isEmpty()) {
-                url = event.images().stream()
+            if (!eventDTO.images().isEmpty()) {
+                url = eventDTO.images().stream()
                         .filter(image -> image.url().endsWith("_SOURCE"))
                         .findFirst()
                         .map(TmEvent.TmImage::url)
-                        .orElseGet(() -> event.images().getFirst().url());
+                        .orElseGet(() -> eventDTO.images().getFirst().url());
             }
             eventBuild = Event.builder()
-                    .sourceEventId(event.id())
+                    .sourceEventId(eventDTO.id())
                     .sourceProvider(SourceProvider.API_TICKETMASTER)
-                    .title(event.name())
-                    .description(event.info())
-                    .price(chechPrice(event))
+                    .title(eventDTO.name())
+                    .description(eventDTO.info())
+                    .price(checkPrice(eventDTO))
                     .free(false) //Ticket Master never free
-                    .startDate(event.dates().start().localDate() != null ? LocalDate.parse(event.dates().start().localDate()) : null)
-                    .startTime(event.dates().start().localTime() != null ? LocalTime.parse(event.dates().start().localTime()) : null).location(createAddress(event))
-                    .longitude(event.embedded().venues().getFirst().location().latitude())
-                    .latitude(event.embedded().venues().getFirst().location().longitude())
-                    .category(findEventCategory(event))
+                    .startDate(eventDTO.dates().start().localDate() != null ? LocalDate.parse(eventDTO.dates().start().localDate()) : null)
+                    .startTime(eventDTO.dates().start().localTime() != null ? LocalTime.parse(eventDTO.dates().start().localTime()) : null)
+                    .location(addressService.createOrFindAddress(eventDTO.embedded().venues().getFirst().postalCode(), eventDTO.embedded().venues().getFirst().city().name(), eventDTO.embedded().venues().getFirst().address().address()))
+                    .longitude(eventDTO.embedded().venues().getFirst().location().longitude())
+                    .latitude(eventDTO.embedded().venues().getFirst().location().latitude())
+                    .category(findEventCategory(eventDTO))
                     .imageUrl(url)
-                    .url(event.url())
+                    .url(eventDTO.url())
                     .build();
             events.add(eventBuild);
         }
         return events;
     }
 
-    private Address createAddress(TmEvent event) {
-        return Address.builder()
-                .address(event.embedded().venues().getFirst().address().address())
-                .city(event.embedded().venues().getFirst().city().name())
-                .postalCode(event.embedded().venues().getFirst().postalCode())
-                .build();
-    }
-
-    private Double chechPrice(TmEvent event) {
+    private Double checkPrice(TmEvent event) {
         Double price = null;
         if (event.priceRanges() != null) {
             for (TmPriceRange priceRange : event.priceRanges()) {

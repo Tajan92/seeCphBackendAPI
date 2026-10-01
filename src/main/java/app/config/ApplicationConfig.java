@@ -2,6 +2,7 @@ package app.config;
 
 import app.controller.*;
 import app.dao.*;
+import app.service.AddressService;
 import app.service.AdvertService;
 import app.service.EventService;
 import app.service.UserService;
@@ -16,15 +17,16 @@ public class ApplicationConfig implements EndpointGroup {
 
     public ApplicationConfig(EntityManagerFactory emf) {
         // DAOs
-        AddressDAO addressDAO = new AddressDAO(emf);
         AdvertDAO advertDAO = new AdvertDAO(emf);
         EventDAO eventDAO = new EventDAO(emf);
+        AddressDAO addressDAO = new AddressDAO(emf);
         UserDAO userDAO = new UserDAO(emf);
 
         // Services
-        EventService eventService = new EventService(eventDAO);
+        AddressService addressService = new AddressService(addressDAO);
+        EventService eventService = new EventService(eventDAO, addressService);
         UserService userService = new UserService(userDAO);
-        AdvertService advertService = new AdvertService(advertDAO);
+        AdvertService advertService = new AdvertService(advertDAO, userDAO, eventDAO, eventService, userService);
 
         // Handlers
         EventHandler eventHandler = new EventHandler(eventService);

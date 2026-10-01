@@ -6,7 +6,6 @@ import app.entities.Advert;
 import app.entities.Event;
 import app.entities.users.Organizer;
 import app.enums.*;
-import app.exceptions.DatabaseException;
 import app.exceptions.DatabaseIdException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;

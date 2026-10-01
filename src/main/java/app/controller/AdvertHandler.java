@@ -18,7 +18,7 @@ public class AdvertHandler implements IHandler {
 
     @Override
     public void create(Context ctx) {
-        AdvertDTORequest input = AdvertInputValidator(ctx);
+        AdvertDTORequest input = advertInputValidator(ctx);
         advertService.create(input);
         ctx.status(HttpStatus.CREATED);
     }
@@ -48,7 +48,7 @@ public class AdvertHandler implements IHandler {
     @Override
     public void updateById(Context ctx) {
         int id = ctx.pathParamAsClass("id", Integer.class).check(value -> value > 0, "Id must be positive").get();
-        AdvertDTORequest input = AdvertInputValidator(ctx);
+        AdvertDTORequest input = advertInputValidator(ctx);
         advertService.updateById(id, input);
         ctx.status(HttpStatus.OK);
     }
@@ -64,7 +64,7 @@ public class AdvertHandler implements IHandler {
         ctx.status(HttpStatus.OK);
     }
 
-    private AdvertDTORequest AdvertInputValidator(Context ctx) {
+    private AdvertDTORequest advertInputValidator(Context ctx) {
         return ctx.bodyValidator(AdvertDTORequest.class)
                 .check(advert -> advert.addPlacement() != null && !advert.addPlacement().toString().isEmpty(), "Ad placement must be defined")
                 .check(advert -> advert.startDate() != null, "Please add start date")
