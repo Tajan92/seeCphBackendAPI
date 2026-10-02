@@ -38,9 +38,13 @@ public class Organizer extends User {
     }
 
 
+
     @PrePersist
     public void prePersist() {
         this.addUserRole(UserRole.ORGANIZER);
+            if (this.accountStatus == null) {
+                this.accountStatus = Status.PENDING;
+            }
     }
 
     @OneToMany(mappedBy = "organizer", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)

@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record EventDTORequest(
+        int userId,
         String title,
         String description,
         double price,

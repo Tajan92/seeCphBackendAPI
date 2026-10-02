@@ -14,6 +14,14 @@ public class UserHandler implements IHandler{
 
     }
 
+    public void createPendingOrganizer(Context ctx) {
+
+    }
+
+    public void createAdmin(Context ctx) {
+
+    }
+
     @Override
     public void getById(Context ctx) {
 

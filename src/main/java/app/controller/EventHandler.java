@@ -67,7 +67,8 @@ public class EventHandler implements IHandler {
     }
 
     private EventDTORequest EventInputValidator(Context ctx) {
-        EventDTORequest input = ctx.bodyValidator(EventDTORequest.class)
+        return ctx.bodyValidator(EventDTORequest.class)
+                .check(event -> event.userId() > 0, "Invalid user id")
                 .check(event -> event.title() != null && !event.title().isEmpty(), "Title must be filled out")
                 .check(event -> event.description() != null && !event.description().isEmpty(), "Description must be filled out")
                 .check(event -> event.address() != null && !event.address().isEmpty(), "Address must be filled out")
@@ -78,7 +79,8 @@ public class EventHandler implements IHandler {
                     if (!dto.useDefaultImage()) {
                         return dto.primaryImageUrl() != null && !dto.primaryImageUrl().isEmpty();
                     }
-                    return true;}, "Image must be provided unless you select default image")
+                    return true;
+                }, "Image must be provided unless you select default image")
                 .check(event -> event.category() != null && !event.category().toString().isEmpty(), "Category must be given")
                 .check(event -> !(event.price() < 0), "Price must be 0 or higher")
                 .check(event -> event.startDate() != null, "Start date must be filled out")
@@ -89,6 +91,6 @@ public class EventHandler implements IHandler {
                     }
                     return true;
                 }, "Start time cannot be in the past").get();
-        return input;
+
     }
 }

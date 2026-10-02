@@ -4,8 +4,11 @@ import app.dao.EventDAO;
 import app.dto.event.EventDTOResponse;
 import app.dto.event.EventDTORequest;
 import app.dto.ticketMaster.TicketMasterDTO;
+import app.dto.user.UserDTOResponse;
 import app.entities.Address;
 import app.entities.Event;
+import app.enums.SourceProvider;
+import app.enums.UserRole;
 import app.mapper.TicketMasterConverter;
 import app.utils.APIReader;
 import app.utils.GeoUtil;
@@ -18,12 +21,14 @@ import java.util.List;
 public class EventService implements IService<EventDTORequest, EventDTOResponse> {
     private final EventDAO eventDAO;
     private final AddressService addressService;
+    private final UserService userService;
     private final APIReader apiReader;
     private final TicketMasterConverter converter;
 
-    public EventService(EventDAO eventDAO, AddressService addressService) {
+    public EventService(EventDAO eventDAO, AddressService addressService, UserService userService) {
         this.eventDAO = eventDAO;
         this.addressService = addressService;
+        this.userService = userService;
         this.apiReader = new APIReader();
         this.converter = new TicketMasterConverter(addressService);
     }
@@ -40,7 +45,7 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
         }
         GeoUtil.Coordinates coordinates = GeoUtil.findCoordinates(address);
 
-        Event event = Event.builder() //Todo: logic for sourceProvider
+        Event event = Event.builder()
                 .title(input.title())
                 .description(input.description())
                 .price(input.price())
@@ -53,6 +58,7 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
                 .url(input.url())
                 .imageUrl(primaryImageUrl)
                 .category(input.category())
+                .sourceProvider(getSourceProvider(input.userId()))
                 .build();
 
         Event createdEvent = eventDAO.create(event);
@@ -71,6 +77,7 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
         if (input.useDefaultImage()) {
             primaryImageUrl = "resources/images/default.jpg";
         }
+        event.setSourceProvider(SourceProvider.ADMIN);
 
         event.setTitle(input.title());
         event.setDescription(input.description());
@@ -124,6 +131,7 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
 
         String description = null;
         for (Event event : events) {
+            event.setSourceProvider(SourceProvider.API_TICKETMASTER);
             description = checkForDescription(event);
             if (description != null) {
                 event.addDescription(description);
@@ -133,11 +141,22 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
         return events;
     }
 
-    public String checkForDescription(Event event) {
+    private String checkForDescription(Event event) {
         String description = null;
         if (event.getDescription() == null || event.getDescription().isEmpty()) {
             description = apiReader.geminiDescriptionCreator(event.getTitle(), event.getLocation().getAddress(), event.getUrl());
         }
         return description;
+    }
+
+    private SourceProvider getSourceProvider(int userId) {
+        SourceProvider sourceProvider = null;
+        UserDTOResponse userDTOResponse = userService.getById(userId);
+        if (userDTOResponse.userRole() == UserRole.ADMIN ) {
+            sourceProvider = SourceProvider.ADMIN;
+        } else if (userDTOResponse.userRole() == UserRole.ORGANIZER) {
+            sourceProvider = SourceProvider.ORGANIZER;
+        }
+        return sourceProvider;
     }
 }

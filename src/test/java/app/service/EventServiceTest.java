@@ -3,10 +3,14 @@ package app.service;
 import app.config.HibernateTestConfig;
 import app.dao.AddressDAO;
 import app.dao.EventDAO;
+import app.dao.UserDAO;
 import app.dto.event.EventDTORequest;
 import app.dto.event.EventDTOResponse;
+import app.entities.Event;
+import app.entities.users.User;
 import app.enums.EventCategory;
 import app.exceptions.DatabaseIdException;
+import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +19,8 @@ import org.junit.jupiter.api.TestInstance;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -26,23 +32,34 @@ class EventServiceTest {
     private EventService eventService;
     private EventDAO eventDAO;
     private AddressDAO addressDAO;
+    private UserDAO userDAO;
     private AddressService addressService;
+    private UserService userService;
+    private Map<String, User> users;
+    private Map<String, Event> events;
+    private int userId;
 
     @BeforeAll
     void setUpAll() {
         eventDAO = new EventDAO(emf);
         addressDAO = new AddressDAO(emf);
+        userDAO = new UserDAO(emf);
     }
 
     @BeforeEach
     void setUp() {
+        users = TestDataCreator.createUsers(emf);
+        events = TestDataCreator.createEvents(emf);
         addressService = new AddressService(addressDAO);
-        eventService = new EventService(eventDAO, addressService);
+        userService = new UserService(userDAO);
+        eventService = new EventService(eventDAO, addressService, userService);
+        userId = users.get("admin").getId();
     }
 
     @Test
     public void create() {
         EventDTORequest eventDTORequest = new EventDTORequest(
+                userId,
                 "Copenhagen Jazz Night",
                 "A fantastic evening with live jazz music in the heart of Copenhagen.",
                 150.0,
@@ -68,6 +85,7 @@ class EventServiceTest {
     @Test
     public void getById() {
         EventDTORequest eventDTORequest = new EventDTORequest(
+                userId,
                 "Rock Concert",
                 "Loud rock music",
                 250.0,
@@ -102,6 +120,7 @@ class EventServiceTest {
     @Test
     public void updateById() {
         EventDTORequest initialRequest = new EventDTORequest(
+                userId,
                 "Old Title",
                 "Old Description",
                 100.0,
@@ -119,6 +138,7 @@ class EventServiceTest {
         EventDTOResponse created = eventService.create(initialRequest);
 
         EventDTORequest updateRequest = new EventDTORequest(
+                userId,
                 "Updated Jazz Festival",
                 "New updated description",
                 200.0,
@@ -145,6 +165,7 @@ class EventServiceTest {
     @Test
     public void deleteById() {
         EventDTORequest eventDTORequest = new EventDTORequest(
+                userId,
                 "Temporary Event",
                 "To be deleted",
                 50.0,
