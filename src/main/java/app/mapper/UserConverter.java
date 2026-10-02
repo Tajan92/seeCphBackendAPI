@@ -11,25 +11,26 @@ public class UserConverter implements IConverter<User, UserDTOResponse, UserDTOR
 
     @Override
     public User convertDTOToEntity(UserDTORequest userDTO) {
-        User user = null;
-        if (userDTO.getUserRole() == UserRole.ADMIN) {
-            user = Admin.builder()
-                    .name(userDTO.getName())
-                    .email(userDTO.getEmail())
-                    .phone(userDTO.getPhone())
-                    .userRole(userDTO.getUserRole())
-                    .password(userDTO.getPassword())
-                    .build();
-        } else if (userDTO.getUserRole() == UserRole.ORGANIZER) {
-            user = Organizer.builder()
-                    .name(userDTO.getName())
-                    .email(userDTO.getEmail())
-                    .phone(userDTO.getPhone())
-                    .userRole(userDTO.getUserRole())
-                    .password(userDTO.getPassword())
-                    .build();
-        }
-        return user;
+//        User user = null;
+//        if (userDTO.getUserRole() == UserRole.ADMIN) {
+//            user = Admin.builder()
+//                    .name(userDTO.getName())
+//                    .email(userDTO.getEmail())
+//                    .phone(userDTO.getPhone())
+//                    .userRole(userDTO.getUserRole())
+//                    .password(userDTO.getPassword())
+//                    .build();
+//        } else if (userDTO.getUserRole() == UserRole.ORGANIZER) {
+//            user = Organizer.builder()
+//                    .name(userDTO.getName())
+//                    .email(userDTO.getEmail())
+//                    .phone(userDTO.getPhone())
+//                    .userRole(userDTO.getUserRole())
+//                    .password(userDTO.getPassword())
+//                    .build();
+//        }
+//        return user;
+        return null;
     }
 
     @Override
