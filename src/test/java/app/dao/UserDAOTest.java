@@ -8,10 +8,12 @@ import app.entities.users.User;
 import app.enums.Status;
 import app.enums.UserRole;
 import app.exceptions.DatabaseException;
+import app.exceptions.DatabaseIdException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -83,7 +85,7 @@ class UserDAOTest {
 
     @Test
     void readAll() {
-        Set<User> allUsers = userDAO.readAll();
+        List<User> allUsers = userDAO.readAll();
         assertThat(allUsers, hasSize(15));
         assertThat(allUsers, containsInAnyOrder(users.values().toArray()));
     }
@@ -156,9 +158,9 @@ class UserDAOTest {
         assertThat(deletedAdmin, is(true));
         assertThat(deletedAttendee, is(true));
         assertThat(deletedOrganizer, is(true));
-        assertThrows(DatabaseException.class, () -> userDAO.readById(admin.getUserId()));
-        assertThrows(DatabaseException.class, () -> userDAO.readById(attendee.getUserId()));
-        assertThrows(DatabaseException.class, () -> userDAO.readById(organizer.getUserId()));
+        assertThrows(DatabaseIdException.class, () -> userDAO.readById(admin.getUserId()));
+        assertThrows(DatabaseIdException.class, () -> userDAO.readById(attendee.getUserId()));
+        assertThrows(DatabaseIdException.class, () -> userDAO.readById(organizer.getUserId()));
     }
 
     @Test
@@ -169,13 +171,13 @@ class UserDAOTest {
 
     @Test
     void getById_withNullId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.readById(null));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> userDAO.readById(null));
         assertThat(ex.getMessage(), is("ID is required"));
     }
 
     @Test
     void getById_withMissingId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.readById(999_999));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> userDAO.readById(999_999));
         assertThat(ex.getMessage(), is("User not found with id: 999999"));
     }
 
@@ -192,14 +194,14 @@ class UserDAOTest {
                 .userId(999_999)
                 .build();
 
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.update(missing));
-        assertThat(ex.getMessage(), is("Updating User failed"));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> userDAO.update(missing));
+        assertThat(ex.getMessage(), is("User not found with id: "+missing.getUserId()));
     }
 
     @Test
     void delete_withNullId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.delete(null));
-        assertThat(ex.getMessage(), is("User is required for deletion"));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> userDAO.delete(Admin.builder().name("Jason").build()));
+        assertThat(ex.getMessage(), is("User id is required for deleting"));
     }
 
     @Test
@@ -209,7 +211,7 @@ class UserDAOTest {
                 .userId(999_999)
                 .build();
 
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> userDAO.delete(missing));
-        assertThat(ex.getMessage(), is("Delete User failed"));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> userDAO.delete(missing));
+        assertThat(ex.getMessage(), is("User not found with id: "+missing.getId()));
     }
 }

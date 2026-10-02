@@ -3,6 +3,7 @@ package app.dao;
 import app.config.HibernateTestConfig;
 import app.entities.Address;
 import app.exceptions.DatabaseException;
+import app.exceptions.DatabaseIdException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.BeforeAll;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -62,7 +64,7 @@ class AddressDAOTest {
 
     @Test
     void readAll() {
-        Set<Address> addressList = addressDAO.readAll();
+        List<Address> addressList = addressDAO.readAll();
         assertThat(addressList.size(), equalTo(addressMap.size()));
     }
 
@@ -80,7 +82,7 @@ class AddressDAOTest {
     void delete() {
         Address address = addressMap.get("address");
         boolean deleted = addressDAO.delete(address);
-        Set<Address> addressList = addressDAO.readAll();
+        List<Address> addressList = addressDAO.readAll();
 
         assertThat(deleted, is(true));
         assertThat(addressList.size(), is(addressMap.size()-1));
@@ -94,13 +96,13 @@ class AddressDAOTest {
 
     @Test
     void getById_withNullId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> addressDAO.readById(null));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> addressDAO.readById(null));
         assertThat(ex.getMessage(), is("ID is required"));
     }
 
     @Test
     void getById_withMissingId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> addressDAO.readById(999_999));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> addressDAO.readById(999_999));
         assertThat(ex.getMessage(), is("Address not found with id: 999999"));
     }
 
@@ -119,14 +121,14 @@ class AddressDAOTest {
                 .address("Østerbrogade 120")
                 .build();
 
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> addressDAO.update(address));
-        assertThat(ex.getMessage(), is("Updating Address failed"));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> addressDAO.update(address));
+        assertThat(ex.getMessage(), is("Address not found with id: "+address.getId()));
     }
 
     @Test
     void delete_withNullId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> addressDAO.delete(null));
-        assertThat(ex.getMessage(), is("Address is required for deletion"));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> addressDAO.delete(Address.builder().address("Håbet Allé 40").build()));
+        assertThat(ex.getMessage(), is("Address id is required for deleting"));
     }
 
     @Test
@@ -138,7 +140,7 @@ class AddressDAOTest {
                 .address("Østerbrogade 120")
                 .build();
 
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> addressDAO.delete(address));
-        assertThat(ex.getMessage(), is("Delete Address failed"));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> addressDAO.delete(address));
+        assertThat(ex.getMessage(), is("Address not found with id: "+address.getId()));
     }
 }

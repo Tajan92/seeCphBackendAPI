@@ -1,13 +1,16 @@
 package app.service;
 
 import app.config.HibernateTestConfig;
+import app.dao.AddressDAO;
 import app.dto.ticketMaster.TicketMasterDTO;
 import app.dto.ticketMaster.TmEvent;
 import app.entities.Event;
 import app.enums.EventCategory;
+import app.mapper.TicketMasterConverter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManagerFactory;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -21,11 +24,18 @@ class TicketMasterConverterTest {
     private final EntityManagerFactory emf = HibernateTestConfig.getEntityManagerFactory();
     private ObjectMapper objectMapper;
     private TicketMasterConverter ticketMasterConverter;
+    private AddressDAO addressDAO;
+    private AddressService addressService;
 
+    @BeforeAll
+    void setup() {
+        addressDAO = new AddressDAO(emf);
+        addressService = new AddressService(addressDAO);
+    }
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        ticketMasterConverter = new TicketMasterConverter();
+        ticketMasterConverter = new TicketMasterConverter(addressService);
     }
 
     @Test

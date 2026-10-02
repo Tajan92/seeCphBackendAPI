@@ -28,7 +28,6 @@ public class AdvertIntegrationTest {
     private Map<String, Advert> adverts;
     private Map<String, User> users;
 
-
     @BeforeEach
     void setUp() {
         users = TestDataCreator.createUsers(emf);
@@ -43,24 +42,28 @@ public class AdvertIntegrationTest {
 
     @Test
     void checkPrePersistStatusTrue() {
-       Advert advert = Advert.builder()
-               .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-               .price(500.00)
-               .startDate(LocalDate.now().minusDays(10))
-               .endDate(LocalDate.now().plusDays(10))
-               .build();
+        Event event = events.get("event");
 
-       Advert createdAdvert = advertDAO.create(advert);
-       assertThat(createdAdvert.isStatus(), is(true));
+        Advert advert = Advert.builder()
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
+                .startDate(LocalDate.now().minusDays(10))
+                .endDate(LocalDate.now().plusDays(10))
+                .event(event)
+                .build();
+
+        Advert createdAdvert = advertDAO.create(advert);
+        assertThat(createdAdvert.isStatus(), is(true));
     }
 
     @Test
     void checkPrePersistStatusFalse() {
+        Event event = events.get("event");
+
         Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-                .price(500.00)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.now().plusDays(2))
                 .endDate(LocalDate.now().plusDays(10))
+                .event(event)
                 .build();
 
         Advert createdAdvert = advertDAO.create(advert);
@@ -72,10 +75,15 @@ public class AdvertIntegrationTest {
         Advert advert = adverts.get("advert");
         assertThat(advert.isStatus(), is(false));
 
-        advert.setStartDate(LocalDate.now().minusDays(10));
-        advert.setEndDate(LocalDate.now().plusDays(10));
+        Advert advertToUpdate = Advert.builder()
+                .advertId(advert.getAdvertId())
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
+                .startDate(LocalDate.now().minusDays(10))
+                .endDate(LocalDate.now().plusDays(10))
+                .event(advert.getEvent())
+                .build();
 
-        Advert updatedAdvert = advertDAO.update(advert);
+        Advert updatedAdvert = advertDAO.update(advertToUpdate);
 
         assertThat(updatedAdvert.isStatus(), is(true));
     }
@@ -85,29 +93,34 @@ public class AdvertIntegrationTest {
         Advert advert = adverts.get("advert2");
         assertThat(advert.isStatus(), is(true));
 
-        advert.setStartDate(LocalDate.now().plusDays(10));
-        advert.setEndDate(LocalDate.now().plusDays(20));
+        Advert advertToUpdate = Advert.builder()
+                .advertId(advert.getAdvertId())
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
+                .startDate(LocalDate.now().minusDays(10))
+                .endDate(LocalDate.now().minusDays(5))
+                .event(advert.getEvent())
+                .build();
 
-        Advert updatedAdvert = advertDAO.update(advert);
+        Advert updatedAdvert = advertDAO.update(advertToUpdate);
 
         assertThat(updatedAdvert.isStatus(), is(false));
     }
 
     @Test
     void CheckRelations() {
+        Event event = events.get("event");
+
         Advert advert = Advert.builder()
-                .addPlacement(AddPlacement.FRONTPAGEHIGHLIGHT)
-                .price(500.00)
+                .addPlacement(AddPlacement.FRONTPAGE_HIGHLIGHT)
                 .startDate(LocalDate.of(2026, 11, 15))
                 .endDate(LocalDate.of(2026, 11, 22))
+                .event(event)
                 .build();
 
         Advert savedAdvert = advertDAO.create(advert);
-        Event event = events.get("event");
         Organizer organizer = (Organizer) users.get("organizer");
         Admin admin = (Admin) users.get("admin");
 
-        savedAdvert.setEvent(event);
         savedAdvert.setOrganizer(organizer);
         savedAdvert.setAdmin(admin);
         Advert updatedAdvert = advertDAO.update(savedAdvert);

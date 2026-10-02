@@ -5,11 +5,13 @@ import app.entities.Address;
 import app.entities.Event;
 import app.enums.EventCategory;
 import app.exceptions.DatabaseException;
+import app.exceptions.DatabaseIdException;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,6 +25,7 @@ class EventDAOTest {
     private final EntityManagerFactory emf = HibernateTestConfig.getEntityManagerFactory();
 
     private EventDAO eventDAO;
+    private AddressDAO addressDAO;
     private Map<String, Event> events;
 
     @BeforeEach
@@ -33,17 +36,21 @@ class EventDAOTest {
     @BeforeAll
     void setUpAll() {
         eventDAO = new EventDAO(emf);
+        addressDAO = new AddressDAO(emf);
     }
 
     @Test
     void create() {
+        Address address = Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build();
+        Address createdAddress = addressDAO.create(address);
+
         Event event = Event.builder()
                 .title("F.C. København vs. Brøndby IF")
                 .description("Experience the intense New Firm derby live at Parken")
                 .category(EventCategory.FOOTBALL)
                 .startTime(LocalTime.of(16, 0))
                 .startDate(LocalDate.of(2026, 10, 18))
-                .location(Address.builder().postalCode("1200").city("København").address("Frederiksberg allé").build())
+                .location(address)
                 .price(350.00)
                 .build();
 
@@ -70,7 +77,7 @@ class EventDAOTest {
 
     @Test
     void readAll() {
-        Set<Event> allEvents = eventDAO.readAll();
+        List<Event> allEvents = eventDAO.readAll();
         assertThat(allEvents, hasSize(2));
         assertThat(allEvents, containsInAnyOrder(events.values().toArray()));
     }
@@ -94,7 +101,7 @@ class EventDAOTest {
 
         boolean deletedEvent = eventDAO.delete(event);
         assertThat(deletedEvent, is(true));
-        assertThrows(DatabaseException.class, () -> eventDAO.readById(event.getEventId()));
+        assertThrows(DatabaseIdException.class, () -> eventDAO.readById(event.getEventId()));
     }
 
     @Test
@@ -104,14 +111,14 @@ class EventDAOTest {
     }
 
     @Test
-    void getById_withNullId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.readById(null));
+    void getById_withNullId_throwsDatabaseIdException() {
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> eventDAO.readById(null));
         assertThat(ex.getMessage(), is("ID is required"));
     }
 
     @Test
-    void getById_withMissingId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.readById(999_999));
+    void getById_withMissingId_throwsDatabaseIdException() {
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> eventDAO.readById(999_999));
         assertThat(ex.getMessage(), is("Event not found with id: 999999"));
     }
 
@@ -122,30 +129,30 @@ class EventDAOTest {
     }
 
     @Test
-    void update_withMissingId_throwsApiException() {
+    void update_withMissingId_throwsDatabaseIdException() {
         Event missing = Event.builder()
                 .eventId(999_999)
                 .title("Missing")
                 .build();
 
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.update(missing));
-        assertThat(ex.getMessage(), is("Updating Event failed"));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> eventDAO.update(missing));
+        assertThat(ex.getMessage(), is("Event not found with id: " + missing.getEventId()));
     }
 
     @Test
-    void delete_withNullId_throwsDatabaseException() {
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.delete(null));
-        assertThat(ex.getMessage(), is("Event is required for deletion"));
+    void delete_withNullId_throwsDatabaseIdException() {
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> eventDAO.delete(Event.builder().title("Missing Id").build()));
+        assertThat(ex.getMessage(), is("Event id is required for deleting"));
     }
 
     @Test
-    void delete_withMissingId_throwsDatabaseException() {
+    void delete_withMissingId_throwsDatabaseIdException() {
         Event missing = Event.builder()
                 .eventId(999_999)
                 .title("Missing")
                 .build();
 
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> eventDAO.delete(missing));
-        assertThat(ex.getMessage(), is("Delete Event failed"));
+        DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> eventDAO.delete(missing));
+        assertThat(ex.getMessage(), is("Event not found with id: " + missing.getEventId()));
     }
 }

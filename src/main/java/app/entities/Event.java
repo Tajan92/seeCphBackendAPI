@@ -3,6 +3,7 @@ package app.entities;
 import app.entities.users.Admin;
 import app.entities.users.Organizer;
 import app.enums.EventCategory;
+import app.enums.SourceProvider;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
@@ -11,7 +12,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -21,7 +21,7 @@ import java.util.Set;
 @Builder
 @Table(name = "event")
 @Entity
-public class Event {
+public class Event implements IGetId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "event_id")
@@ -33,9 +33,10 @@ public class Event {
     private String description;
     @Setter
     private Double price;
+    @Setter
     private boolean free;
     @Setter
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToOne(cascade = {CascadeType.MERGE})
     @JoinColumn(name = "location_id")
     private Address location;
     @Setter
@@ -48,26 +49,28 @@ public class Event {
     @Setter
     @Column(name = "start_date")
     private LocalDate startDate;
+    @Setter
     private String url;
     @Setter
     @Column(name = "source_provider")
-    private String sourceProvider;
+    private SourceProvider sourceProvider;
     @Setter
     @Column(name = "source_event_id")
     private String sourceEventId;
     @Setter
     @Column(name = "last_synced_at")
     private LocalDateTime lastSyncedAt;
-
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    private List<ImageUrl> images;
+    @Setter
+    @Column(name = "image_url")
+    private String imageUrl;
     @Setter
     @Enumerated(EnumType.STRING)
     @Column(name = "event_category")
     private EventCategory category;
 
     @OneToMany(mappedBy = "event", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Advert> adverts;
+    @Builder.Default
+    private Set<Advert> adverts = new HashSet<>();
 
     public void addAdvert(Advert advert) {
         if (advert != null) {
@@ -76,6 +79,13 @@ public class Event {
             }
             this.adverts.add(advert);
             advert.setEvent(this);
+        }
+    }
+
+    public void removeAdvert(Advert advert) {
+        if (advert != null && this.adverts != null) {
+            this.adverts.remove(advert);
+            advert.setEvent(null);
         }
     }
 
@@ -122,5 +132,10 @@ public class Event {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer()
                 .getPersistentClass()
                 .hashCode() : getClass().hashCode();
+    }
+
+    @Override
+    public Integer getId() {
+        return eventId;
     }
 }
