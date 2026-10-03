@@ -48,3 +48,8 @@ PUT {{url}}/events/1
 ###
 
 DELETE {{url}}/events/1
+
+###
+
+POST {{url}}/events/ticketmaster
+x-api-key: c*GXiG+tS68Ec6`2/5;y*M>REMQbG(

@@ -1,6 +1,5 @@
 package app.controller;
 
-import app.enums.UserRole;
 import io.javalin.apibuilder.EndpointGroup;
 import lombok.AllArgsConstructor;
 
@@ -17,5 +16,6 @@ public class EventController implements EndpointGroup {
         get("/api/v1/events", eventHandler::getAll);
         put("/api/v1/events/{id}", eventHandler::updateById);
         delete("/api/v1/events/{id}", eventHandler::deleteById);
+        post("/api/v1/events/ticketmaster", eventHandler::getTicketMasterEvents);
     }
 }

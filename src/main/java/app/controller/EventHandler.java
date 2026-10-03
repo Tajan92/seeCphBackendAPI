@@ -66,6 +66,18 @@ public class EventHandler implements IHandler {
         ctx.status(HttpStatus.OK);
     }
 
+    public void getTicketMasterEvents(Context ctx) {
+        String authHeader = ctx.header("x-api-key");
+        String expectedSecret = System.getenv("SYNC_SECRET"); // Bør hentes fra en miljøvariabel (.env)
+
+        if (expectedSecret != null && expectedSecret.equals(authHeader)) {
+            eventService.persistTmEvents();
+            ctx.status(200).result("Ticketmaster sync executed successfully.");
+        } else {
+            ctx.status(401).result("Unauthorized");
+        }
+    }
+
     private EventDTORequest EventInputValidator(Context ctx) {
         return ctx.bodyValidator(EventDTORequest.class)
                 .check(event -> event.userId() > 0, "Invalid user id")
