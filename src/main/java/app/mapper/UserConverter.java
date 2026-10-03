@@ -1,5 +1,6 @@
 package app.mapper;
 
+import app.dto.user.OrganizerDTOResponse;
 import app.dto.user.UserDTORequest;
 import app.dto.user.UserDTOResponse;
 import app.entities.users.Admin;
@@ -47,9 +48,9 @@ public class UserConverter implements IConverter<User, UserDTOResponse, UserDTOR
             case UserRole.ATTENDEE -> Attendee.builder().userId(id).build();
             case UserRole.ORGANIZER  -> Organizer.builder().userId(id).build();
         };
-        user.setName(input.name());
-        user.setEmail(input.email());
-        user.setPhone(input.phone());
+        updatedUser.setName(input.name());
+        updatedUser.setEmail(input.email());
+        updatedUser.setPhone(input.phone());
 
         return updatedUser;
     }
@@ -57,5 +58,9 @@ public class UserConverter implements IConverter<User, UserDTOResponse, UserDTOR
     @Override
     public UserDTOResponse convertEntityToDTO(User user) {
         return new UserDTOResponse(user.getUserId(), user.getName(), user.getEmail(), user.getPhone(), user.getUserRole());
+    }
+
+    public OrganizerDTOResponse convertOrganizerToDTO(Organizer organizer) {
+        return new OrganizerDTOResponse(organizer.getUserId(), organizer.getName(), organizer.getEmail(), organizer.getPhone(), organizer.getUserRole(), organizer.getAccountStatus());
     }
 }

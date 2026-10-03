@@ -1,12 +1,14 @@
 package app.dto.user;
 
+import app.enums.Status;
 import app.enums.UserRole;
 
-public record UserDTOResponse(
+public record OrganizerDTOResponse(
         int id,
         String name,
         String email,
         String phone,
-        UserRole userRole
+        UserRole userRole,
+        Status status
 ) {
 }

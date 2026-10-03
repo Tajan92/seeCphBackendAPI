@@ -1,8 +1,10 @@
 package app.service;
 
 import app.dao.UserDAO;
+import app.dto.user.OrganizerDTOResponse;
 import app.dto.user.UserDTORequest;
 import app.dto.user.UserDTOResponse;
+import app.entities.users.Organizer;
 import app.entities.users.User;
 import app.mapper.UserConverter;
 
@@ -24,9 +26,12 @@ public class UserService implements IService<UserDTORequest, UserDTOResponse> {
         return userConverter.convertEntityToDTO(user);
     }
 
-    public UserDTOResponse createPendingOrganizer(UserDTORequest input) {
+    public OrganizerDTOResponse createPendingOrganizer(UserDTORequest input) {
         User user = userDAO.create(userConverter.convertDTOToOrganizer(input));
-        return userConverter.convertEntityToDTO(user);
+        if (!(user instanceof Organizer)) {
+            return null;
+        }
+        return userConverter.convertOrganizerToDTO((Organizer) user);
     }
 
     public UserDTOResponse createAdmin(UserDTORequest input) {
@@ -37,8 +42,8 @@ public class UserService implements IService<UserDTORequest, UserDTOResponse> {
     @Override
     public UserDTOResponse updateById(int id, UserDTORequest input) {
         User user = userDAO.readById(id);
-        user = userDAO.update(userConverter.convertDTOToUserUpdate(input, user, id));
-        return userConverter.convertEntityToDTO(user);
+        User updatedUser = userDAO.update(userConverter.convertDTOToUserUpdate(input, user, id));
+        return userConverter.convertEntityToDTO(updatedUser);
     }
 
     @Override

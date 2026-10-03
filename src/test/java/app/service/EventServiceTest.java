@@ -137,7 +137,7 @@ class EventServiceTest {
 
         EventDTOResponse created = eventService.create(initialRequest);
 
-        EventDTORequest updateRequest = new EventDTORequest(
+        EventDTORequest updatedRequest = new EventDTORequest(
                 userId,
                 "Updated Jazz Festival",
                 "New updated description",
@@ -153,7 +153,7 @@ class EventServiceTest {
                 false,
                 EventCategory.MUSIC);
 
-        EventDTOResponse updated = eventService.updateById(created.id(), updateRequest);
+        EventDTOResponse updated = eventService.updateById(created.id(), updatedRequest);
 
         assertNotNull(updated);
         assertThat(updated.title(), is("Updated Jazz Festival"));
