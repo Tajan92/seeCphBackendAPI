@@ -12,7 +12,9 @@ public class UserController implements EndpointGroup {
 
     @Override
     public void addEndpoints() {
-        post("/api/v1/users", userHandler::create);
+        post("/api/v1/users/attendee", userHandler::create);
+        post("/api/v1/users/organizer", userHandler::createPendingOrganizer);
+        post("/api/v1/users/admin", userHandler::createAdmin);
         get("/api/v1/users/{id}", userHandler::getById);
         get("/api/v1/users", userHandler::getAll);
         put("/api/v1/users/{id}", userHandler::updateById);

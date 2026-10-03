@@ -3,11 +3,7 @@ package app.service;
 import app.dao.UserDAO;
 import app.dto.user.UserDTORequest;
 import app.dto.user.UserDTOResponse;
-import app.entities.users.Admin;
-import app.entities.users.Attendee;
-import app.entities.users.Organizer;
 import app.entities.users.User;
-import app.enums.UserRole;
 import app.mapper.UserConverter;
 
 import java.util.ArrayList;
@@ -24,60 +20,24 @@ public class UserService implements IService<UserDTORequest, UserDTOResponse> {
 
     @Override
     public UserDTOResponse create(UserDTORequest input) {
-        User user = Attendee.builder()
-                .name(input.name())
-                .email(input.email())
-                .phone(input.phone())
-                .password(input.password())
-                .userRole(UserRole.ATTENDEE)
-                .build();
-
-        user = userDAO.create(user);
-
+        User user = userDAO.create(userConverter.convertDTOToEntity(input));
         return userConverter.convertEntityToDTO(user);
     }
 
     public UserDTOResponse createPendingOrganizer(UserDTORequest input) {
-        User user = Organizer.builder()
-                .name(input.name())
-                .email(input.email())
-                .phone(input.phone())
-                .password(input.password())
-                .userRole(UserRole.ORGANIZER)
-                .build();
-
-        user = userDAO.create(user);
-
+        User user = userDAO.create(userConverter.convertDTOToOrganizer(input));
         return userConverter.convertEntityToDTO(user);
     }
 
     public UserDTOResponse createAdmin(UserDTORequest input) {
-        User user = Admin.builder()
-                .name(input.name())
-                .email(input.email())
-                .phone(input.phone())
-                .password(input.password())
-                .userRole(UserRole.ADMIN)
-                .build();
-
-        user = userDAO.create(user);
-
+        User user = userDAO.create(userConverter.convertDTOToAdmin(input));
         return userConverter.convertEntityToDTO(user);
     }
 
     @Override
     public UserDTOResponse updateById(int id, UserDTORequest input) {
         User user = userDAO.readById(id);
-        user = switch (user.getUserRole()){
-            case UserRole.ADMIN -> Admin.builder().userId(id).build();
-            case UserRole.ATTENDEE -> Attendee.builder().userId(id).build();
-            case UserRole.ORGANIZER  -> Organizer.builder().userId(id).build();
-        };
-        user.setName(input.name());
-        user.setEmail(input.email());
-        user.setPhone(input.phone());
-
-        user = userDAO.update(user);
+        user = userDAO.update(userConverter.convertDTOToUserUpdate(input, user, id));
         return userConverter.convertEntityToDTO(user);
     }
 
