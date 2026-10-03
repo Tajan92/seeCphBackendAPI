@@ -1,0 +1,32 @@
+### GET request to example server
+POST {{url}}/adverts
+
+{
+    "eventId" : "1",
+    "userId" : "1",
+    "addPlacement" : "FRONTPAGE_HEADER",
+    "startDate" : "2026-11-11",
+    "endDate" : "2026-12-12"
+}
+###
+
+GET {{url}}/adverts/1
+
+###
+
+GET {{url}}/adverts
+
+###
+
+PUT {{url}}/adverts/1
+
+{
+    "eventId" : "1",
+    "userId" : "1",
+    "addPlacement" : "FRONTPAGE_HIGHLIGHT",
+    "startDate" : "2026-11-16",
+    "endDate" : "2026-12-12"
+}
+###
+
+DELETE {{url}}/adverts/1

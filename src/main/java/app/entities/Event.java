@@ -108,7 +108,7 @@ public class Event implements IGetId {
     }
 
     public void addDescription(String description) {
-        this.description = this.description + description;
+        this.description = description;
     }
 
     @Override

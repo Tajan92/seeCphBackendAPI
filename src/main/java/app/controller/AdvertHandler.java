@@ -68,8 +68,8 @@ public class AdvertHandler implements IHandler {
         return ctx.bodyValidator(AdvertDTORequest.class)
                 .check(advert -> advert.addPlacement() != null && !advert.addPlacement().toString().isEmpty(), "Ad placement must be defined")
                 .check(advert -> advert.startDate() != null, "Please add start date")
-                .check(advert -> advert.startDate().isAfter(LocalDate.now()) && advert.startDate().isEqual(LocalDate.now()), "Start must be today or in the future")
+                .check(advert -> advert.startDate().isAfter(LocalDate.now()) || advert.startDate().isEqual(LocalDate.now()), "Start date must be today or in the future")
                 .check(advert -> advert.endDate() != null, "Please add end date")
-                .check(advert -> advert.endDate().isAfter(advert.startDate()) && advert.endDate().isEqual(advert.startDate()), "End date can't be before start date").get();
+                .check(advert -> advert.endDate().isAfter(advert.startDate()) || advert.endDate().isEqual(advert.startDate()), "End date can't be before start date").get();
     }
 }

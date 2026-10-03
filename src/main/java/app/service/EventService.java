@@ -11,11 +11,14 @@ import app.enums.SourceProvider;
 import app.enums.UserRole;
 import app.mapper.TicketMasterConverter;
 import app.utils.APIReader;
+import app.utils.DefaultDescription;
 import app.utils.GeoUtil;
 import lombok.Getter;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Getter
 public class EventService implements IService<EventDTORequest, EventDTOResponse> {
@@ -24,6 +27,7 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
     private final UserService userService;
     private final APIReader apiReader;
     private final TicketMasterConverter converter;
+    private int counter;
 
     public EventService(EventDAO eventDAO, AddressService addressService, UserService userService) {
         this.eventDAO = eventDAO;
@@ -120,8 +124,11 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
         return eventDAO.delete(event);
     }
 
-    public List<Event> persistTmEvents(List<TicketMasterDTO> ticketMasterDTOs) {
+    public void persistTmEvents() {
+        counter = 0;
+        int maxCount = 5;
         List<Event> events = new ArrayList<>();
+        List<TicketMasterDTO> ticketMasterDTOs = apiReader.getApiAsTmDTO();
 
         for (TicketMasterDTO ticketMasterDTO : ticketMasterDTOs) {
             if (ticketMasterDTO != null && ticketMasterDTO.embedded() != null && ticketMasterDTO.embedded().events() != null) {
@@ -129,22 +136,32 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
             }
         }
 
-        String description = null;
         for (Event event : events) {
             event.setSourceProvider(SourceProvider.API_TICKETMASTER);
-            description = checkForDescription(event);
+            String description = checkForDescription(event, maxCount);
             if (description != null) {
                 event.addDescription(description);
             }
             eventDAO.create(event);
         }
-        return events;
     }
 
-    private String checkForDescription(Event event) {
-        String description = null;
+    private String checkForDescription(Event event, int maxCount) {
+        String description;
         if (event.getDescription() == null || event.getDescription().isEmpty()) {
-            description = apiReader.geminiDescriptionCreator(event.getTitle(), event.getLocation().getAddress(), event.getUrl());
+            if (counter < maxCount) {
+                counter++;
+                description = apiReader.geminiDescriptionCreator(event);
+                try {
+                    Thread.sleep(4000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            } else {
+                description = DefaultDescription.generateDefaultDescription(event);
+            }
+        } else {
+            description = event.getDescription();
         }
         return description;
     }
@@ -152,7 +169,7 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
     private SourceProvider getSourceProvider(int userId) {
         SourceProvider sourceProvider = null;
         UserDTOResponse userDTOResponse = userService.getById(userId);
-        if (userDTOResponse.userRole() == UserRole.ADMIN ) {
+        if (userDTOResponse.userRole() == UserRole.ADMIN) {
             sourceProvider = SourceProvider.ADMIN;
         } else if (userDTOResponse.userRole() == UserRole.ORGANIZER) {
             sourceProvider = SourceProvider.ORGANIZER;

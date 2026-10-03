@@ -5,6 +5,7 @@ import io.javalin.http.Context;
 
 public class UserHandler implements IHandler{
     UserService userService;
+
     public UserHandler(UserService userService) {
         this.userService = userService;
     }

@@ -81,7 +81,24 @@ public final class TestDataCreator {
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
 
-            // Advert kræver nu et Event pga. optional = false / nullable = false
+            Organizer organizer = Organizer.builder()
+                    .organizerName("Advert Test Organizer")
+                    .accountStatus(Status.PENDING).name("Nike")
+                    .email("nike@mail.dk").phone("12345678")
+                    .password("12345678")
+                    .userRole(UserRole.ORGANIZER)
+                    .build();
+            em.persist(organizer);
+
+            Admin admin = Admin.builder()
+                    .name("John")
+                    .email("john@mail.dk")
+                    .phone("12345678")
+                    .password("12345678")
+                    .userRole(UserRole.ADMIN)
+                    .build();
+            em.persist(admin);
+
             Address address = Address.builder()
                     .postalCode("1050")
                     .city("København K")
@@ -94,6 +111,7 @@ public final class TestDataCreator {
                     .category(EventCategory.MUSIC)
                     .location(address)
                     .startDate(LocalDate.now().plusDays(5))
+                    .price(100.0)
                     .build();
             em.persist(event);
 
@@ -102,6 +120,7 @@ public final class TestDataCreator {
                     .startDate(LocalDate.now().plusDays(10))
                     .endDate(LocalDate.now().plusDays(20))
                     .event(event)
+                    .admin(admin)
                     .build();
 
             Advert advert2 = Advert.builder()
@@ -109,14 +128,13 @@ public final class TestDataCreator {
                     .startDate(LocalDate.now().minusDays(5))
                     .endDate(LocalDate.now().plusDays(5))
                     .event(event)
+                    .organizer(organizer)
                     .build();
 
             try {
                 em.createNativeQuery("TRUNCATE TABLE advert RESTART IDENTITY CASCADE").executeUpdate();
 
-                List<Advert> adverts = List.of(
-                        advert, advert2
-                );
+                List<Advert> adverts = List.of(advert, advert2);
                 adverts.forEach(em::persist);
 
                 em.flush();
@@ -151,7 +169,6 @@ public final class TestDataCreator {
                     .address("Cirkusbygningen")
                     .build();
 
-            // Persist begge adresser først, så de ikke er transient
             em.persist(address);
             em.persist(address2);
 
