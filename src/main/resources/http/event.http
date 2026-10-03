@@ -1,0 +1,50 @@
+### GET request to example server
+POST {{url}}/events
+
+{
+    "userId" : "1",
+    "title" : "SLS CPH",
+    "description" : "Skating in copenhagen",
+    "price" : "150.00",
+    "free" : "false",
+    "city" : "Lyngby",
+    "postalCode" : "2800",
+    "address" : "Hovedgaden 1",
+    "startTime" : "12:30",
+    "startDate" : "2026-12-12",
+    "url" : "sls.com",
+    "primaryImageUrl" : "slsurl.com",
+    "useDefaultImage" : "false",
+    "category" : "skate"
+}
+###
+
+GET {{url}}/events/1
+
+###
+
+GET {{url}}/events/
+
+###
+
+PUT {{url}}/events/1
+
+{
+    "userId" : "1",
+    "title" : "X-Games Cph",
+    "description" : "Skating in copenhagen",
+    "price" : "150.00",
+    "free" : "false",
+    "city" : "Lyngby",
+    "postalCode" : "2800",
+    "address" : "Hovedgaden 1",
+    "startTime" : "12:30",
+    "startDate" : "2026-12-12",
+    "url" : "sls.com",
+    "primaryImageUrl" : "slsurl.com",
+    "useDefaultImage" : "false",
+    "category" : "skate"
+}
+###
+
+DELETE {{url}}/events/1
