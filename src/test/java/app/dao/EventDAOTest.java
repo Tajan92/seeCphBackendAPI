@@ -30,6 +30,7 @@ class EventDAOTest {
 
     @BeforeEach
     void setUp() {
+        TestDataCreator.clearDatabase(emf);
         events = TestDataCreator.createEvents(emf);
     }
 

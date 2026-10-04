@@ -2,6 +2,7 @@ package app.controller;
 
 import app.dto.event.EventDTOResponse;
 import app.dto.event.EventDTORequest;
+import app.exceptions.SyncException;
 import app.service.EventService;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
@@ -9,6 +10,7 @@ import io.javalin.http.HttpStatus;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class EventHandler implements IHandler {
     EventService eventService;
@@ -66,13 +68,19 @@ public class EventHandler implements IHandler {
         ctx.status(HttpStatus.OK);
     }
 
-    public void getTicketMasterEvents(Context ctx) {
+    public void syncEventsFromAPI(Context ctx) {
         String authHeader = ctx.header("x-api-key");
-        String expectedSecret = System.getenv("SYNC_SECRET"); // Bør hentes fra en miljøvariabel (.env)
+        String expectedSecret = System.getenv("SYNC_SECRET");
 
         if (expectedSecret != null && expectedSecret.equals(authHeader)) {
-            eventService.persistTmEvents();
-            ctx.status(200).result("Ticketmaster sync executed successfully.");
+            CompletableFuture.runAsync(() -> {
+                try {
+                    eventService.syncTmEvents();
+                } catch (Exception e) {
+                    throw new SyncException("Error during background sync: ", e.getCause());
+                }
+            });
+            ctx.status(200).result("Ticketmaster sync started successfully.");
         } else {
             ctx.status(401).result("Unauthorized");
         }
@@ -103,6 +111,5 @@ public class EventHandler implements IHandler {
                     }
                     return true;
                 }, "Start time cannot be in the past").get();
-
     }
 }

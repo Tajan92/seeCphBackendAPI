@@ -52,6 +52,8 @@ public class Event implements IGetId {
     @Setter
     private String url;
     @Setter
+    private String apiEventId;
+    @Setter
     @Column(name = "source_provider")
     private SourceProvider sourceProvider;
     @Setter

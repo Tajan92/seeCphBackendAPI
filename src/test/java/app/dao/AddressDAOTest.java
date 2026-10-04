@@ -28,6 +28,7 @@ class AddressDAOTest {
 
     @BeforeEach
     void setUp() {
+        TestDataCreator.clearDatabase(emf);
         addressMap = TestDataCreator.createAddresses(emf);
     }
 

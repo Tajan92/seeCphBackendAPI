@@ -6,7 +6,12 @@ import app.service.AddressService;
 import app.service.AdvertService;
 import app.service.EventService;
 import app.service.UserService;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.javalin.Javalin;
 import io.javalin.apibuilder.EndpointGroup;
+import io.javalin.config.JavalinConfig;
+import io.javalin.json.JavalinJackson;
+import io.javalin.validation.ValidationException;
 import jakarta.persistence.EntityManagerFactory;
 
 public class ApplicationConfig implements EndpointGroup {
@@ -44,5 +49,28 @@ public class ApplicationConfig implements EndpointGroup {
         eventController.addEndpoints();
         userController.addEndpoints();
         advertController.addEndpoints();
+    }
+
+    public void configuration(JavalinConfig config) {
+            config.jsonMapper(new JavalinJackson().updateMapper(mapper -> {
+                mapper.registerModule(new JavaTimeModule());
+            }));
+            config.router.apiBuilder(this);
+    }
+
+    public Javalin startServer(int port) {
+        var app = Javalin.create(this::configuration);
+        app.exception(ValidationException.class, (e, ctx) -> {
+            ctx.status(400).json(e.getErrors());
+        });
+//        app.exception(Exception.class, (e, ctx) -> { // TODO: First check if validating of LocalDate fail with eg. "tomorrow" String instead of 2026-05-05 else use this to catch it
+//            ctx.status(400).json(Map.of("ERROR", List.of("Invalid request body: " + e.getMessage())));
+//        });
+        app.start(port);
+        return app;
+    }
+
+    public void stopServer(Javalin app) {
+        app.stop();
     }
 }

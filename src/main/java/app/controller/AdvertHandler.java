@@ -2,6 +2,7 @@ package app.controller;
 
 import app.dto.advert.AdvertDTORequest;
 import app.dto.advert.AdvertDTOResponse;
+import app.entities.Advert;
 import app.service.AdvertService;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
@@ -19,7 +20,11 @@ public class AdvertHandler implements IHandler {
     @Override
     public void create(Context ctx) {
         AdvertDTORequest input = advertInputValidator(ctx);
-        advertService.create(input);
+        AdvertDTOResponse advertDTOResponse = advertService.create(input);
+        if (advertDTOResponse == null) {
+            ctx.status(HttpStatus.UNAUTHORIZED);
+            return;
+        }
         ctx.status(HttpStatus.CREATED);
     }
 

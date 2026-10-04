@@ -31,6 +31,7 @@ class AdvertDAOTest {
 
     @BeforeEach
     void setUp() {
+        TestDataCreator.clearDatabase(emf);
         adverts = TestDataCreator.createAdverts(emf);
     }
 

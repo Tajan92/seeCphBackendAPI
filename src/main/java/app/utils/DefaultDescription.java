@@ -13,6 +13,6 @@ public class DefaultDescription {
         return event.getTitle() + " will take place at "
                 + event.getLocation().getAddress() + " on "
                 + startDate + " at "
-                + event.getStartTime();
+                + event.getStartTime()+"<!-- default-message -->";
     }
 }
