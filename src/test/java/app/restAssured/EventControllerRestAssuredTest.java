@@ -2,34 +2,33 @@ package app.restAssured;
 
 import app.config.ApplicationConfig;
 import app.config.HibernateConfig;
-import app.dao.EventDAO;
 import app.dao.UserDAO;
-import app.dto.advert.AdvertDTORequest;
-import app.dto.advert.AdvertDTOResponse;
-import app.entities.Advert;
+import app.dto.event.EventDTORequest;
+import app.dto.event.EventDTOResponse;
 import app.entities.Event;
 import app.entities.users.User;
-import app.enums.AddPlacement;
+import app.enums.EventCategory;
 import app.utils.TestDataCreator;
 import io.javalin.Javalin;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.*;
+
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Map;
+
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class AdvertControllerRestAssuredTest {
+public class EventControllerRestAssuredTest {
     private static Javalin app;
     private static EntityManagerFactory emf;
     private static ApplicationConfig applicationConfig;
-    private static Map<String, Advert> advertMap;
     private static Map<String, Event> eventMap;
     private static Map<String, User> userMap;
-    private static EventDAO eventDAO;
     private static UserDAO userDAO;
 
 
@@ -38,22 +37,19 @@ public class AdvertControllerRestAssuredTest {
         emf = HibernateConfig.getEntityManagerFactory();
         applicationConfig = new ApplicationConfig(emf);
         app = applicationConfig.startServer(7070);
-        RestAssured.baseURI = "http://localhost:7070/api/v1/adverts";
+        RestAssured.baseURI = "http://localhost:7070/api/v1/events";
     }
 
     @BeforeEach
     void setUp() {
         TestDataCreator.clearDatabase(emf);
-        advertMap = TestDataCreator.createAdverts(emf);
         eventMap = TestDataCreator.createEvents(emf);
         userMap = TestDataCreator.createUsers(emf);
-        eventDAO = new EventDAO(emf);
         userDAO = new UserDAO(emf);
     }
 
     @AfterEach
     void tearDown() {
-        advertMap.clear();
         eventMap.clear();
         userMap.clear();
     }
@@ -64,13 +60,13 @@ public class AdvertControllerRestAssuredTest {
     }
 
     @Test
-    void createAdvert() {
-        AdvertDTORequest advertDTORequest = new AdvertDTORequest(eventDAO.readAll().getFirst().getId(), userDAO.readAll().getFirst().getUserId(), AddPlacement.FRONTPAGE_HIGHLIGHT,LocalDate.of(2027,1,5), LocalDate.of(2027,1,6));
+    void createEvent() {
+        EventDTORequest eventDTORequest = new EventDTORequest(userDAO.readAll().getFirst().getUserId(), "New Event", "Description", 200, false, "Kongens Lyngby", "2800", "Hovedgaden 1", LocalTime.of(18,0), LocalDate.of(2027,6,6),"www.newEvent.dk", "www.image.dk", false, EventCategory.MUSIC);
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .body(advertDTORequest)
+                .body(eventDTORequest)
                 .when()
                 .post("")
                 .then()
@@ -86,17 +82,17 @@ public class AdvertControllerRestAssuredTest {
                 .body("size()", is(3))
                 .extract()
                 .jsonPath()
-                .getList("", AdvertDTOResponse.class);
+                .getList("", EventDTOResponse.class);
     }
 
     @Test
-    void createAdvertFailure() {
-        AdvertDTORequest advertDTORequest = new AdvertDTORequest(eventDAO.readAll().getFirst().getId(), userDAO.readAll().getFirst().getUserId(), AddPlacement.FRONTPAGE_HIGHLIGHT,LocalDate.of(2027,1,5), LocalDate.of(2027,1,4));
+    void createEventFailure() {
+        EventDTORequest eventDTORequest = new EventDTORequest(userDAO.readAll().getFirst().getUserId(), "New Event", "", 200, false, "Kongens Lyngby", "2800", "Hovedgaden 1", LocalTime.of(18,0), LocalDate.of(2027,6,6),"www.newEvent.dk", "www.image.dk", false, EventCategory.MUSIC);
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .body(advertDTORequest)
+                .body(eventDTORequest)
                 .when()
                 .post("")
                 .then()
@@ -112,11 +108,11 @@ public class AdvertControllerRestAssuredTest {
                 .body("size()", is(2))
                 .extract()
                 .jsonPath()
-                .getList("", AdvertDTOResponse.class);
+                .getList("", EventDTOResponse.class);
     }
 
     @Test
-    void readAdvertById() {
+    void readEventById() {
         given()
                 .when()
                 .contentType(ContentType.JSON)
@@ -128,7 +124,7 @@ public class AdvertControllerRestAssuredTest {
     }
 
     @Test
-    void readAdvertByIdFailure1() {
+    void readEventByIdFailure1() {
         given()
                 .when()
                 .contentType(ContentType.JSON)
@@ -140,7 +136,7 @@ public class AdvertControllerRestAssuredTest {
     }
 
     @Test
-    void readAdvertByIdFailure2() {
+    void readEventByIdFailure2() {
         given()
                 .when()
                 .contentType(ContentType.JSON)
@@ -152,13 +148,13 @@ public class AdvertControllerRestAssuredTest {
     }
 
     @Test
-    void updateAdvert() {
-        AdvertDTORequest advertDTORequest = new AdvertDTORequest(eventDAO.readAll().getFirst().getId(), userDAO.readAll().getFirst().getUserId(), AddPlacement.FRONTPAGE_HIGHLIGHT,LocalDate.of(2027,1,5), LocalDate.of(2027,1,6));
+    void updateEvent() {
+        EventDTORequest eventDTORequest = new EventDTORequest(userDAO.readAll().getFirst().getUserId(), "New Event", "Description", 200, false, "Kongens Lyngby", "2800", "Hovedgaden 1", LocalTime.of(18,0), LocalDate.of(2027,6,6),"www.newEvent.dk", "www.image.dk", false, EventCategory.MUSIC);
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .body(advertDTORequest)
+                .body(eventDTORequest)
                 .when()
                 .put("/1")
                 .then()
@@ -174,21 +170,20 @@ public class AdvertControllerRestAssuredTest {
                 .body("size()", is(2))
                 .extract()
                 .jsonPath()
-                .getList("", AdvertDTOResponse.class);
+                .getList("", EventDTOResponse.class);
     }
 
     @Test
-    void updateAdvertFailure1() {
-        AdvertDTORequest advertDTORequest = new AdvertDTORequest(eventDAO.readAll().getFirst().getId(), userDAO.readAll().getFirst().getUserId(), AddPlacement.FRONTPAGE_HIGHLIGHT,LocalDate.of(2027,1,5), LocalDate.of(2027,1,6));
+    void updateEventFailure1() {
+        EventDTORequest eventDTORequest = new EventDTORequest(userDAO.readAll().getFirst().getUserId(), "New Event", "Description", 200, false, "Kongens Lyngby", "2800", "Hovedgaden 1", LocalTime.of(18,0), LocalDate.of(2027,6,6),"www.newEvent.dk", "www.image.dk", false, EventCategory.MUSIC);
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .body(advertDTORequest)
+                .body(eventDTORequest)
                 .when()
                 .put("/-5")
                 .then()
-                .body("error", equalTo("Id must be positive"))
                 .statusCode(400)
                 .log().all();
 
@@ -201,17 +196,17 @@ public class AdvertControllerRestAssuredTest {
                 .body("size()", is(2))
                 .extract()
                 .jsonPath()
-                .getList("", AdvertDTOResponse.class);
+                .getList("", EventDTOResponse.class);
     }
 
     @Test
-    void updateAdvertFailure2() {
-        AdvertDTORequest advertDTORequest = new AdvertDTORequest(eventDAO.readAll().getFirst().getId(), userDAO.readAll().getFirst().getUserId(), AddPlacement.FRONTPAGE_HIGHLIGHT,LocalDate.of(2027,1,5), LocalDate.of(2027,1,6));
+    void updateEventFailure2() {
+        EventDTORequest eventDTORequest = new EventDTORequest(userDAO.readAll().getFirst().getUserId(), "New Event", "Description", 200, false, "Kongens Lyngby", "2800", "Hovedgaden 1", LocalTime.of(18,0), LocalDate.of(2027,6,6),"www.newEvent.dk", "www.image.dk", false, EventCategory.MUSIC);
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .body(advertDTORequest)
+                .body(eventDTORequest)
                 .when()
                 .put("/10")
                 .then()
@@ -227,11 +222,11 @@ public class AdvertControllerRestAssuredTest {
                 .body("size()", is(2))
                 .extract()
                 .jsonPath()
-                .getList("", AdvertDTOResponse.class);
+                .getList("", EventDTOResponse.class);
     }
 
     @Test
-    void deleteAdvert() {
+    void deleteEvent() {
         given()
                 .when()
                 .delete("/1")
@@ -248,7 +243,7 @@ public class AdvertControllerRestAssuredTest {
                 .body("size()", is(1))
                 .extract()
                 .jsonPath()
-                .getList("", AdvertDTOResponse.class);
+                .getList("", EventDTOResponse.class);
     }
 
     @Test
@@ -269,7 +264,7 @@ public class AdvertControllerRestAssuredTest {
                 .body("size()", is(2))
                 .extract()
                 .jsonPath()
-                .getList("", AdvertDTOResponse.class);
+                .getList("", EventDTOResponse.class);
     }
 
     @Test
@@ -290,6 +285,6 @@ public class AdvertControllerRestAssuredTest {
                 .body("size()", is(2))
                 .extract()
                 .jsonPath()
-                .getList("", AdvertDTOResponse.class);
+                .getList("", EventDTOResponse.class);
     }
 }

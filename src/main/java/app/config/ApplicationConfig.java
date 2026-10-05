@@ -2,6 +2,10 @@ package app.config;
 
 import app.controller.*;
 import app.dao.*;
+import app.exceptions.ApiException;
+import app.exceptions.DatabaseException;
+import app.exceptions.DatabaseIdException;
+import app.exceptions.SyncException;
 import app.service.AddressService;
 import app.service.AdvertService;
 import app.service.EventService;
@@ -11,9 +15,16 @@ import io.javalin.Javalin;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.config.JavalinConfig;
 import io.javalin.json.JavalinJackson;
+import io.javalin.validation.ValidationError;
 import io.javalin.validation.ValidationException;
 import jakarta.persistence.EntityManagerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Slf4j
 public class ApplicationConfig implements EndpointGroup {
 
     private final EventController eventController;
@@ -60,12 +71,39 @@ public class ApplicationConfig implements EndpointGroup {
 
     public Javalin startServer(int port) {
         var app = Javalin.create(this::configuration);
+
         app.exception(ValidationException.class, (e, ctx) -> {
-            ctx.status(400).json(e.getErrors());
+            String messages = e.getErrors().values().stream()
+                    .flatMap(List::stream)
+                    .map(ValidationError::getMessage)
+                    .collect(Collectors.joining(", "));
+            log.warn("Validation failed: {}", messages);
+            ctx.status(400).json(Map.of("error", messages));
         });
-//        app.exception(Exception.class, (e, ctx) -> { // TODO: First check if validating of LocalDate fail with eg. "tomorrow" String instead of 2026-05-05 else use this to catch it
-//            ctx.status(400).json(Map.of("ERROR", List.of("Invalid request body: " + e.getMessage())));
-//        });
+        app.exception(ApiException.class, (e, ctx) -> {
+            log.warn("API Error: {}", e.getMessage());
+            ctx.status(500).json(Map.of("error", e.getMessage()));
+        });
+
+        app.exception(DatabaseException.class, (e, ctx) -> {
+            log.warn("Database Error: {}", e.getMessage());
+            ctx.status(500).json(Map.of("error", e.getMessage()));
+        });
+
+        app.exception(DatabaseIdException.class, (e, ctx) -> {
+            log.warn("Database Id Error: {}", e.getMessage());
+            ctx.status(500).json(Map.of("error", e.getMessage()));
+        });
+
+        app.exception(SyncException.class, (e, ctx) -> {
+            log.warn("Sync Error: {}", e.getMessage());
+            ctx.status(500).json(Map.of("error", e.getMessage()));
+        });
+
+        app.exception(Exception.class, (e, ctx) -> {
+            log.error("Unexpected server error: {}", e.getMessage(), e);
+            ctx.status(500).json(Map.of("error", "An unexpected internal server error occurred"));
+        });
         app.start(port);
         return app;
     }
