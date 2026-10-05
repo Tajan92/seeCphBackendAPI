@@ -7,18 +7,21 @@ import app.dto.ticketMaster.TicketMasterDTO;
 import app.dto.user.UserDTOResponse;
 import app.entities.Address;
 import app.entities.Event;
+import app.enums.EventCategory;
 import app.enums.SourceProvider;
 import app.enums.UserRole;
+import app.mapper.EventConverter;
 import app.mapper.TicketMasterConverter;
 import app.utils.APIReader;
 import app.utils.DefaultDescription;
 import app.utils.GeoUtil;
 import lombok.Getter;
 
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 public class EventService implements IService<EventDTORequest, EventDTOResponse> {
@@ -27,6 +30,7 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
     private final UserService userService;
     private final APIReader apiReader;
     private final TicketMasterConverter converter;
+    private final EventConverter eventConverter;
     private int counter;
 
     public EventService(EventDAO eventDAO, AddressService addressService, UserService userService) {
@@ -35,6 +39,7 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
         this.userService = userService;
         this.apiReader = new APIReader();
         this.converter = new TicketMasterConverter(addressService);
+        this.eventConverter = new EventConverter();
     }
 
 //apiReader.getApiAsTmDTO("https://app.ticketmaster.com/discovery/v2/events.json?countryCode=DK&latlong=55.6761,12.5683&radius=15&unit=km&page=$&apikey="+System.getenv("API_KEY"));
@@ -109,13 +114,22 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
     @Override
     public List<EventDTOResponse> getAll() {
         List<Event> events = eventDAO.readAll();
-        List<EventDTOResponse> eventDTOs = new ArrayList<>();
-        if (events != null && !events.isEmpty()) {
-            for (Event event : events) {
-                eventDTOs.add(new EventDTOResponse(event));
-            }
+        if (events == null) {
+            return List.of();
         }
-        return eventDTOs;
+        return eventConverter.convertEntityListToDTOList(events);
+    }
+
+    public List<EventDTOResponse> getAllEventsBySearchAndFilter(String search, EventCategory category, LocalDate startDate, String postalCode, int page, int pageSize) {
+        List<Event> events = eventDAO.searchAndFilterEvent(search, category, startDate, postalCode, page, pageSize);
+        if (events == null) {
+            return List.of();
+        }
+        return eventConverter.convertEntityListToDTOList(events);
+    }
+
+    public List<EventCategory> getAllActiveEventCategories() {
+        return eventDAO.readDistinctCategoriesInDb();
     }
 
     @Override
@@ -124,11 +138,16 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
         return eventDAO.delete(event);
     }
 
-    public void persistTmEvents() {
+    public void syncTmEvents() {
         counter = 0;
-        int maxCount = 5;
+        int maxCount = 15;
         List<Event> events = new ArrayList<>();
         List<TicketMasterDTO> ticketMasterDTOs = apiReader.getApiAsTmDTO();
+        List<Event> allEvents = eventDAO.readAllTmEvents();
+
+        Set<String> existingApiIds = allEvents.stream()
+                .map(Event::getApiEventId)
+                .collect(Collectors.toSet());
 
         for (TicketMasterDTO ticketMasterDTO : ticketMasterDTOs) {
             if (ticketMasterDTO != null && ticketMasterDTO.embedded() != null && ticketMasterDTO.embedded().events() != null) {
@@ -142,13 +161,18 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
             if (description != null) {
                 event.addDescription(description);
             }
-            eventDAO.create(event);
+            if (existingApiIds.contains(event.getApiEventId())) {
+                eventDAO.update(event);
+            } else {
+                eventDAO.create(event);
+            }
         }
+        System.out.println("Done");
     }
 
     private String checkForDescription(Event event, int maxCount) {
         String description;
-        if (event.getDescription() == null || event.getDescription().isEmpty()) {
+        if (event.getDescription() == null || event.getDescription().isEmpty() || event.getDescription().contains("<!-- default-message -->") && !event.getDescription().contains("(Description created with AI)")) {
             if (counter < maxCount) {
                 counter++;
                 description = apiReader.geminiDescriptionCreator(event);

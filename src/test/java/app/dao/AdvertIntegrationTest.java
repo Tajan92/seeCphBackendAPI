@@ -30,6 +30,7 @@ public class AdvertIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        TestDataCreator.clearDatabase(emf);
         users = TestDataCreator.createUsers(emf);
         events = TestDataCreator.createEvents(emf);
         adverts = TestDataCreator.createAdverts(emf);

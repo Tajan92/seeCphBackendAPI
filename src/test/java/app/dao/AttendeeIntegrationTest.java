@@ -29,6 +29,7 @@ public class AttendeeIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        TestDataCreator.clearDatabase(emf);
         users = TestDataCreator.createUsers(emf);
         events = TestDataCreator.createEvents(emf);
     }

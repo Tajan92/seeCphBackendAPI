@@ -18,6 +18,26 @@ import java.util.*;
 
 public final class TestDataCreator {
 
+    public static void clearDatabase(EntityManagerFactory emf) {
+        try (EntityManager em = emf.createEntityManager()) {
+            em.getTransaction().begin();
+            try {
+                em.createNativeQuery("TRUNCATE TABLE advert RESTART IDENTITY CASCADE").executeUpdate();
+                em.createNativeQuery("TRUNCATE TABLE event RESTART IDENTITY CASCADE").executeUpdate();
+                em.createNativeQuery("TRUNCATE TABLE address RESTART IDENTITY CASCADE").executeUpdate();
+                em.createNativeQuery("TRUNCATE TABLE users RESTART IDENTITY CASCADE").executeUpdate();
+
+                em.flush();
+                em.getTransaction().commit();
+            } catch (Exception e) {
+                if (em.getTransaction().isActive()) {
+                    em.getTransaction().rollback();
+                }
+                throw e;
+            }
+        }
+    }
+
     public static Map<String, User> createUsers(EntityManagerFactory emf) {
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
@@ -41,8 +61,6 @@ public final class TestDataCreator {
             User organizer5 = Organizer.builder().organizerName("Lego").accountStatus(Status.ACTIVE).name("Lego").email("lego@mail.dk").phone("56789012").password("56789012").userRole(UserRole.ORGANIZER).build();
 
             try {
-                em.createNativeQuery("TRUNCATE TABLE users RESTART IDENTITY CASCADE").executeUpdate();
-
                 List<User> users = List.of(
                         admin, admin2, admin3, admin4, admin5,
                         attendee, attendee2, attendee3, attendee4, attendee5,
@@ -132,8 +150,6 @@ public final class TestDataCreator {
                     .build();
 
             try {
-                em.createNativeQuery("TRUNCATE TABLE advert RESTART IDENTITY CASCADE").executeUpdate();
-
                 List<Advert> adverts = List.of(advert, advert2);
                 adverts.forEach(em::persist);
 
@@ -195,8 +211,6 @@ public final class TestDataCreator {
                     .build();
 
             try {
-                em.createNativeQuery("TRUNCATE TABLE event RESTART IDENTITY CASCADE").executeUpdate();
-
                 List<Event> events = List.of(
                         event, event2
                 );
@@ -234,8 +248,6 @@ public final class TestDataCreator {
                     .build();
 
             try {
-                em.createNativeQuery("TRUNCATE TABLE address RESTART IDENTITY CASCADE").executeUpdate();
-
                 List<Address> addresses = List.of(
                         address1, address2
                 );

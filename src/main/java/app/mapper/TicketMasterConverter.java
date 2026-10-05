@@ -46,6 +46,7 @@ public class TicketMasterConverter {
                     .category(findEventCategory(eventDTO))
                     .imageUrl(url)
                     .url(eventDTO.url())
+                    .apiEventId(eventDTO.id())
                     .build();
             events.add(eventBuild);
         }

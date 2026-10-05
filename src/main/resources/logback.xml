@@ -1,14 +1,36 @@
 <configuration>
 
+    <!-- Console Appender (så du stadig ser logs i terminalen) -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <!-- Default level for everything -->
+    <!-- Rolling File Appender (gemmer i fil og sletter automatisk gamle) -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/log.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Hvordan arkiv-filerne skal navngives (her rulles de dagligt) -->
+            <fileNamePattern>logs/archived/log-%d{yyyy-MM-dd}.log</fileNamePattern>
+
+            <!-- Hvor mange dages historik der må gemmes, før de slettes automatisk -->
+            <maxHistory>14</maxHistory>
+
+            <!-- (Valgfrit) Maksimal samlet størrelse for alle arkiverede filer tilsammen -->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root logger - sender til BÅDE konsol og fil -->
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
     </root>
 
     <!-- Silence noisy frameworks -->

@@ -32,6 +32,7 @@ public class OrganizorIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        TestDataCreator.clearDatabase(emf);
         events = TestDataCreator.createEvents(emf);
         adverts = TestDataCreator.createAdverts(emf);
         organizer = Organizer.builder()

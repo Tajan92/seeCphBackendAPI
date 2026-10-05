@@ -31,6 +31,7 @@ class UserDAOTest {
 
     @BeforeEach
     void setUp() {
+        TestDataCreator.clearDatabase(emf);
         users = TestDataCreator.createUsers(emf);
     }
 

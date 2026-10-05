@@ -38,6 +38,7 @@ public class AdminIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        TestDataCreator.clearDatabase(emf);
         events = TestDataCreator.createEvents(emf);
         adverts = TestDataCreator.createAdverts(emf);
         admin = Admin.builder()

@@ -2,14 +2,18 @@ package app.controller;
 
 import app.dto.event.EventDTOResponse;
 import app.dto.event.EventDTORequest;
+import app.enums.EventCategory;
+import app.exceptions.SyncException;
 import app.service.EventService;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-
+import java.util.concurrent.CompletableFuture;
+@Slf4j
 public class EventHandler implements IHandler {
     EventService eventService;
 
@@ -39,12 +43,34 @@ public class EventHandler implements IHandler {
 
     @Override
     public void getAll(Context ctx) {
-        List<EventDTOResponse> eventDTOS = eventService.getAll();
-        if (eventDTOS.isEmpty()) {
-            ctx.status(HttpStatus.NOT_FOUND);
+        int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(0);
+        int pageSize = ctx.queryParamAsClass("pageSize", Integer.class).getOrDefault(20);
+
+        int pageMaxSize = 100;
+        if (pageSize > pageMaxSize) {
+            pageSize = pageMaxSize;
         }
+        if (page < 0) {
+            page = 0;
+        }
+
+        String categoryParam = ctx.queryParam("category");
+        String startDateParam = ctx.queryParam("startDate");
+        String postalCodeParam = ctx.queryParam("postalCode");
+        String searchParam = ctx.queryParam("search");
+
+        LocalDate startDate = (startDateParam != null && !startDateParam.isBlank() ? LocalDate.parse(startDateParam) : null);
+        EventCategory eventCategory = (categoryParam != null && !categoryParam.isBlank() ? EventCategory.valueOf(categoryParam.toUpperCase()) : null);
+
+        List<EventDTOResponse> eventDTOS = eventService.getAllEventsBySearchAndFilter(searchParam, eventCategory, startDate, postalCodeParam, page, pageSize);
+
         ctx.status(HttpStatus.OK);
         ctx.json(eventDTOS);
+    }
+
+    public void getAllActiveEventCategories(Context ctx) {
+        ctx.status(HttpStatus.OK);
+        ctx.json(eventService.getAllActiveEventCategories());
     }
 
     @Override
@@ -66,13 +92,20 @@ public class EventHandler implements IHandler {
         ctx.status(HttpStatus.OK);
     }
 
-    public void getTicketMasterEvents(Context ctx) {
+    public void syncEventsFromAPI(Context ctx) {
         String authHeader = ctx.header("x-api-key");
-        String expectedSecret = System.getenv("SYNC_SECRET"); // Bør hentes fra en miljøvariabel (.env)
+        String expectedSecret = System.getenv("SYNC_SECRET");
 
         if (expectedSecret != null && expectedSecret.equals(authHeader)) {
-            eventService.persistTmEvents();
-            ctx.status(200).result("Ticketmaster sync executed successfully.");
+            CompletableFuture.runAsync(() -> {
+                try {
+                    eventService.syncTmEvents();
+                    log.info("Background sync completed successfully.");
+                } catch (Exception e) {
+                    log.error("Error during background sync: {}", e.getMessage(), e);
+                }
+            });
+            ctx.status(200).result("Ticketmaster sync started successfully.");
         } else {
             ctx.status(401).result("Unauthorized");
         }
@@ -103,6 +136,5 @@ public class EventHandler implements IHandler {
                     }
                     return true;
                 }, "Start time cannot be in the past").get();
-
     }
 }

@@ -27,6 +27,7 @@ public class EventIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        TestDataCreator.clearDatabase(emf);
         events = TestDataCreator.createEvents(emf);
         adverts = TestDataCreator.createAdverts(emf);
     }
