@@ -160,6 +160,12 @@
             <version>5.5.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- JWT - Security -->
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>4.6.1</version>
+        </dependency>
     </dependencies>
 
 </project>

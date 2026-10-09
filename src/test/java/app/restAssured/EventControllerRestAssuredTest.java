@@ -2,6 +2,7 @@ package app.restAssured;
 
 import app.config.ApplicationConfig;
 import app.config.HibernateConfig;
+import app.config.HibernateTestConfig;
 import app.dao.UserDAO;
 import app.dto.event.EventDTORequest;
 import app.dto.event.EventDTOResponse;
@@ -34,7 +35,7 @@ public class EventControllerRestAssuredTest {
 
     @BeforeAll
     static void init() {
-        emf = HibernateConfig.getEntityManagerFactory();
+        emf = HibernateTestConfig.getEntityManagerFactory();
         applicationConfig = new ApplicationConfig(emf);
         app = applicationConfig.startServer(7070);
         RestAssured.baseURI = "http://localhost:7070/api/v1/events";

@@ -1,61 +1,34 @@
 package app.utils;
 
-import app.dto.user.UserDTORequest;
-import java.util.ArrayList;
-import java.util.List;
+public class UserValidator {
 
-public class UserValidator { // TODO: Needs a lot of work to take in validation annotation
-    public List<String> validate(UserDTORequest userRegisterDTO) {
-        List<String> message = new ArrayList<>();
-
-        if (userRegisterDTO == null) {
-            message.add("All fields are required");
-            return message;
-        }
-
-        String email = userRegisterDTO.email();
-        String phone = userRegisterDTO.phone();
-        String password = userRegisterDTO.password();
-        String passwordCheck = userRegisterDTO.passwordCheck();
-
-        validatePhoneNumber(phone, message);
-        passwordMustContainNumber(password, message);
-        shouldRejectPasswordWithoutSpecialCharacter(password, message);
-        passwordsMustMatch(password, passwordCheck, message);
-        validateEmail(email, message);
-        return message;
+    public static boolean passwordsMustMatch(String password, String passwordCheck) {
+        return password != null && password.equals(passwordCheck);
     }
 
-    private void passwordsMustMatch(String password, String passwordCheck, List<String> message) {
-        if (!password.equals(passwordCheck)) {
-            message.add("Passwords do not match");
-        }
+    public static boolean passwordMustContainNumber(String password) {
+        return password != null && password.chars().anyMatch(Character::isDigit);
     }
 
-    private void passwordMustContainNumber(String password, List<String> message) {
-        if (!password.chars().anyMatch(Character::isDigit)) {
-            message.add("Password must contain a number");
-        }
+    public static boolean shouldRejectPasswordWithoutSpecialCharacter(String password) {
+        return password != null && password.chars().anyMatch(c -> !Character.isLetterOrDigit(c));
+
     }
 
-    private void shouldRejectPasswordWithoutSpecialCharacter(String password, List<String> message) {
-        if (!password.chars().anyMatch(c -> !Character.isLetterOrDigit(c))) {
-            message.add("Password must contain a special character");
-        }
+    public static boolean isPasswordLongEnough(String password) {
+        return password != null && password.length() >= 8;
     }
 
-    private void validateEmail(String email, List<String> message) {
+    public static boolean validateEmail(String email) {
+        if (email == null) return false;
         String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
-        if (!email.matches(emailRegex)) {
-            message.add("Email-format not right");
-        }
+        return email.matches(emailRegex);
     }
 
-    private void validatePhoneNumber(String phoneNumber, List<String> message) {
+    public static boolean validatePhoneNumber(String phoneNumber) {
+        if (phoneNumber == null) return false;
         String phoneRegexDK = "^[0-9]{8}$";
         String phoneNumberRegex = "^(?:\\+|00)[1-9][0-9]{1,2}[0-9]{4,12}$";
-        if (!phoneNumber.matches(phoneNumberRegex) && !phoneNumber.matches(phoneRegexDK)) {
-            message.add("Phone number format not right");
-        }
+        return (phoneNumber.matches(phoneNumberRegex) || phoneNumber.matches(phoneRegexDK));
     }
 }

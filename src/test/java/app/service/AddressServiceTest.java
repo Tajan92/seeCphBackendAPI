@@ -15,12 +15,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AddressServiceTest {
-    private final EntityManagerFactory emf = HibernateTestConfig.getEntityManagerFactory();
+    private EntityManagerFactory emf;
     private AddressDAO addressDAO;
     private AddressService addressService;
 
     @BeforeAll
     void setUpAll() {
+        emf = HibernateTestConfig.getEntityManagerFactory();
         addressDAO = new AddressDAO(emf);
     }
 

@@ -3,16 +3,15 @@ package app.entities.users;
 import app.entities.IGetId;
 import app.enums.UserRole;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.proxy.HibernateProxy;
+import org.mindrot.jbcrypt.BCrypt;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 @Getter
@@ -30,10 +29,11 @@ public abstract class User implements IGetId {
     @Setter
     private String name;
     @Setter
+    @Column(unique = true, nullable = false)
     private String email;
     @Setter
     private String phone;
-    private String password;
+    private String hashedPassword;
     @Enumerated(EnumType.STRING)
     @Column(name = "user_role")
     private UserRole userRole;

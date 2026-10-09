@@ -23,12 +23,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserServiceTest {
-    private final EntityManagerFactory emf = HibernateTestConfig.getEntityManagerFactory();
+    private EntityManagerFactory emf;
     private UserDAO userDAO;
     private UserService userService;
 
     @BeforeAll
     void setUpAll() {
+        emf = HibernateTestConfig.getEntityManagerFactory();
         userDAO = new UserDAO(emf);
     }
 

@@ -7,6 +7,8 @@ import app.dto.user.UserDTOResponse;
 import app.entities.users.Organizer;
 import app.entities.users.User;
 import app.mapper.UserConverter;
+import app.utils.PasswordUtil;
+import org.hibernate.service.spi.ServiceException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,12 +24,20 @@ public class UserService implements IService<UserDTORequest, UserDTOResponse> {
 
     @Override
     public UserDTOResponse create(UserDTORequest input) {
-        User user = userDAO.create(userConverter.convertDTOToEntity(input));
+        if (userDAO.checkIfEmailExist(input.email())){
+            throw new ServiceException("Email is already in use");
+        }
+        String hashedPassword = PasswordUtil.hashPassword(input.password());
+        User user = userDAO.create(userConverter.convertDTOToEntity(input, hashedPassword));
         return userConverter.convertEntityToDTO(user);
     }
 
     public OrganizerDTOResponse createPendingOrganizer(UserDTORequest input) {
-        User user = userDAO.create(userConverter.convertDTOToOrganizer(input));
+        if (userDAO.checkIfEmailExist(input.email())){
+            throw new ServiceException("Email is already in use");
+        }
+        String hashedPassword = PasswordUtil.hashPassword(input.password());
+        User user = userDAO.create(userConverter.convertDTOToOrganizer(input, hashedPassword));
         if (!(user instanceof Organizer)) {
             return null;
         }
@@ -35,7 +45,11 @@ public class UserService implements IService<UserDTORequest, UserDTOResponse> {
     }
 
     public UserDTOResponse createAdmin(UserDTORequest input) {
-        User user = userDAO.create(userConverter.convertDTOToAdmin(input));
+        if (userDAO.checkIfEmailExist(input.email())){
+            throw new ServiceException("Email is already in use");
+        }
+        String hashedPassword = PasswordUtil.hashPassword(input.password());
+        User user = userDAO.create(userConverter.convertDTOToAdmin(input, hashedPassword));
         return userConverter.convertEntityToDTO(user);
     }
 

@@ -15,7 +15,6 @@ import org.junit.jupiter.api.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -42,7 +41,7 @@ class UserDAOTest {
 
     @Test
     void createAdmin() {
-        User admin = Admin.builder().name("Camilla").email("camilla@mail.dk").phone("67890123").password("67890123").userRole(UserRole.ADMIN).build();
+        User admin = Admin.builder().name("Camilla").email("camilla@mail.dk").phone("67890123").hashedPassword("67890123").userRole(UserRole.ADMIN).build();
         User adminCreated = userDAO.create(admin);
 
         assertThat(adminCreated.getUserId(), notNullValue());
@@ -54,7 +53,7 @@ class UserDAOTest {
 
     @Test
     void createAttendee() {
-        User attendee = Attendee.builder().name("Peter").email("peter@mail.dk").phone("67890123").password("67890123").userRole(UserRole.ATTENDEE).build();
+        User attendee = Attendee.builder().name("Peter").email("peter@mail.dk").phone("67890123").hashedPassword("67890123").userRole(UserRole.ATTENDEE).build();
         User attendeeCreated = userDAO.create(attendee);
 
         assertThat(attendeeCreated.getUserId(), notNullValue());
@@ -66,7 +65,7 @@ class UserDAOTest {
 
     @Test
     void createOrganizer() {
-        User organizer = Organizer.builder().organizerName("Maersk").accountStatus(Status.PENDING).name("Maersk").email("maersk@mail.dk").phone("67890123").password("67890123").userRole(UserRole.ORGANIZER).build();
+        User organizer = Organizer.builder().organizerName("Maersk").accountStatus(Status.PENDING).name("Maersk").email("maersk@mail.dk").phone("67890123").hashedPassword("67890123").userRole(UserRole.ORGANIZER).build();
         User organizerCreated = userDAO.create(organizer);
 
         assertThat(organizerCreated.getUserId(), notNullValue());
@@ -96,7 +95,7 @@ class UserDAOTest {
         User admin = users.get("admin");
         Admin newAdmin = Admin.builder()
                 .userId(admin.getUserId())
-                .password("12345678")
+                .hashedPassword("12345678")
                 .name("jason")
                 .email("jason@mail.dk")
                 .phone("67890123")
@@ -115,7 +114,7 @@ class UserDAOTest {
         Attendee newAttendee = Attendee.builder()
                 .userId(attendee.getUserId())
                 .name("jason")
-                .password("12345678")
+                .hashedPassword("12345678")
                 .email("jason@mail.dk")
                 .phone("67890123")
                 .build();
@@ -134,7 +133,7 @@ class UserDAOTest {
                 .userId(organizer.getUserId())
                 .name("jason")
                 .email("jason@mail.dk")
-                .password("12345678")
+                .hashedPassword("12345678")
                 .phone("67890123")
                 .userRole(UserRole.ORGANIZER)
                 .build();

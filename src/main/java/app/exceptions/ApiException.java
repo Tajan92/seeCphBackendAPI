@@ -1,18 +1,16 @@
 package app.exceptions;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Getter
+@Slf4j
 public class ApiException extends RuntimeException {
     private int code;
-    private static final Logger logger = LoggerFactory.getLogger(ApiException.class);
 
     public ApiException(int code, String msg){
         super(msg);
         this.code = code;
-        logger.error("ApiException (code={}): {}", code, msg);
-    }
-    public int getCode(){
-        return code;
+        log.error("ApiException (code={}): {}", code, msg);
     }
 }

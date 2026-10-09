@@ -6,10 +6,7 @@ import app.exceptions.ApiException;
 import app.exceptions.DatabaseException;
 import app.exceptions.DatabaseIdException;
 import app.exceptions.SyncException;
-import app.service.AddressService;
-import app.service.AdvertService;
-import app.service.EventService;
-import app.service.UserService;
+import app.service.*;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.Javalin;
 import io.javalin.apibuilder.EndpointGroup;
@@ -30,6 +27,8 @@ public class ApplicationConfig implements EndpointGroup {
     private final EventController eventController;
     private final UserController userController;
     private final AdvertController advertController;
+    private final SecurityController securityController;
+    private final SecurityHandler securityHandler;
 
     public ApplicationConfig(EntityManagerFactory emf) {
         // DAOs
@@ -43,16 +42,19 @@ public class ApplicationConfig implements EndpointGroup {
         UserService userService = new UserService(userDAO);
         EventService eventService = new EventService(eventDAO, addressService, userService);
         AdvertService advertService = new AdvertService(advertDAO, userDAO, eventDAO, eventService, userService);
+        SecurityService securityService = new SecurityService(userDAO);
 
         // Handlers
         EventHandler eventHandler = new EventHandler(eventService);
         UserHandler userHandler = new UserHandler(userService);
         AdvertHandler advertHandler = new AdvertHandler(advertService);
+        this.securityHandler = new SecurityHandler(securityService);
 
         // Controllers
         this.eventController = new EventController(eventHandler);
         this.userController = new UserController(userHandler);
         this.advertController = new AdvertController(advertHandler);
+        this.securityController = new SecurityController(securityHandler);
     }
 
     @Override
@@ -63,14 +65,18 @@ public class ApplicationConfig implements EndpointGroup {
     }
 
     public void configuration(JavalinConfig config) {
-            config.jsonMapper(new JavalinJackson().updateMapper(mapper -> {
-                mapper.registerModule(new JavaTimeModule());
-            }));
-            config.router.apiBuilder(this);
+        config.jsonMapper(new JavalinJackson().updateMapper(mapper -> {
+            mapper.registerModule(new JavaTimeModule());
+        }));
+        config.showJavalinBanner = false;
+        config.http.defaultContentType = "application/json"; // default content type for requests
+        config.router.apiBuilder(this);
     }
 
     public Javalin startServer(int port) {
         var app = Javalin.create(this::configuration);
+        app.beforeMatched(securityHandler::authenticate);
+        app.beforeMatched(securityHandler::authorize);
 
         app.exception(ValidationException.class, (e, ctx) -> {
             String messages = e.getErrors().values().stream()

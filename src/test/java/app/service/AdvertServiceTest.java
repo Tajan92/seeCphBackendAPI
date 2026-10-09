@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AdvertServiceTest {
-    private final EntityManagerFactory emf = HibernateTestConfig.getEntityManagerFactory();
+    private EntityManagerFactory emf;
     private AdvertService advertService;
     private AdvertDAO advertDAO;
     private UserDAO userDAO;
@@ -47,6 +47,7 @@ class AdvertServiceTest {
 
     @BeforeAll
     void setUpAll() {
+        emf = HibernateTestConfig.getEntityManagerFactory();
         advertDAO = new AdvertDAO(emf);
         userDAO = new UserDAO(emf);
         eventDAO = new EventDAO(emf);

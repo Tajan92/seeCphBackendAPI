@@ -44,7 +44,7 @@ public class AdminIntegrationTest {
         admin = Admin.builder()
                 .name("RF")
                 .email("runfun@mail.dk")
-                .password("12345678")
+                .hashedPassword("12345678")
                 .userRole(UserRole.ADMIN)
                 .phone("89765432")
                 .build();

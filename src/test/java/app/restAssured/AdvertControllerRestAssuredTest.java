@@ -2,6 +2,7 @@ package app.restAssured;
 
 import app.config.ApplicationConfig;
 import app.config.HibernateConfig;
+import app.config.HibernateTestConfig;
 import app.dao.EventDAO;
 import app.dao.UserDAO;
 import app.dto.advert.AdvertDTORequest;
@@ -35,7 +36,7 @@ public class AdvertControllerRestAssuredTest {
 
     @BeforeAll
     static void init() {
-        emf = HibernateConfig.getEntityManagerFactory();
+        emf = HibernateTestConfig.getEntityManagerFactory();
         applicationConfig = new ApplicationConfig(emf);
         app = applicationConfig.startServer(7070);
         RestAssured.baseURI = "http://localhost:7070/api/v1/adverts";

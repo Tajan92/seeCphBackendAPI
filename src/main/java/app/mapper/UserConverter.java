@@ -9,35 +9,34 @@ import app.entities.users.Organizer;
 import app.entities.users.User;
 import app.enums.UserRole;
 
-public class UserConverter implements IConverter<User, UserDTOResponse, UserDTORequest> {
+public class UserConverter {
 
-    @Override
-    public User convertDTOToEntity(UserDTORequest attendeeDTO) {
+    public User convertDTOToEntity(UserDTORequest attendeeDTO, String hashedPassword) {
         return Attendee.builder()
                 .name(attendeeDTO.name())
                 .email(attendeeDTO.email())
                 .phone(attendeeDTO.phone())
-                .password(attendeeDTO.password())
+                .hashedPassword(hashedPassword)
                 .userRole(UserRole.ATTENDEE)
                 .build();
     }
 
-    public User convertDTOToOrganizer(UserDTORequest organizerDTO) {
+    public User convertDTOToOrganizer(UserDTORequest organizerDTO, String hashedPassword) {
         return Organizer.builder()
                 .name(organizerDTO.name())
                 .email(organizerDTO.email())
                 .phone(organizerDTO.phone())
-                .password(organizerDTO.password())
+                .hashedPassword(hashedPassword)
                 .userRole(UserRole.ORGANIZER)
                 .build();
     }
 
-    public User convertDTOToAdmin(UserDTORequest adminDTORequest) {
+    public User convertDTOToAdmin(UserDTORequest adminDTORequest, String hashedPassword) {
         return Admin.builder()
                 .name(adminDTORequest.name())
                 .email(adminDTORequest.email())
                 .phone(adminDTORequest.phone())
-                .password(adminDTORequest.password())
+                .hashedPassword(hashedPassword)
                 .userRole(UserRole.ADMIN)
                 .build();
     }
@@ -55,7 +54,6 @@ public class UserConverter implements IConverter<User, UserDTOResponse, UserDTOR
         return updatedUser;
     }
 
-    @Override
     public UserDTOResponse convertEntityToDTO(User user) {
         return new UserDTOResponse(user.getUserId(), user.getName(), user.getEmail(), user.getPhone(), user.getUserRole());
     }

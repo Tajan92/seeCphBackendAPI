@@ -1,6 +1,9 @@
 package app.utils;
 
+import app.entities.users.User;
 import org.mindrot.jbcrypt.BCrypt;
+
+import java.nio.charset.StandardCharsets;
 
 public class PasswordUtil {
 
@@ -9,7 +12,9 @@ public class PasswordUtil {
 
     }
 
-    public static boolean checkPassword(String password, String hashedPasswordFromDB){
-        return BCrypt.checkpw(password, hashedPasswordFromDB);
+    public static boolean verifyPassword(String password, User user){
+        return password != null
+                && password.getBytes(StandardCharsets.UTF_8).length <= 72
+                && BCrypt.checkpw(password, user.getHashedPassword());
     }
 }

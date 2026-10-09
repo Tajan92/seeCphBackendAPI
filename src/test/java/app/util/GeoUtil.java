@@ -23,7 +23,6 @@ public class GeoUtil {
         coordinates = null;
     }
 
-
     @Test
     void newAddress() {
         Address address = Address.builder()

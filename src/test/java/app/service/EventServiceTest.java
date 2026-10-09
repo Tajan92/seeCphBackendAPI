@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EventServiceTest {
-    private final EntityManagerFactory emf = HibernateTestConfig.getEntityManagerFactory();
+    private EntityManagerFactory emf;
     private EventService eventService;
     private EventDAO eventDAO;
     private AddressDAO addressDAO;
@@ -41,6 +41,7 @@ class EventServiceTest {
 
     @BeforeAll
     void setUpAll() {
+        emf = HibernateTestConfig.getEntityManagerFactory();
         eventDAO = new EventDAO(emf);
         addressDAO = new AddressDAO(emf);
         userDAO = new UserDAO(emf);
