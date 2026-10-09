@@ -1,6 +1,7 @@
 package app.utils;
 
 import app.entities.Address;
+import app.exceptions.ApiException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -56,7 +57,7 @@ public class GeoUtil {
             }
         } catch (IOException | InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Failed to fetch coordinates from API", e);
+            throw new ApiException(500, "Failed to fetch coordinates from API: "+e.getMessage());
         }
         return new Coordinates("0", "0");
     }

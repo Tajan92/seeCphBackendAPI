@@ -23,10 +23,15 @@ public class EventHandler implements IHandler {
 
     @Override
     public void create(Context ctx) {
-        EventInputValidator(ctx);
         EventDTORequest input = EventInputValidator(ctx);
-        eventService.create(input);
-        ctx.status(HttpStatus.CREATED);
+        EventDTOResponse eventDTOResponse = eventService.create(input);
+        if (eventDTOResponse != null) {
+            ctx.status(HttpStatus.CREATED);
+            ctx.json(eventDTOResponse);
+        }  else {
+            ctx.status(HttpStatus.BAD_REQUEST);
+            log.warn("400: Invalid event request: {}", input);
+        }
     }
 
     @Override
@@ -35,6 +40,7 @@ public class EventHandler implements IHandler {
         EventDTOResponse eventDTO = eventService.getById(id);
         if (eventDTO == null) {
             ctx.status(HttpStatus.NOT_FOUND);
+            log.warn("404: Event with id {} not found", id);
             return;
         }
         ctx.status(HttpStatus.OK);

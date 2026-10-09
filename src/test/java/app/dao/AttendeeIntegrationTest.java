@@ -45,7 +45,7 @@ public class AttendeeIntegrationTest {
                 .name("Peter")
                 .email("peter@mail.dk")
                 .phone("67890123")
-                .password("67890123")
+                .hashedPassword("67890123")
                 .userRole(UserRole.ATTENDEE)
                 .build();
 
@@ -66,7 +66,7 @@ public class AttendeeIntegrationTest {
                 .name("Peter")
                 .email("peter@mail.dk")
                 .phone("67890123")
-                .password("67890123")
+                .hashedPassword("67890123")
                 .userRole(UserRole.ATTENDEE)
                 .build();
 
@@ -83,7 +83,7 @@ public class AttendeeIntegrationTest {
                 .name("Peter")
                 .email("peter@mail.dk")
                 .phone("67890123")
-                .password("67890123")
+                .hashedPassword("67890123")
                 .userRole(UserRole.ATTENDEE)
                 .build();
 

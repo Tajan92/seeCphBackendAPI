@@ -1,8 +1,8 @@
 package app.utils;
 
 import app.dto.ticketMaster.TicketMasterDTO;
-import app.dto.ticketMaster.TmEvent;
 import app.entities.Event;
+import app.exceptions.ApiException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,24 +13,13 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 public class APIReader {
     private final ObjectMapper objectMapper = new ObjectMapper();
     String geminiApiKey = System.getenv("GEMINI_API_KEY");
-
-    public <T> T getApiAsDTO(String url, Class<T> tclass) {
-        try {
-            JsonNode node = objectMapper.readTree(new URI(url).toURL());
-            return objectMapper.treeToValue(node, tclass);
-        } catch (URISyntaxException | IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     public List<TicketMasterDTO> getApiAsTmDTO() {
         String apiKeyTicketMaster = System.getenv("TICKETMASTER_API_KEY");
@@ -56,9 +45,11 @@ public class APIReader {
 
                 Thread.sleep(250);
             }
-        } catch (IOException | URISyntaxException | InterruptedException e) {
+        } catch (IOException | URISyntaxException e) {
+            throw new ApiException(502, "Failed to fetch Ticket Master API: " + e.getMessage());
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
+            throw new ApiException(500, "Ticketmaster thread was interrupted: " + e.getMessage());
         }
 
         return ticketMasterDTOs;
@@ -107,48 +98,9 @@ public class APIReader {
 
             return aiText + " (Description created with AI)";
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new ApiException(500, "Failed to fetch description from API: "+e.getMessage());
         } catch (Exception e) {
             return DefaultDescription.generateDefaultDescription(event);
         }
-    }
-
-
-    public String geminiRequestGenericPrompt(String prompt) {
-        Map<String, Object> body = Map.of(
-                "contents", List.of(
-                        Map.of("parts", List.of(
-                                Map.of("text", prompt)))),
-                "generationConfig", Map.of("responseMimeType", "application/json")
-        );
-
-        String jsonBody = null;
-        try {
-            jsonBody = objectMapper.writeValueAsString(body);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        String model = "gemini-3.5-flash-lite";
-        String endpoint =
-                "https://generativelanguage.googleapis.com/v1beta/models/"
-                        + model
-                        + ":generateContent";
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(endpoint))
-                .header("Content-Type", "application/json")
-                .header("x-goog-api-key", geminiApiKey)
-                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                .build();
-
-        HttpClient client = HttpClient.newHttpClient();
-        HttpResponse<String> response = null;
-        try {
-            response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        return response.body();
     }
 }

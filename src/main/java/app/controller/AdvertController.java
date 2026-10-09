@@ -1,4 +1,6 @@
 package app.controller;
+import app.enums.EventCategory;
+import app.enums.UserRole;
 import io.javalin.apibuilder.EndpointGroup;
 import lombok.AllArgsConstructor;
 
@@ -11,10 +13,10 @@ public class AdvertController implements EndpointGroup {
 
     @Override
     public void addEndpoints() {
-        post("/api/v1/adverts", advertHandler::create);
-        get("/api/v1/adverts/{id}", advertHandler::getById);
-        get("/api/v1/adverts", advertHandler::getAll);
-        put("/api/v1/adverts/{id}", advertHandler::updateById);
-        delete("/api/v1/adverts/{id}", advertHandler::deleteById);
+        post("/api/v1/adverts", advertHandler::create, UserRole.ORGANIZER, UserRole.ADMIN);
+        get("/api/v1/adverts/{id}", advertHandler::getById, UserRole.ADMIN);
+        get("/api/v1/adverts", advertHandler::getAll, UserRole.ADMIN);
+        put("/api/v1/adverts/{id}", advertHandler::updateById, UserRole.ADMIN);
+        delete("/api/v1/adverts/{id}", advertHandler::deleteById, UserRole.ADMIN);
     }
 }

@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TicketMasterConverterTest {
 
-    private final EntityManagerFactory emf = HibernateTestConfig.getEntityManagerFactory();
+    private EntityManagerFactory emf;
     private ObjectMapper objectMapper;
     private TicketMasterConverter ticketMasterConverter;
     private AddressDAO addressDAO;
@@ -29,6 +29,7 @@ class TicketMasterConverterTest {
 
     @BeforeAll
     void setup() {
+        emf = HibernateTestConfig.getEntityManagerFactory();
         addressDAO = new AddressDAO(emf);
         addressService = new AddressService(addressDAO);
     }
