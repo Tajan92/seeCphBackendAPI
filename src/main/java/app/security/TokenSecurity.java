@@ -2,66 +2,53 @@ package app.security;
 
 import app.dto.user.UserDTOResponse;
 import app.enums.UserRole;
+import app.exceptions.SecurityValidationException;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-
+import com.auth0.jwt.interfaces.DecodedJWT;
 import java.time.Instant;
-import java.util.List;
 
 public class TokenSecurity {
-    public String createToken(UserDTOResponse user, String issuer, String expirationTime, String secret) {
-        long expirationMillis = Long.parseLong(expirationTime);
-        if (expirationMillis <= 0 || issuer == null || issuer.isBlank()) {
+    public String createToken(UserDTOResponse user, String issuer, long expirationTime, String secret) {
+        if (expirationTime <= 0 || issuer == null || issuer.isBlank()) {
             throw new IllegalArgumentException("Issuer and positive expiration are required");
         }
         Instant now = Instant.now();
         return JWT.create()
                 .withIssuer(issuer)
-                .withSubject(user.name())
-                .withClaim("roles", user.userRole().toString())
+                .withSubject(String.valueOf(user.id()))
+                .withClaim("email", user.email())
+                .withClaim("name", user.name())
+                .withClaim("role", user.userRole().name())
                 .withIssuedAt(now)
-                .withExpiresAt(now.plusMillis(expirationMillis))
+                .withExpiresAt(now.plusMillis(expirationTime))
                 .sign(signingAlgorithm(secret));
     }
 
-    /** Verifies the signature, expiry, and required identity claims. */
-    public boolean tokenIsValid(String token, String secret) {
-        Algorithm algorithm = signingAlgorithm(secret);
+    public UserDTOResponse verifyAndGetUser(String token, String issuer, String secret) {
         try {
-            var jwt = JWT.require(algorithm)
-                    .withClaimPresence("sub")
-                    .withClaimPresence("roles")
+            DecodedJWT jwt = JWT.require(signingAlgorithm(secret))
+                    .withIssuer(issuer)
                     .withClaimPresence("exp")
-                    .build().verify(token);
-            if (jwt.getExpiresAtAsInstant() == null) return false;
-            getUserWithRolesFromToken(token);
-            return true;
-        } catch (JWTVerificationException e) {
-            return false;
-        }
-    }
+                    .withClaimPresence("email")
+                    .withClaimPresence("role")
+                    .build()
+                    .verify(token);
 
-    /** Checks expiry only; this does not verify the signature. */
-    public boolean tokenNotExpired(String token) {
-        try {
-            Instant expiration = JWT.decode(token).getExpiresAtAsInstant();
-            return expiration != null && Instant.now().isBefore(expiration);
-        } catch (JWTVerificationException e) {
-            return false;
-        }
-    }
+            int id = Integer.parseInt(jwt.getSubject());
+            UserRole role = UserRole.valueOf(jwt.getClaim("role").asString());
 
-    /** Call only after tokenIsValid: decoding alone does not authenticate a user. */
-    public UserDTOResponse getUserWithRolesFromToken(String token) {
-        var jwt = JWT.decode(token);
-        String username = jwt.getSubject();
-        UserRole userRole = jwt.getClaim("roles").getClass();
-        if (username == null || username.isBlank() || roles == null
-                || roles.stream().anyMatch(role -> role == null || role.isBlank())) {
-            throw new JWTVerificationException("Token must contain a username and roles");
+            return new UserDTOResponse(
+                    id,
+                    jwt.getClaim("name").asString(),
+                    jwt.getClaim("email").asString(),
+                    null, // phone is not stored in the token
+                    role);
+
+        } catch (JWTVerificationException | IllegalArgumentException | NullPointerException e) {
+            throw new SecurityValidationException(401, "Invalid or expired token");
         }
-        return new UserDTOResponse(username, Set.copyOf(roles));
     }
 
     private Algorithm signingAlgorithm(String secret) {

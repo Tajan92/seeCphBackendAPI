@@ -20,6 +20,7 @@ public class Organizer extends User {
     @Column(name = "organizer_name")
     private String organizerName;
 
+    @Setter
     @Enumerated(EnumType.STRING)
     private Status accountStatus;
 

@@ -12,11 +12,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 public class GeoUtil {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final HttpClient httpClient = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
+            .connectTimeout(Duration.ofSeconds(5))
             .build();
 
     public record Coordinates(String latitude, String longitude) {
@@ -37,6 +39,7 @@ public class GeoUtil {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
+                    .timeout(Duration.ofSeconds(10))
                     .header("User-Agent", "seeCphBackendApp/1.0 (StudentProject)")
                     .GET()
                     .build();
@@ -55,9 +58,12 @@ public class GeoUtil {
                     return new Coordinates(latitude, longitude);
                 }
             }
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ApiException(500, "Failed to fetch coordinates from API: "+e.getMessage());
+            throw new ApiException(500, "Getting coordinates from API was interrupted",e);
+        } catch (IOException e) {
+            throw new ApiException(502, "Failed to fetch coordinates from API", e);
+
         }
         return new Coordinates("0", "0");
     }

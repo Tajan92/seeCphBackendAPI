@@ -1,15 +1,13 @@
 package app.controller;
 
-import app.dto.user.OrganizerDTOResponse;
+import app.dto.user.OrganizerDTORequest;
 import app.dto.user.UserDTORequest;
 import app.dto.user.UserDTOResponse;
 import app.service.UserService;
 import app.utils.UserValidator;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class UserHandler implements IHandler {
     UserService userService;
 
@@ -19,74 +17,85 @@ public class UserHandler implements IHandler {
 
     @Override
     public void create(Context ctx) {
-        UserDTORequest userDTORequest = userInputValidator(ctx);
-        UserDTOResponse userDTOResponse = userService.create(userDTORequest);
-        if (userDTOResponse != null) {
-            ctx.status(HttpStatus.CREATED);
-            ctx.json(userDTOResponse);
-        } else  {
-            ctx.status(HttpStatus.BAD_REQUEST);
-            log.warn("400: Invalid user request: {}", userDTORequest);
-        }
+        UserDTORequest input = createValidator(ctx);
+        ctx.status(HttpStatus.CREATED).json(userService.create(input));
     }
 
     public void createPendingOrganizer(Context ctx) {
-        UserDTORequest userDTORequest = userInputValidator(ctx);
-        OrganizerDTOResponse organizerDTOResponse = userService.createPendingOrganizer(userDTORequest);
-        if (organizerDTOResponse != null) {
-            ctx.status(HttpStatus.CREATED);
-        } else  {
-            ctx.status(HttpStatus.BAD_REQUEST);
-            log.warn("400: Invalid organizer request: {}", userDTORequest);
-        }
+        UserDTORequest input = createValidator(ctx);
+        ctx.status(HttpStatus.CREATED).json(userService.createPendingOrganizer(input));
     }
 
     public void createAdmin(Context ctx) {
-        UserDTORequest userDTORequest = userInputValidator(ctx);
-        UserDTOResponse userDTOResponse = userService.createAdmin(userDTORequest);
-        if (userDTOResponse != null) {
-            ctx.status(HttpStatus.CREATED);
-            ctx.json(userDTOResponse);
-        } else   {
-            ctx.status(HttpStatus.BAD_REQUEST);
-            log.warn("400: Invalid admin request: {}", userDTORequest);
-        }
+        UserDTORequest input = createValidator(ctx);
+        ctx.status(HttpStatus.CREATED).json(userService.createAdmin(input));
+    }
+
+    public void getMe(Context ctx) {
+        UserDTOResponse currentUser = ctx.attribute("user");
+        ctx.status(HttpStatus.OK).json(userService.getById(currentUser.id()));
     }
 
     @Override
     public void getById(Context ctx) {
-        int id = ctx.pathParamAsClass("id", Integer.class).check(value -> value > 0, "Id must be positive").get();
-
+        int id = getId(ctx);
+        ctx.status(HttpStatus.OK).json(userService.getById(id));
     }
 
     @Override
     public void getAll(Context ctx) {
-
+        ctx.status(HttpStatus.OK).json(userService.getAll());
     }
 
     @Override
     public void updateById(Context ctx) {
-        int id = ctx.pathParamAsClass("id", Integer.class).check(value -> value > 0, "Id must be positive").get();
+        int id = getId(ctx);
+        UserDTORequest input = updateValidator(ctx);
+        ctx.status(HttpStatus.OK).json(userService.updateById(id, input));
+    }
 
+    public void updateMe(Context ctx) {
+        UserDTOResponse currentUser = ctx.attribute("user");
+        UserDTORequest input = updateValidator(ctx);
+        ctx.status(HttpStatus.OK).json(userService.updateById(currentUser.id(), input));
+    }
+
+    public void updateOrganizerStatus(Context ctx) {
+        int id = getId(ctx);
+        OrganizerDTORequest input = ctx.bodyValidator(OrganizerDTORequest.class)
+                .check(r -> r.status() != null, "Status is required")
+                .get();
+        ctx.status(HttpStatus.OK).json(userService.updateOrganizerStatus(id, input.status()));
     }
 
     @Override
     public void deleteById(Context ctx) {
-        int id = ctx.pathParamAsClass("id", Integer.class).check(value -> value > 0, "Id must be positive").get();
-
+        int id = getId(ctx);
+        userService.deleteById(id);
+        ctx.status(HttpStatus.NO_CONTENT);
     }
 
-    private UserDTORequest userInputValidator(Context ctx) {
+    private UserDTORequest createValidator(Context ctx) {
         return ctx.bodyValidator(UserDTORequest.class)
-                .check(user -> user.email() != null && !user.email().isBlank(), "Please enter an email")
-                .check(user -> user.phone() != null && !user.phone().isEmpty(),"Please enter a phone number")
-                .check(user -> user.name() != null && !user.name().isEmpty(),"Please enter your name")
-                .check(user -> UserValidator.passwordsMustMatch(user.password(), user.passwordCheck()),"Passwords do not match")
-                .check(user -> UserValidator.passwordMustContainNumber(user.password()),"Password must contain a number")
-                .check(user -> UserValidator.shouldRejectPasswordWithoutSpecialCharacter(user.password()),"Password must contain a special character")
-                .check(user -> UserValidator.isPasswordLongEnough(user.password()),"Password must be at least 8 characters long")
-                .check(user -> UserValidator.validateEmail(user.email()), "Email-format not right")
-                .check(user -> UserValidator.validatePhoneNumber(user.phone()), "Please enter a valid phone number")
+                .check(u -> u.name() != null && !u.name().isBlank(), "Please enter your name")
+                .check(u -> UserValidator.validateEmail(u.email()), "Please enter a valid email")
+                .check(u -> UserValidator.validatePhoneNumber(u.phone()), "Please enter a valid phone number")
+                .check(u -> UserValidator.passwordsMustMatch(u.password(), u.passwordCheck()), "Passwords do not match")
+                .check(u -> UserValidator.isPasswordLongEnough(u.password()), "Password must be at least 8 characters long")
+                .check(u -> UserValidator.passwordMustContainNumber(u.password()), "Password must contain a number")
+                .check(u -> UserValidator.shouldRejectPasswordWithoutSpecialCharacter(u.password()), "Password must contain a special character")
                 .get();
+    }
+
+    private UserDTORequest updateValidator(Context ctx) {
+        return ctx.bodyValidator(UserDTORequest.class)
+                .check(u -> u.name() != null && !u.name().isBlank(), "Please enter your name")
+                .check(u -> UserValidator.validateEmail(u.email()), "Please enter a valid email")
+                .check(u -> UserValidator.validatePhoneNumber(u.phone()), "Please enter a valid phone number")
+                .get();
+    }
+
+    private int getId(Context ctx) {
+        return ctx.pathParamAsClass("id", Integer.class).check(value -> value > 0, "Id must be positive").get();
     }
 }

@@ -2,15 +2,13 @@ package app.config;
 
 import app.controller.*;
 import app.dao.*;
-import app.exceptions.ApiException;
-import app.exceptions.DatabaseException;
-import app.exceptions.DatabaseIdException;
-import app.exceptions.SyncException;
+import app.exceptions.*;
 import app.service.*;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.Javalin;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.config.JavalinConfig;
+import io.javalin.http.HttpStatus;
 import io.javalin.json.JavalinJackson;
 import io.javalin.validation.ValidationError;
 import io.javalin.validation.ValidationException;
@@ -59,6 +57,7 @@ public class ApplicationConfig implements EndpointGroup {
 
     @Override
     public void addEndpoints() {
+        securityController.addEndpoints();
         eventController.addEndpoints();
         userController.addEndpoints();
         advertController.addEndpoints();
@@ -69,7 +68,7 @@ public class ApplicationConfig implements EndpointGroup {
             mapper.registerModule(new JavaTimeModule());
         }));
         config.showJavalinBanner = false;
-        config.http.defaultContentType = "application/json"; // default content type for requests
+        config.http.defaultContentType = "application/json";
         config.router.apiBuilder(this);
     }
 
@@ -87,23 +86,38 @@ public class ApplicationConfig implements EndpointGroup {
             ctx.status(400).json(Map.of("error", messages));
         });
         app.exception(ApiException.class, (e, ctx) -> {
-            log.warn("API Error: {}", e.getMessage());
-            ctx.status(500).json(Map.of("error", e.getMessage()));
+            log.error("External API error ({}): {}", e.getCode(), e.getMessage(), e);
+            ctx.status(e.getCode()).json(Map.of("error", "An error occurred while fetching data from an external service"));
+        });
+
+        app.exception(SecurityValidationException.class, (e, ctx) -> {
+            log.error("Security Validation Error: {}", e.getMessage(), e);
+            ctx.status(e.getCode()).json(Map.of("error", e.getMessage()));
         });
 
         app.exception(DatabaseException.class, (e, ctx) -> {
             log.warn("Database Error: {}", e.getMessage());
-            ctx.status(500).json(Map.of("error", e.getMessage()));
+            ctx.status(500).json(Map.of("error", "An unexpected internal server error occurred"));
         });
 
         app.exception(DatabaseIdException.class, (e, ctx) -> {
             log.warn("Database Id Error: {}", e.getMessage());
-            ctx.status(500).json(Map.of("error", e.getMessage()));
+            ctx.status(404).json(Map.of("error", e.getMessage()));
         });
 
         app.exception(SyncException.class, (e, ctx) -> {
             log.warn("Sync Error: {}", e.getMessage());
             ctx.status(500).json(Map.of("error", e.getMessage()));
+        });
+
+        app.exception(ConflictException.class, (e, ctx) -> {
+            log.warn("Conflict: {}", e.getMessage());
+            ctx.status(HttpStatus.CONFLICT).json(Map.of("error", e.getMessage()));
+        });
+
+        app.exception(BadRequestException.class, (e, ctx) -> {
+            log.warn("Bad request: {}", e.getMessage());
+            ctx.status(400).json(Map.of("error", e.getMessage()));
         });
 
         app.exception(Exception.class, (e, ctx) -> {

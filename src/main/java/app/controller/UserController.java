@@ -16,9 +16,14 @@ public class UserController implements EndpointGroup {
         post("/api/v1/users/attendee", userHandler::create, UserRole.ANYONE);
         post("/api/v1/users/organizer", userHandler::createPendingOrganizer, UserRole.ANYONE);
         post("/api/v1/users/admin", userHandler::createAdmin, UserRole.ADMIN);
-        get("/api/v1/users/{id}", userHandler::getById, UserRole.ADMIN);
+
+        get("/api/v1/users/me", userHandler::getMe, UserRole.ATTENDEE, UserRole.ORGANIZER, UserRole.ADMIN);
+        put("/api/v1/users/me", userHandler::updateMe, UserRole.ATTENDEE, UserRole.ORGANIZER, UserRole.ADMIN);
+
         get("/api/v1/users", userHandler::getAll, UserRole.ADMIN);
+        get("/api/v1/users/{id}", userHandler::getById, UserRole.ADMIN);
         put("/api/v1/users/{id}", userHandler::updateById, UserRole.ADMIN);
+        put("/api/v1/users/{id}/status", userHandler::updateOrganizerStatus, UserRole.ADMIN);
         delete("/api/v1/users/{id}", userHandler::deleteById, UserRole.ADMIN);
     }
 }

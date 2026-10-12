@@ -3,7 +3,10 @@ package app.service;
 import app.dao.UserDAO;
 import app.dto.user.UserDTOResponse;
 import app.dto.user.UserLoginDTORequest;
+import app.entities.users.Organizer;
 import app.entities.users.User;
+import app.enums.Status;
+import app.exceptions.SecurityValidationException;
 import app.mapper.UserConverter;
 import app.utils.SecurityUtil;
 
@@ -18,10 +21,12 @@ public class SecurityService {
 
     public UserDTOResponse login(UserLoginDTORequest userLoginDTORequest) {
         User user = userDAO.readUserByEmail(userLoginDTORequest.email());
-        if (SecurityUtil.verifyUser(user, userLoginDTORequest)) {
-            return userConverter.convertEntityToDTO(user);
-        } else  {
-            return null;
+        SecurityUtil.verifyUserPassword(user, userLoginDTORequest);
+
+        if (user instanceof Organizer organizer && organizer.getAccountStatus() != Status.ACTIVE) {
+            throw new SecurityValidationException(403, "Organizer account is not active");
         }
+
+        return userConverter.convertEntityToDTO(user);
     }
 }

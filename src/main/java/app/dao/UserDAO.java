@@ -4,9 +4,7 @@ import app.dto.user.UserDTOResponse;
 import app.entities.users.User;
 import app.exceptions.DatabaseException;
 import app.exceptions.DatabaseIdException;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Query;
+import jakarta.persistence.*;
 
 import java.util.List;
 
@@ -27,13 +25,13 @@ public class UserDAO extends GenericDAO<User> {
 
     public User readUserByEmail(String email) {
         try (EntityManager em = emf.createEntityManager()) {
-            em.getTransaction().begin();
-            User user = em.find(User.class, email);
-            if (user == null) {
-                throw new DatabaseException("User not with email: "+ email);
-            }
-            em.getTransaction().commit();
-            return user;
+            return em.createQuery("SELECT u FROM User u WHERE u.email = :email", User.class)
+                    .setParameter("email", email)
+                    .getResultStream()
+                    .findFirst()
+                    .orElse(null);
+        } catch (PersistenceException e) {
+            throw new DatabaseException("Reading user by email failed", e);
         }
     }
 }

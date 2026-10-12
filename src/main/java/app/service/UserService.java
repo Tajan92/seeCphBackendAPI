@@ -6,6 +6,9 @@ import app.dto.user.UserDTORequest;
 import app.dto.user.UserDTOResponse;
 import app.entities.users.Organizer;
 import app.entities.users.User;
+import app.enums.Status;
+import app.exceptions.BadRequestException;
+import app.exceptions.ConflictException;
 import app.mapper.UserConverter;
 import app.utils.PasswordUtil;
 import org.hibernate.service.spi.ServiceException;
@@ -56,8 +59,27 @@ public class UserService implements IService<UserDTORequest, UserDTOResponse> {
     @Override
     public UserDTOResponse updateById(int id, UserDTORequest input) {
         User user = userDAO.readById(id);
-        User updatedUser = userDAO.update(userConverter.convertDTOToUserUpdate(input, user, id));
-        return userConverter.convertEntityToDTO(updatedUser);
+
+        boolean emailChanged = !user.getEmail().equalsIgnoreCase(input.email());
+        if (emailChanged && userDAO.checkIfEmailExist(input.email())) {
+            throw new ConflictException("Email is already in use");
+        }
+
+        user.setName(input.name());
+        user.setEmail(input.email());
+        user.setPhone(input.phone());
+
+        return userConverter.convertEntityToDTO(userDAO.update(user));
+    }
+
+    public OrganizerDTOResponse updateOrganizerStatus(int id, Status status) {
+        User user = userDAO.readById(id);
+        if (!(user instanceof Organizer organizer)) {
+            throw new BadRequestException("User with id " + id + " is not an organizer");
+        }
+        organizer.setAccountStatus(status);
+        Organizer updated = (Organizer) userDAO.update(organizer);
+        return userConverter.convertOrganizerToDTO(updated);
     }
 
     @Override

@@ -43,10 +43,12 @@ public class UserConverter {
 
     public User convertDTOToUserUpdate(UserDTORequest input, User user, int id) {
         User updatedUser = switch (user.getUserRole()){
-            case UserRole.ADMIN -> Admin.builder().userId(id).build();
-            case UserRole.ATTENDEE -> Attendee.builder().userId(id).build();
-            case UserRole.ORGANIZER  -> Organizer.builder().userId(id).build();
+            case ADMIN -> Admin.builder().userId(id).build();
+            case ATTENDEE -> Attendee.builder().userId(id).build();
+            case ORGANIZER  -> Organizer.builder().userId(id).build();
+            case ANYONE -> null;
         };
+        assert updatedUser != null;
         updatedUser.setName(input.name());
         updatedUser.setEmail(input.email());
         updatedUser.setPhone(input.phone());
