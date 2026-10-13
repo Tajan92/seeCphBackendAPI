@@ -102,7 +102,7 @@ public final class TestDataCreator {
             Organizer organizer = Organizer.builder()
                     .organizerName("Advert Test Organizer")
                     .accountStatus(Status.PENDING).name("Nike")
-                    .email("nike@mail.dk").phone("12345678")
+                    .email("nike235@mail.dk").phone("12345678")
                     .hashedPassword("12345678")
                     .userRole(UserRole.ORGANIZER)
                     .build();
@@ -110,7 +110,7 @@ public final class TestDataCreator {
 
             Admin admin = Admin.builder()
                     .name("John")
-                    .email("john@mail.dk")
+                    .email("john324235@mail.dk")
                     .phone("12345678")
                     .hashedPassword("12345678")
                     .userRole(UserRole.ADMIN)

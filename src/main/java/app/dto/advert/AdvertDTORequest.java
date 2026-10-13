@@ -6,7 +6,6 @@ import java.time.LocalDate;
 
 public record AdvertDTORequest(
         int eventId,
-        int userId,
         AddPlacement addPlacement,
         LocalDate startDate,
         LocalDate endDate

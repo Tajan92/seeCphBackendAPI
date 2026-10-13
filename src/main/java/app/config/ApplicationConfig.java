@@ -9,6 +9,7 @@ import io.javalin.Javalin;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.HttpStatus;
+import io.javalin.http.staticfiles.Location;
 import io.javalin.json.JavalinJackson;
 import io.javalin.validation.ValidationError;
 import io.javalin.validation.ValidationException;
@@ -39,7 +40,7 @@ public class ApplicationConfig implements EndpointGroup {
         AddressService addressService = new AddressService(addressDAO);
         UserService userService = new UserService(userDAO);
         EventService eventService = new EventService(eventDAO, addressService, userService);
-        AdvertService advertService = new AdvertService(advertDAO, userDAO, eventDAO, eventService, userService);
+        AdvertService advertService = new AdvertService(advertDAO, userDAO, eventDAO);
         SecurityService securityService = new SecurityService(userDAO);
 
         // Handlers
@@ -70,6 +71,16 @@ public class ApplicationConfig implements EndpointGroup {
         config.showJavalinBanner = false;
         config.http.defaultContentType = "application/json";
         config.router.apiBuilder(this);
+        config.bundledPlugins.enableCors(cors -> {
+            cors.addRule(rule -> {
+                rule.allowHost("http://localhost:5173", "https://<frontend-domain>");
+            });
+        });
+        config.staticFiles.add(staticFiles -> {
+            staticFiles.hostedPath = "/images";          // the URL path
+            staticFiles.directory = "/images";           // the folder on the classpath
+            staticFiles.location = Location.CLASSPATH;   // = src/main/resources
+        });
     }
 
     public Javalin startServer(int port) {

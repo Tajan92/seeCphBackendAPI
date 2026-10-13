@@ -5,38 +5,32 @@ import app.dao.EventDAO;
 import app.dao.UserDAO;
 import app.dto.advert.AdvertDTORequest;
 import app.dto.advert.AdvertDTOResponse;
-import app.dto.event.EventDTOResponse;
 import app.dto.user.UserDTOResponse;
 import app.entities.Advert;
 import app.entities.Event;
 import app.entities.users.Admin;
 import app.entities.users.Organizer;
 import app.entities.users.User;
+import app.mapper.AdvertConverter;
 import app.mapper.UserConverter;
-
-import java.util.ArrayList;
 import java.util.List;
 
-public class AdvertService implements IService<AdvertDTORequest, AdvertDTOResponse> {
+public class AdvertService {
     private final AdvertDAO advertDAO;
     private final UserDAO userDAO;
     private final EventDAO eventDAO;
-    private final EventService eventService;
-    private final UserService userService;
     private final UserConverter userConverter = new UserConverter();
+    private final AdvertConverter advertConverter = new AdvertConverter();
 
-    public AdvertService(AdvertDAO advertDAO, UserDAO userDAO, EventDAO eventDAO, EventService eventService, UserService userService) {
+    public AdvertService(AdvertDAO advertDAO, UserDAO userDAO, EventDAO eventDAO) {
         this.advertDAO = advertDAO;
         this.userDAO = userDAO;
         this.eventDAO = eventDAO;
-        this.eventService = eventService;
-        this.userService = userService;
     }
 
-    @Override
-    public AdvertDTOResponse create(AdvertDTORequest input) {
+    public AdvertDTOResponse create(AdvertDTORequest input, int userID) {
         Event event = eventDAO.readById(input.eventId());
-        User user = userDAO.readById(input.userId());
+        User user = userDAO.readById(userID);
 
         Advert advert = Advert.builder()
                 .event(event)
@@ -51,12 +45,10 @@ public class AdvertService implements IService<AdvertDTORequest, AdvertDTORespon
         if (user instanceof Admin){
             advert.setAdmin((Admin) user);
         }
-
         Advert createdAdvert = advertDAO.create(advert);
-        return new AdvertDTOResponse(createdAdvert, userService.getById(input.userId()), eventService.getById(input.eventId()));
+        return advertConverter.convertEntityToDTO(createdAdvert);
     }
 
-    @Override
     public AdvertDTOResponse updateById(int id, AdvertDTORequest input) {
         Event event = eventDAO.readById(input.eventId());
         User user = userDAO.readById(input.userId());
@@ -74,40 +66,18 @@ public class AdvertService implements IService<AdvertDTORequest, AdvertDTORespon
         } else if (user instanceof Admin) {
             configuredAdvert.setAdmin((Admin) user);
         }
-
         Advert updatedAdvert = advertDAO.update(configuredAdvert);
-
-        EventDTOResponse eventDTOResponse = new EventDTOResponse(updatedAdvert.getEvent());
-        UserDTOResponse userDTOResponse = userConverter.convertEntityToDTO(user);
-
-        return new AdvertDTOResponse(updatedAdvert, userDTOResponse, eventDTOResponse);
+        return advertConverter.convertEntityToDTO(updatedAdvert);
     }
 
-    @Override
     public AdvertDTOResponse getById(int id) {
-        Advert advert = advertDAO.readById(id);
-        EventDTOResponse eventDTOResponse = new EventDTOResponse(advert.getEvent());
-        UserDTOResponse userDTOResponse =  getUserDTOResponse(advert);
-
-        return new AdvertDTOResponse(advert, userDTOResponse, eventDTOResponse);
+        return advertConverter.convertEntityToDTO(advertDAO.readById(id));
     }
 
-    @Override
     public List<AdvertDTOResponse> getAll() {
-        List<AdvertDTOResponse> advertDTOResponses = new ArrayList<>();
-        List<Advert> adverts = advertDAO.readAll();
-        if (adverts != null && !adverts.isEmpty()) {
-            for (Advert advert : adverts) {
-                EventDTOResponse eventDTOResponse = new EventDTOResponse(advert.getEvent());
-                UserDTOResponse userDTOResponse =  getUserDTOResponse(advert);
-
-                advertDTOResponses.add(new AdvertDTOResponse(advert, userDTOResponse, eventDTOResponse));
-            }
-        }
-        return advertDTOResponses;
+        return advertConverter.convertEntityListToDTOList(advertDAO.readAll());
     }
 
-    @Override
     public boolean deleteById(int id) {
         Advert advert = advertDAO.readById(id);
         return advertDAO.delete(advert);

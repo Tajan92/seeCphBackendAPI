@@ -1,6 +1,7 @@
 package app.service;
 
 import app.dao.UserDAO;
+import app.dto.user.OrganizerDTORequest;
 import app.dto.user.OrganizerDTOResponse;
 import app.dto.user.UserDTORequest;
 import app.dto.user.UserDTOResponse;
@@ -28,19 +29,19 @@ public class UserService implements IService<UserDTORequest, UserDTOResponse> {
     @Override
     public UserDTOResponse create(UserDTORequest input) {
         if (userDAO.checkIfEmailExist(input.email())){
-            throw new ServiceException("Email is already in use");
+            throw new ConflictException("Email is already in use");
         }
         String hashedPassword = PasswordUtil.hashPassword(input.password());
         User user = userDAO.create(userConverter.convertDTOToEntity(input, hashedPassword));
         return userConverter.convertEntityToDTO(user);
     }
 
-    public OrganizerDTOResponse createPendingOrganizer(UserDTORequest input) {
-        if (userDAO.checkIfEmailExist(input.email())){
-            throw new ServiceException("Email is already in use");
+    public OrganizerDTOResponse createPendingOrganizer(OrganizerDTORequest organizer) {
+        if (userDAO.checkIfEmailExist(organizer.input().email())){
+            throw new ConflictException("Email is already in use");
         }
-        String hashedPassword = PasswordUtil.hashPassword(input.password());
-        User user = userDAO.create(userConverter.convertDTOToOrganizer(input, hashedPassword));
+        String hashedPassword = PasswordUtil.hashPassword(organizer.input().password());
+        User user = userDAO.create(userConverter.convertDTOToOrganizer(organizer, hashedPassword));
         if (!(user instanceof Organizer)) {
             return null;
         }
@@ -49,7 +50,7 @@ public class UserService implements IService<UserDTORequest, UserDTOResponse> {
 
     public UserDTOResponse createAdmin(UserDTORequest input) {
         if (userDAO.checkIfEmailExist(input.email())){
-            throw new ServiceException("Email is already in use");
+            throw new ConflictException("Email is already in use");
         }
         String hashedPassword = PasswordUtil.hashPassword(input.password());
         User user = userDAO.create(userConverter.convertDTOToAdmin(input, hashedPassword));

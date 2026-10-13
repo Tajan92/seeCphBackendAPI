@@ -1,5 +1,6 @@
 package app.mapper;
 
+import app.dto.user.OrganizerDTORequest;
 import app.dto.user.OrganizerDTOResponse;
 import app.dto.user.UserDTORequest;
 import app.dto.user.UserDTOResponse;
@@ -21,11 +22,12 @@ public class UserConverter {
                 .build();
     }
 
-    public User convertDTOToOrganizer(UserDTORequest organizerDTO, String hashedPassword) {
+    public User convertDTOToOrganizer(OrganizerDTORequest organizerDTO, String hashedPassword) {
         return Organizer.builder()
-                .name(organizerDTO.name())
-                .email(organizerDTO.email())
-                .phone(organizerDTO.phone())
+                .name(organizerDTO.input().name())
+                .email(organizerDTO.input().email())
+                .phone(organizerDTO.input().phone())
+                .organizerName(organizerDTO.organizerName())
                 .hashedPassword(hashedPassword)
                 .userRole(UserRole.ORGANIZER)
                 .build();

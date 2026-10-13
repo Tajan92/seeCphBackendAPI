@@ -1,5 +1,6 @@
 package app.service;
 
+import app.config.AppConstants;
 import app.dao.EventDAO;
 import app.dto.event.EventDTOResponse;
 import app.dto.event.EventDTORequest;
@@ -16,13 +17,15 @@ import app.utils.APIReader;
 import app.utils.DefaultDescription;
 import app.utils.GeoUtil;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Getter
 public class EventService implements IService<EventDTORequest, EventDTOResponse> {
     private final EventDAO eventDAO;
@@ -50,7 +53,7 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
 
         String primaryImageUrl = input.primaryImageUrl();
         if (input.useDefaultImage()) {
-            primaryImageUrl = "resources/images/default.jpg";
+            primaryImageUrl = AppConstants.DEFAULT_IMAGE_URL;
         }
         GeoUtil.Coordinates coordinates = GeoUtil.findCoordinates(address);
 
@@ -71,8 +74,7 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
                 .build();
 
         Event createdEvent = eventDAO.create(event);
-
-        return new EventDTOResponse(createdEvent);
+        return eventConverter.convertEntityToDTO(createdEvent);
     }
 
     @Override
@@ -84,7 +86,7 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
 
         String primaryImageUrl = input.primaryImageUrl();
         if (input.useDefaultImage()) {
-            primaryImageUrl = "resources/images/default.jpg";
+            primaryImageUrl = AppConstants.DEFAULT_IMAGE_URL;
         }
         event.setSourceProvider(SourceProvider.ADMIN);
 
@@ -102,13 +104,13 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
         event.setCategory(input.category());
 
         Event updatedEvent = eventDAO.update(event);
-        return new EventDTOResponse(updatedEvent);
+        return eventConverter.convertEntityToDTO(updatedEvent);
     }
 
     @Override
     public EventDTOResponse getById(int id) {
         Event event = eventDAO.readById(id);
-        return new EventDTOResponse(event);
+        return eventConverter.convertEntityToDTO(event);
     }
 
     @Override
@@ -141,33 +143,58 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
     public void syncTmEvents() {
         counter = 0;
         int maxCount = 15;
+
+        Map<String, Event> existingTmEvents = eventDAO.readAllTmEvents().stream()
+                .filter(e -> e.getApiEventId() != null)
+                .collect(Collectors.toMap(Event::getApiEventId, e -> e, (a, b) -> a));
+
         List<Event> events = new ArrayList<>();
-        List<TicketMasterDTO> ticketMasterDTOs = apiReader.getApiAsTmDTO();
-        List<Event> allEvents = eventDAO.readAllTmEvents();
-
-        Set<String> existingApiIds = allEvents.stream()
-                .map(Event::getApiEventId)
-                .collect(Collectors.toSet());
-
-        for (TicketMasterDTO ticketMasterDTO : ticketMasterDTOs) {
-            if (ticketMasterDTO != null && ticketMasterDTO.embedded() != null && ticketMasterDTO.embedded().events() != null) {
-                events.addAll(converter.ticketMasterDtoToEvent(ticketMasterDTO));
+        for (TicketMasterDTO dto : apiReader.getApiAsTmDTO()) {
+            if (dto != null && dto.embedded() != null && dto.embedded().events() != null) {
+                events.addAll(converter.ticketMasterDtoToEvent(dto));
             }
         }
+
+        int created = 0;
+        int updated = 0;
+        int failed = 0;
 
         for (Event event : events) {
-            event.setSourceProvider(SourceProvider.API_TICKETMASTER);
-            String description = checkForDescription(event, maxCount);
-            if (description != null) {
-                event.addDescription(description);
-            }
-            if (existingApiIds.contains(event.getApiEventId())) {
-                eventDAO.update(event);
-            } else {
-                eventDAO.create(event);
+            try {
+                Event existing = existingTmEvents.get(event.getApiEventId());
+                if (existing == null) {
+                    event.addDescription(checkForDescription(event, maxCount));
+                    eventDAO.create(event);
+                    existingTmEvents.put(event.getApiEventId(), event); // avoid duplicates within one sync
+                    created++;
+                } else {
+                    copyTicketmasterFields(event, existing);
+                    existing.addDescription(checkForDescription(existing, maxCount));
+                    eventDAO.update(existing);
+                    updated++;
+                }
+            } catch (Exception e) {
+                failed++;
+                log.warn("Sync failed for Ticketmaster event {}: {}", event.getApiEventId(), e.getMessage());
             }
         }
-        System.out.println("Done");
+        log.info("Ticketmaster sync done: {} created, {} updated, {} failed", created, updated, failed);
+    }
+
+    private void copyTicketmasterFields(Event from, Event to) {
+        to.setTitle(from.getTitle());
+        to.setPrice(from.getPrice());
+        to.setStartDate(from.getStartDate());
+        to.setStartTime(from.getStartTime());
+        to.setLocation(from.getLocation());
+        to.setLatitude(from.getLatitude());
+        to.setLongitude(from.getLongitude());
+        to.setCategory(from.getCategory());
+        to.setImageUrl(from.getImageUrl());
+        to.setUrl(from.getUrl());
+        if (from.getDescription() != null && !from.getDescription().isBlank()) {
+            to.setDescription(from.getDescription());
+        }
     }
 
     private String checkForDescription(Event event, int maxCount) {

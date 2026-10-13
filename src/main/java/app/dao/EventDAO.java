@@ -6,6 +6,7 @@ import app.enums.SourceProvider;
 import app.exceptions.DatabaseException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TypedQuery;
 
 import java.time.LocalDate;
@@ -19,94 +20,83 @@ public class EventDAO extends GenericDAO<Event> {
 
     public List<Event> readAllTmEvents() {
             try (EntityManager em = emf.createEntityManager()) {
-                em.getTransaction().begin();
                 String jpql = "SELECT e FROM Event e WHERE e.sourceProvider = :provider";
-                TypedQuery<Event> query = em.createQuery(jpql, Event.class);
-                query.setParameter("provider", SourceProvider.API_TICKETMASTER);
-                List<Event> events = query.getResultList();
-                em.getTransaction().commit();
-                return events;
-            } catch (Exception e) {
+                return em.createQuery(jpql, Event.class)
+                    .setParameter("provider", SourceProvider.API_TICKETMASTER)
+                    .getResultList();
+            } catch (PersistenceException e) {
                 throw new DatabaseException("Reading all TicketMaster events failed", e);
             }
     }
 
     public List<Event> searchAndFilterEvent(String search, EventCategory category, LocalDate startDate, String postalCode, int page, int pageSize) {
+        boolean hasSearch = search != null && !search.isBlank();
+        boolean hasPostalCode = postalCode != null && !postalCode.isBlank();
+
         try (EntityManager em = emf.createEntityManager()) {
-            StringBuilder jpql = new StringBuilder("SELECT e FROM Event e WHERE 1=1");
+            StringBuilder jpql = new StringBuilder("SELECT e FROM Event e LEFT JOIN e.location l WHERE 1=1");
 
             if (category != null) jpql.append(" AND e.category = :category");
             if (startDate != null) jpql.append(" AND e.startDate >= :startDate");
-            if (postalCode != null && !postalCode.isBlank()) jpql.append(" AND e.location.postalCode = :postalCode");
-            if (search != null && !search.isEmpty()) jpql.append(" AND (e.title LIKE :search OR e.description LIKE :search OR e.location.address LIKE :search OR e.location.postalCode LIKE :search OR e.category LIKE :search)");
+            if (hasPostalCode) jpql.append(" AND l.postalCode = :postalCode");
+            if (hasSearch) jpql.append(" AND (LOWER(e.title) LIKE :search"
+                    + " OR LOWER(e.description) LIKE :search"
+                    + " OR LOWER(l.address) LIKE :search"
+                    + " OR LOWER(l.city) LIKE :search"
+                    + " OR l.postalCode LIKE :search)");
+            jpql.append(" ORDER BY e.startDate ASC, e.eventId ASC");
 
             TypedQuery<Event> query = em.createQuery(jpql.toString(), Event.class);
 
             if (category != null) query.setParameter("category", category);
             if (startDate != null) query.setParameter("startDate", startDate);
-            if (postalCode != null && !postalCode.isBlank()) query.setParameter("postalCode", postalCode);
-            if (search != null && !search.isEmpty()) query.setParameter("search", "%" + search + "%");
+            if (hasPostalCode) query.setParameter("postalCode", postalCode.trim());
+            if (hasSearch) query.setParameter("search", "%" + search.trim().toLowerCase() + "%");
 
-            int offset = page * pageSize;
-            query.setFirstResult(offset);
+            query.setFirstResult(page * pageSize);
             query.setMaxResults(pageSize);
-
             return query.getResultList();
-        }catch (Exception e) {
+        } catch (PersistenceException e) {
             throw new DatabaseException("Search & filter failed", e);
         }
     }
 
     public List<Event> readEventsByUserId(int userId) {
         try (EntityManager em = emf.createEntityManager()) {
-            String jpql = "SELECT e FROM Event e JOIN User u WHERE u.userId = :userId";
-            TypedQuery<Event> query = em.createQuery(jpql, Event.class);
-            query.setParameter("userId", userId);
-            List<Event> events = query.getResultList();
-            em.getTransaction().commit();
-            return events;
+            return em.createQuery("SELECT e FROM Event e LEFT JOIN e.organizer o LEFT JOIN e.admin a WHERE o.userId = :userId OR a.userId = :userId ORDER BY e.startDate ASC", Event.class)
+                    .setParameter("userId", userId)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            throw new DatabaseException("Reading events for user " + userId + " failed", e);
         }
     }
 
-    public List<Event> readEventsByAdvertId(int advertId) {
+    public List<Event> readFavoriteEventsByUserId(int userId) {
         try (EntityManager em = emf.createEntityManager()) {
-            String jpql = "SELECT e FROM Event e JOIN Advert a WHERE a.advertId = :advertId";
-            TypedQuery<Event> query = em.createQuery(jpql, Event.class);
-            query.setParameter("advertId", advertId);
-            List<Event> events = query.getResultList();
-            em.getTransaction().commit();
-            return events;
-        }
-    }
-
-    public List<Event> readFavoritEventsByUserId(int userId) {
-        try (EntityManager em = emf.createEntityManager()) {
-            String jpql = "SELECT a.favoriteEvents FROM Attendee a WHERE a.userId = :userId";
-            TypedQuery<Event> query = em.createQuery(jpql, Event.class);
-            query.setParameter("userId", userId);
-            List<Event> events = query.getResultList();
-            em.getTransaction().commit();
-            return events;
+            return em.createQuery("SELECT e FROM Attendee a JOIN a.favoriteEvents e WHERE a.userId = :userId ORDER BY e.startDate ASC", Event.class)
+                    .setParameter("userId", userId)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            throw new DatabaseException("Reading favorite events for user " + userId + " failed", e);
         }
     }
 
     public List<Event> readLikedEventsByUserId(int userId) {
         try (EntityManager em = emf.createEntityManager()) {
-            String jpql = "SELECT a.likedEvents FROM Attendee a WHERE a.userId = :userId";
-            TypedQuery<Event> query = em.createQuery(jpql, Event.class);
-            query.setParameter("userId", userId);
-            List<Event> events = query.getResultList();
-            em.getTransaction().commit();
-            return events;
+            return em.createQuery("SELECT e FROM Attendee a JOIN a.likedEvents e WHERE a.userId = :userId ORDER BY e.startDate ASC", Event.class)
+                    .setParameter("userId", userId)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            throw new DatabaseException("Reading liked events for user " + userId + " failed", e);
         }
     }
 
     public List<EventCategory> readDistinctCategoriesInDb() {
         try (EntityManager em = emf.createEntityManager()) {
-            String jpql = "SELECT DISTINCT e.category FROM Event e WHERE e.category IS NOT NULL";
-            TypedQuery<EventCategory> query = em.createQuery(jpql, EventCategory.class);
-            return query.getResultList();
-        } catch (Exception e) {
+            return em.createQuery("SELECT DISTINCT e.category FROM Event e WHERE e.category IS NOT NULL",
+                            EventCategory.class)
+                    .getResultList();
+        } catch (PersistenceException e) {
             throw new DatabaseException("Failed to read active categories", e);
         }
     }

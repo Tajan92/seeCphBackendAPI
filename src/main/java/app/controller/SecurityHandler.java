@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SecurityHandler {
+
     private final TokenSecurity tokenSecurity = new TokenSecurity();
     private final SecurityService securityService;
     private final String issuer;
@@ -51,6 +52,7 @@ public class SecurityHandler {
             ctx.status(200);
             return;
         }
+        if (isStaticFile(ctx)) return;
         if (isEndpointOpenForAnyone(getAllowedRoles(ctx))) return;
 
         String token = getUsersToken(ctx);
@@ -70,6 +72,8 @@ public class SecurityHandler {
     }
 
     public void authorize(Context ctx) {
+        if (isStaticFile(ctx)) return;
+
         Set<UserRole> allowedRoles = getAllowedRoles(ctx);
         if (isEndpointOpenForAnyone(allowedRoles)) return;
 
@@ -99,5 +103,9 @@ public class SecurityHandler {
             throw new IllegalStateException(key + " is not configured");
         }
         return value;
+    }
+
+    private static boolean isStaticFile(Context ctx) {
+        return ctx.path().startsWith("/images/");
     }
 }

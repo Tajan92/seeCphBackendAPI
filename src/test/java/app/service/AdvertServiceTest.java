@@ -36,9 +36,6 @@ class AdvertServiceTest {
     private UserDAO userDAO;
     private EventDAO eventDAO;
     private AddressDAO addressDAO;
-    private UserService userService;
-    private EventService eventService;
-    private AddressService addressService;
     private Map<String, User> users;
     private Map<String, Event> events;
     private Map<String, Advert> adverts;
@@ -60,10 +57,7 @@ class AdvertServiceTest {
         users = TestDataCreator.createUsers(emf);
         events = TestDataCreator.createEvents(emf);
         adverts = TestDataCreator.createAdverts(emf);
-        userService = new UserService(userDAO);
-        addressService = new AddressService(addressDAO);
-        eventService = new EventService(eventDAO, addressService, userService);
-        advertService = new AdvertService(advertDAO, userDAO, eventDAO, eventService, userService);
+        advertService = new AdvertService(advertDAO, userDAO, eventDAO);
 
         userId = users.get("admin").getId();
         eventId = events.values().iterator().next().getId();

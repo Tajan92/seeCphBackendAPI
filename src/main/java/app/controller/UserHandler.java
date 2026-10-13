@@ -1,6 +1,7 @@
 package app.controller;
 
 import app.dto.user.OrganizerDTORequest;
+import app.dto.user.OrganizerStatusDTORequest;
 import app.dto.user.UserDTORequest;
 import app.dto.user.UserDTOResponse;
 import app.service.UserService;
@@ -22,7 +23,17 @@ public class UserHandler implements IHandler {
     }
 
     public void createPendingOrganizer(Context ctx) {
-        UserDTORequest input = createValidator(ctx);
+        OrganizerDTORequest input = ctx.bodyValidator(OrganizerDTORequest.class)
+                .check(u -> u.input().name() != null && !u.input().name().isBlank(), "Please enter your name")
+                .check(u -> UserValidator.validateEmail(u.input().email()), "Please enter a valid email")
+                .check(u -> UserValidator.validatePhoneNumber(u.input().phone()), "Please enter a valid phone number")
+                .check(u -> UserValidator.passwordsMustMatch(u.input().password(), u.input().passwordCheck()), "Passwords do not match")
+                .check(u -> UserValidator.isPasswordLongEnough(u.input().password()), "Password must be at least 8 characters long")
+                .check(u -> UserValidator.passwordMustContainNumber(u.input().password()), "Password must contain a number")
+                .check(u -> UserValidator.shouldRejectPasswordWithoutSpecialCharacter(u.input().password()), "Password must contain a special character")
+                .check(u -> u.organizerName() != null && !u.organizerName().isBlank(), "Please enter company or organisation name")
+                .get();
+
         ctx.status(HttpStatus.CREATED).json(userService.createPendingOrganizer(input));
     }
 
@@ -62,7 +73,7 @@ public class UserHandler implements IHandler {
 
     public void updateOrganizerStatus(Context ctx) {
         int id = getId(ctx);
-        OrganizerDTORequest input = ctx.bodyValidator(OrganizerDTORequest.class)
+        OrganizerStatusDTORequest input = ctx.bodyValidator(OrganizerStatusDTORequest.class)
                 .check(r -> r.status() != null, "Status is required")
                 .get();
         ctx.status(HttpStatus.OK).json(userService.updateOrganizerStatus(id, input.status()));

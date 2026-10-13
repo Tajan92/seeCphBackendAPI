@@ -13,9 +13,9 @@ public class EventController implements EndpointGroup {
     @Override
     public void addEndpoints() {
         post("/api/v1/events", eventHandler::create, UserRole.ORGANIZER, UserRole.ADMIN);
-        get("/api/v1/events", eventHandler::getAll, UserRole.ADMIN);
+        get("/api/v1/events", eventHandler::getAll, UserRole.ANYONE);
         get("/api/v1/events/active-categories", eventHandler::getAllActiveEventCategories, UserRole.ANYONE);
-        get("/api/v1/events/{id}", eventHandler::getById, UserRole.ADMIN);
+        get("/api/v1/events/{id}", eventHandler::getById, UserRole.ANYONE);
         put("/api/v1/events/{id}", eventHandler::updateById, UserRole.ADMIN);
         delete("/api/v1/events/{id}", eventHandler::deleteById, UserRole.ADMIN);
         post("/api/v1/events/ticketmaster", eventHandler::syncEventsFromAPI, UserRole.ANYONE);

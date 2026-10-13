@@ -2,6 +2,7 @@ package app.service;
 
 import app.config.HibernateTestConfig;
 import app.dao.UserDAO;
+import app.dto.user.OrganizerDTORequest;
 import app.dto.user.OrganizerDTOResponse;
 import app.dto.user.UserDTORequest;
 import app.dto.user.UserDTOResponse;
@@ -58,18 +59,19 @@ class UserServiceTest {
 
     @Test
     public void createPendingOrganizer() {
-        UserDTORequest request = new UserDTORequest(
-                "Nike Store",
+        UserDTORequest userDTO = new UserDTORequest(
+                "Employee 3565",
                 "nike@test.dk",
                 "87654321",
                 "password123",
                 "Nike"
         );
 
-        OrganizerDTOResponse response = userService.createPendingOrganizer(request);
+        OrganizerDTORequest input = new OrganizerDTORequest("Nike Store", userDTO);
+        OrganizerDTOResponse response = userService.createPendingOrganizer(input);
 
         assertNotNull(response);
-        assertThat(response.name(), is("Nike Store"));
+        assertThat(response.name(), is("Employee 3565"));
         assertThat(response.userRole(), is(UserRole.ORGANIZER));
         assertThat(response.status(), is(Status.PENDING));
     }

@@ -1,14 +1,14 @@
 package app.mapper;
 
-import app.dto.event.EventDTORequest;
 import app.dto.event.EventDTOResponse;
+import app.dto.event.EventDTORequest;
 import app.entities.Address;
 import app.entities.Event;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class EventConverter implements IConverter<Event, EventDTOResponse, EventDTORequest> {
+
     @Override
     public Event convertDTOToEntity(EventDTORequest dto) {
         Address address = Address.builder()
@@ -33,26 +33,24 @@ public class EventConverter implements IConverter<Event, EventDTOResponse, Event
 
     @Override
     public EventDTOResponse convertEntityToDTO(Event event) {
-        return new EventDTOResponse(event.getId(),
+        Address location = event.getLocation();
+        return new EventDTOResponse(
+                event.getEventId(),
                 event.getTitle(),
                 event.getDescription(),
                 event.getPrice(),
                 event.isFree(),
-                event.getLocation().getCity(),
-                event.getLocation().getPostalCode(),
-                event.getLocation().getAddress(),
+                location != null ? location.getCity() : null,
+                location != null ? location.getPostalCode() : null,
+                location != null ? location.getAddress() : null,
                 event.getStartTime(),
                 event.getStartDate(),
                 event.getUrl(),
                 event.getImageUrl(),
-                event.getCategory().getLabel());
+                event.getCategory() != null ? event.getCategory().name() : null);
     }
 
-    public List<EventDTOResponse> convertEntityListToDTOList (List<Event> events) {
-        List<EventDTOResponse> dtos = new ArrayList<>();
-        for (Event event : events) {
-            dtos.add(convertEntityToDTO(event));
-        }
-        return dtos;
+    public List<EventDTOResponse> convertEntityListToDTOList(List<Event> events) {
+        return events.stream().map(this::convertEntityToDTO).toList();
     }
 }

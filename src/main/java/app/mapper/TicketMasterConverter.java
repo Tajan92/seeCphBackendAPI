@@ -1,56 +1,103 @@
 package app.mapper;
 
-import app.dto.ticketMaster.TicketMasterDTO;
-import app.dto.ticketMaster.TmClassification;
-import app.dto.ticketMaster.TmEvent;
-import app.dto.ticketMaster.TmPriceRange;
+import app.config.AppConstants;
+import app.dto.ticketMaster.*;
+import app.entities.Address;
 import app.entities.Event;
 import app.enums.EventCategory;
 import app.enums.SourceProvider;
 import app.service.AddressService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+@Slf4j
 @AllArgsConstructor
 public class TicketMasterConverter {
     private final AddressService addressService;
 
     public List<Event> ticketMasterDtoToEvent(TicketMasterDTO ticketMasterDTO) {
         List<Event> events = new ArrayList<>();
-        Event eventBuild = new Event();
-        for (TmEvent eventDTO : ticketMasterDTO.embedded().events()) {
-            String url = null;
-            if (!eventDTO.images().isEmpty()) {
-                url = eventDTO.images().stream()
-                        .filter(image -> image.url().endsWith("_SOURCE"))
-                        .findFirst()
-                        .map(TmEvent.TmImage::url)
-                        .orElseGet(() -> eventDTO.images().getFirst().url());
+        for (TmEvent tmEvent : ticketMasterDTO.embedded().events()) {
+            try {
+                events.add(convert(tmEvent));
+            } catch (Exception e) {
+                log.warn("Ticket Master event with {}: {} not added - {}", tmEvent.id(), tmEvent.name(), e.getMessage());
             }
-            eventBuild = Event.builder()
-                    .sourceEventId(eventDTO.id())
-                    .sourceProvider(SourceProvider.API_TICKETMASTER)
-                    .title(eventDTO.name())
-                    .description(eventDTO.info())
-                    .price(checkPrice(eventDTO))
-                    .free(false) //Ticket Master never free
-                    .startDate(eventDTO.dates().start().localDate() != null ? LocalDate.parse(eventDTO.dates().start().localDate()) : null)
-                    .startTime(eventDTO.dates().start().localTime() != null ? LocalTime.parse(eventDTO.dates().start().localTime()) : null)
-                    .location(addressService.createOrFindAddress(eventDTO.embedded().venues().getFirst().postalCode(), eventDTO.embedded().venues().getFirst().city().name(), eventDTO.embedded().venues().getFirst().address().address()))
-                    .longitude(eventDTO.embedded().venues().getFirst().location().longitude())
-                    .latitude(eventDTO.embedded().venues().getFirst().location().latitude())
-                    .category(findEventCategory(eventDTO))
-                    .imageUrl(url)
-                    .url(eventDTO.url())
-                    .apiEventId(eventDTO.id())
-                    .build();
-            events.add(eventBuild);
         }
         return events;
+    }
+
+    private Event convert(TmEvent tmEvent) {
+        TmVenue venue = firstLocation(tmEvent);
+        TmVenue.TmVenueLocation coords = venue != null ? venue.location() : null;
+
+        return Event.builder()
+                .apiEventId(tmEvent.id())
+                .sourceEventId(tmEvent.id())
+                .sourceProvider(SourceProvider.API_TICKETMASTER)
+                .title(tmEvent.name())
+                .description(tmEvent.info())
+                .price(checkPrice(tmEvent))
+                .free(false) // Ticketmaster is never free
+                .startDate(parseDate(tmEvent))
+                .startTime(parseTime(tmEvent))
+                .location(findAddress(venue))
+                .latitude(coords != null ? coords.latitude() : null)
+                .longitude(coords != null ? coords.longitude() : null)
+                .category(findEventCategory(tmEvent))
+                .imageUrl(findImageUrl(tmEvent))
+                .url(tmEvent.url())
+                .build();
+    }
+
+    private TmVenue firstLocation(TmEvent tmEvent) {
+        if (tmEvent.embedded() == null || tmEvent.embedded().venues() == null
+                || tmEvent.embedded().venues().isEmpty()) {
+            return null;
+        }
+        return tmEvent.embedded().venues().getFirst();
+    }
+
+    private LocalDate parseDate(TmEvent tmEvent) {
+        if (tmEvent.dates() == null || tmEvent.dates().start() == null
+                || tmEvent.dates().start().localDate() == null) {
+            return null;
+        }
+        return LocalDate.parse(tmEvent.dates().start().localDate());
+    }
+
+    private LocalTime parseTime(TmEvent tmEvent) {
+        if (tmEvent.dates() == null || tmEvent.dates().start() == null
+                || tmEvent.dates().start().localTime() == null) {
+            return null;
+        }
+        return LocalTime.parse(tmEvent.dates().start().localTime());
+    }
+
+    private Address findAddress(TmVenue venue) {
+        if (venue == null || venue.address() == null || venue.address().address() == null) {
+            return null;
+        }
+        String city = venue.city() != null ? venue.city().name() : null;
+        return addressService.createOrFindAddress(venue.postalCode(), city, venue.address().address());
+    }
+
+    private String findImageUrl(TmEvent tmEvent) {
+        if (tmEvent.images() == null || tmEvent.images().isEmpty()) {
+            return AppConstants.DEFAULT_IMAGE_URL; // Default local image
+        }
+        return tmEvent.images().stream()
+                .map(TmEvent.TmImage::url)
+                .filter(Objects::nonNull)
+                .filter(url -> url.endsWith("_SOURCE"))
+                .findFirst()
+                .orElseGet(() -> tmEvent.images().getFirst().url());
     }
 
     private Double checkPrice(TmEvent event) {
@@ -66,6 +113,9 @@ public class TicketMasterConverter {
     }
 
     private EventCategory findEventCategory(TmEvent event) {
+        if (event.classifications() == null) {
+            return EventCategory.OTHERS;
+        }
         EventCategory eventCategory = event.classifications().stream()
                 .filter(TmClassification::primary)
                 .findFirst()

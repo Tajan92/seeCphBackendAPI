@@ -1,7 +1,6 @@
 package app.restAssured;
 
 import app.config.ApplicationConfig;
-import app.config.HibernateConfig;
 import app.config.HibernateTestConfig;
 import app.dao.EventDAO;
 import app.dao.UserDAO;
