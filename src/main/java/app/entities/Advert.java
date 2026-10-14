@@ -22,12 +22,16 @@ public class Advert implements IGetId {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "advert_id")
     private Integer advertId;
+    @Setter
     @Enumerated(EnumType.STRING)
     private AddPlacement addPlacement;
+    @Setter
     @Column(name = "start_date")
     private LocalDate startDate;
+    @Setter
     @Column(name = "end_date")
     private LocalDate endDate;
+    @Setter
     private boolean status;
 
     @ManyToOne(fetch = FetchType.EAGER) //TODO: Decide fetchType and cascadeType

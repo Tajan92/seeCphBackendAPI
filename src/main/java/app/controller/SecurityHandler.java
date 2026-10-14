@@ -3,8 +3,6 @@ package app.controller;
 import app.dto.user.UserDTOResponse;
 import app.dto.user.UserLoginDTORequest;
 import app.dto.user.UserLoginDTOResponse;
-import app.entities.users.Organizer;
-import app.enums.Status;
 import app.enums.UserRole;
 import app.exceptions.SecurityValidationException;
 import app.security.TokenSecurity;
@@ -26,9 +24,9 @@ public class SecurityHandler {
 
     public SecurityHandler(SecurityService securityService) {
         this.securityService = securityService;
-        this.issuer = getConfig("ISSUER");
-        this.secretKey = getConfig("SECRET_KEY");
-        this.tokenExpireMillis = Long.parseLong(getConfig("TOKEN_EXPIRE_TIME"));
+        this.issuer = Utils.getConfig("ISSUER");
+        this.secretKey = Utils.getConfig("SECRET_KEY");
+        this.tokenExpireMillis = Long.parseLong(Utils.getConfig("TOKEN_EXPIRE_TIME"));
     }
 
     public void login(Context ctx) {
@@ -95,14 +93,6 @@ public class SecurityHandler {
 
     private static boolean isEndpointOpenForAnyone(Set<UserRole> allowedRoles) {
         return allowedRoles.contains(UserRole.ANYONE);
-    }
-
-    private static String getConfig(String key) {
-        String value = System.getenv("DEPLOYED") != null ? System.getenv(key) : Utils.getPropertyValue(key, "config.properties");
-        if (value == null || value.isBlank()) {
-            throw new IllegalStateException(key + " is not configured");
-        }
-        return value;
     }
 
     private static boolean isStaticFile(Context ctx) {

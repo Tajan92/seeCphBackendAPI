@@ -2,15 +2,20 @@ package app.service;
 
 import app.config.AppConstants;
 import app.dao.EventDAO;
+import app.dao.UserDAO;
 import app.dto.event.EventDTOResponse;
 import app.dto.event.EventDTORequest;
 import app.dto.ticketMaster.TicketMasterDTO;
 import app.dto.user.UserDTOResponse;
 import app.entities.Address;
 import app.entities.Event;
+import app.entities.users.Admin;
+import app.entities.users.Organizer;
+import app.entities.users.User;
 import app.enums.EventCategory;
 import app.enums.SourceProvider;
 import app.enums.UserRole;
+import app.exceptions.SecurityValidationException;
 import app.mapper.EventConverter;
 import app.mapper.TicketMasterConverter;
 import app.utils.APIReader;
@@ -23,38 +28,32 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
-public class EventService implements IService<EventDTORequest, EventDTOResponse> {
+public class EventService {
     private final EventDAO eventDAO;
+    private final UserDAO userDAO;
     private final AddressService addressService;
-    private final UserService userService;
     private final APIReader apiReader;
     private final TicketMasterConverter converter;
     private final EventConverter eventConverter;
     private int counter;
 
-    public EventService(EventDAO eventDAO, AddressService addressService, UserService userService) {
+    public EventService(EventDAO eventDAO, AddressService addressService, UserDAO userDAO) {
         this.eventDAO = eventDAO;
         this.addressService = addressService;
-        this.userService = userService;
         this.apiReader = new APIReader();
         this.converter = new TicketMasterConverter(addressService);
         this.eventConverter = new EventConverter();
+        this.userDAO = userDAO;
     }
 
-//apiReader.getApiAsTmDTO("https://app.ticketmaster.com/discovery/v2/events.json?countryCode=DK&latlong=55.6761,12.5683&radius=15&unit=km&page=$&apikey="+System.getenv("API_KEY"));
-
-    @Override
-    public EventDTOResponse create(EventDTORequest input) {
+    public EventDTOResponse create(EventDTORequest input, int userId) {
+        User user = userDAO.readById(userId);
         Address address = addressService.createOrFindAddress(input.postalCode(), input.city(), input.address());
-
-        String primaryImageUrl = input.primaryImageUrl();
-        if (input.useDefaultImage()) {
-            primaryImageUrl = AppConstants.DEFAULT_IMAGE_URL;
-        }
         GeoUtil.Coordinates coordinates = GeoUtil.findCoordinates(address);
 
         Event event = Event.builder()
@@ -68,27 +67,28 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
                 .startTime(input.startTime())
                 .startDate(input.startDate())
                 .url(input.url())
-                .imageUrl(primaryImageUrl)
+                .imageUrl(resolveImageUrl(input))
                 .category(input.category())
-                .sourceProvider(getSourceProvider(input.userId()))
                 .build();
+
+        if (user instanceof Organizer organizer) {
+            event.setOrganizer(organizer);
+            event.setSourceProvider(SourceProvider.ORGANIZER);
+        } else if (user instanceof Admin admin) {
+            event.setAdmin(admin);
+            event.setSourceProvider(SourceProvider.ADMIN);
+        }
 
         Event createdEvent = eventDAO.create(event);
         return eventConverter.convertEntityToDTO(createdEvent);
     }
 
-    @Override
-    public EventDTOResponse updateById(int id, EventDTORequest input) {
+    public EventDTOResponse updateById(int id, EventDTORequest input, UserDTOResponse currentUser) {
         Event event = eventDAO.readById(id);
+        requireOwnerOrAdmin(event, currentUser);
 
         Address address = addressService.createOrFindAddress(input.postalCode(), input.city(), input.address());
         GeoUtil.Coordinates coordinates = GeoUtil.findCoordinates(address);
-
-        String primaryImageUrl = input.primaryImageUrl();
-        if (input.useDefaultImage()) {
-            primaryImageUrl = AppConstants.DEFAULT_IMAGE_URL;
-        }
-        event.setSourceProvider(SourceProvider.ADMIN);
 
         event.setTitle(input.title());
         event.setDescription(input.description());
@@ -100,20 +100,22 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
         event.setStartTime(input.startTime());
         event.setStartDate(input.startDate());
         event.setUrl(input.url());
-        event.setImageUrl(primaryImageUrl);
+        event.setImageUrl(resolveImageUrl(input));
         event.setCategory(input.category());
 
         Event updatedEvent = eventDAO.update(event);
         return eventConverter.convertEntityToDTO(updatedEvent);
     }
 
-    @Override
     public EventDTOResponse getById(int id) {
-        Event event = eventDAO.readById(id);
-        return eventConverter.convertEntityToDTO(event);
+        return eventConverter.convertEntityToDTO(eventDAO.readById(id));
     }
 
-    @Override
+    public List<EventDTOResponse> getByUserId(int id) {
+        List<Event> event = eventDAO.readEventsByUserId(id);
+        return eventConverter.convertEntityListToDTOList(event);
+    }
+
     public List<EventDTOResponse> getAll() {
         List<Event> events = eventDAO.readAll();
         if (events == null) {
@@ -134,9 +136,9 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
         return eventDAO.readDistinctCategoriesInDb();
     }
 
-    @Override
-    public boolean deleteById(int id) {
+    public boolean deleteById(int id, UserDTOResponse currentUser) {
         Event event = eventDAO.readById(id);
+        requireOwnerOrAdmin(event, currentUser);
         return eventDAO.delete(event);
     }
 
@@ -181,6 +183,19 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
         log.info("Ticketmaster sync done: {} created, {} updated, {} failed", created, updated, failed);
     }
 
+    private void requireOwnerOrAdmin(Event event, UserDTOResponse currentUser) {
+        if (currentUser.userRole() == UserRole.ADMIN) return;
+
+        boolean isOwner = event.getOrganizer() != null && Objects.equals(event.getOrganizer().getUserId(), currentUser.id());
+        if (!isOwner) {
+            throw new SecurityValidationException(403, "You can only change your own events");
+        }
+    }
+
+    private String resolveImageUrl(EventDTORequest input) {
+        return input.useDefaultImage() ? AppConstants.DEFAULT_IMAGE_URL : input.primaryImageUrl();
+    }
+
     private void copyTicketmasterFields(Event from, Event to) {
         to.setTitle(from.getTitle());
         to.setPrice(from.getPrice());
@@ -215,16 +230,5 @@ public class EventService implements IService<EventDTORequest, EventDTOResponse>
             description = event.getDescription();
         }
         return description;
-    }
-
-    private SourceProvider getSourceProvider(int userId) {
-        SourceProvider sourceProvider = null;
-        UserDTOResponse userDTOResponse = userService.getById(userId);
-        if (userDTOResponse.userRole() == UserRole.ADMIN) {
-            sourceProvider = SourceProvider.ADMIN;
-        } else if (userDTOResponse.userRole() == UserRole.ORGANIZER) {
-            sourceProvider = SourceProvider.ORGANIZER;
-        }
-        return sourceProvider;
     }
 }

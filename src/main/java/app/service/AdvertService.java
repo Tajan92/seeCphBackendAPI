@@ -5,21 +5,23 @@ import app.dao.EventDAO;
 import app.dao.UserDAO;
 import app.dto.advert.AdvertDTORequest;
 import app.dto.advert.AdvertDTOResponse;
-import app.dto.user.UserDTOResponse;
 import app.entities.Advert;
 import app.entities.Event;
 import app.entities.users.Admin;
 import app.entities.users.Organizer;
 import app.entities.users.User;
+import app.enums.AddPlacement;
+import app.exceptions.SecurityValidationException;
 import app.mapper.AdvertConverter;
-import app.mapper.UserConverter;
+
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 public class AdvertService {
     private final AdvertDAO advertDAO;
     private final UserDAO userDAO;
     private final EventDAO eventDAO;
-    private final UserConverter userConverter = new UserConverter();
     private final AdvertConverter advertConverter = new AdvertConverter();
 
     public AdvertService(AdvertDAO advertDAO, UserDAO userDAO, EventDAO eventDAO) {
@@ -32,6 +34,12 @@ public class AdvertService {
         Event event = eventDAO.readById(input.eventId());
         User user = userDAO.readById(userID);
 
+        if (user instanceof Organizer organizer) {
+            boolean ownsEvent = event.getOrganizer() != null && Objects.equals(event.getOrganizer().getUserId(), organizer.getUserId());
+            if (!ownsEvent) {
+                throw new SecurityValidationException(403, "You can only advertise your own events");
+            }
+        }
         Advert advert = Advert.builder()
                 .event(event)
                 .addPlacement(input.addPlacement())
@@ -39,35 +47,26 @@ public class AdvertService {
                 .endDate(input.endDate())
                 .build();
 
-        if (user instanceof Organizer){
-            advert.setOrganizer((Organizer) user);
+        if (user instanceof Organizer organizer) {
+            advert.setOrganizer(organizer);
+        } else if (user instanceof Admin admin) {
+            advert.setAdmin(admin);
         }
-        if (user instanceof Admin){
-            advert.setAdmin((Admin) user);
-        }
+
         Advert createdAdvert = advertDAO.create(advert);
         return advertConverter.convertEntityToDTO(createdAdvert);
     }
 
     public AdvertDTOResponse updateById(int id, AdvertDTORequest input) {
+        Advert advert = advertDAO.readById(id);
         Event event = eventDAO.readById(input.eventId());
-        User user = userDAO.readById(input.userId());
 
-        Advert configuredAdvert = Advert.builder()
-                .advertId(id)
-                .event(event)
-                .addPlacement(input.addPlacement())
-                .startDate(input.startDate())
-                .endDate(input.endDate())
-                .build();
+        advert.setEvent(event);
+        advert.setAddPlacement(input.addPlacement());
+        advert.setStartDate(input.startDate());
+        advert.setEndDate(input.endDate());
 
-        if (user instanceof Organizer) {
-            configuredAdvert.setOrganizer((Organizer) user);
-        } else if (user instanceof Admin) {
-            configuredAdvert.setAdmin((Admin) user);
-        }
-        Advert updatedAdvert = advertDAO.update(configuredAdvert);
-        return advertConverter.convertEntityToDTO(updatedAdvert);
+        return advertConverter.convertEntityToDTO(advertDAO.update(advert));
     }
 
     public AdvertDTOResponse getById(int id) {
@@ -78,14 +77,16 @@ public class AdvertService {
         return advertConverter.convertEntityListToDTOList(advertDAO.readAll());
     }
 
+    public List<AdvertDTOResponse> getByUserId(int userId) {
+        return advertConverter.convertEntityListToDTOList(advertDAO.readAdvertsByUserId(userId));
+    }
+
+    public List<AdvertDTOResponse> getActive(AddPlacement placement) {
+        return advertConverter.convertEntityListToDTOList(advertDAO.readActiveAdverts(placement, LocalDate.now()));
+    }
+
     public boolean deleteById(int id) {
         Advert advert = advertDAO.readById(id);
         return advertDAO.delete(advert);
     }
-
-   private UserDTOResponse getUserDTOResponse(Advert advert) {
-       int userId = advert.getAdmin() != null ? advert.getAdmin().getUserId() : advert.getOrganizer().getUserId();
-       User user = userDAO.readById(userId);
-       return userConverter.convertEntityToDTO(user);
-   }
 }

@@ -1,17 +1,16 @@
 package app.controller;
 
 import app.dto.advert.AdvertDTORequest;
-import app.dto.advert.AdvertDTOResponse;
 import app.dto.user.UserDTOResponse;
-import app.entities.Advert;
 import app.enums.AddPlacement;
 import app.service.AdvertService;
+import app.utils.PathUtil;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
-import java.util.List;
+
 @Slf4j
 public class AdvertHandler implements IHandler {
     private final AdvertService advertService;
@@ -29,7 +28,7 @@ public class AdvertHandler implements IHandler {
 
     @Override
     public void getById(Context ctx) {
-        ctx.status(HttpStatus.OK).json(advertService.getById(getId(ctx)));
+        ctx.status(HttpStatus.OK).json(advertService.getById(PathUtil.getId(ctx)));
     }
 
     @Override
@@ -51,21 +50,15 @@ public class AdvertHandler implements IHandler {
 
     @Override
     public void updateById(Context ctx) {
-        int id = getId(ctx);
+        int id = PathUtil.getId(ctx);
         AdvertDTORequest input = advertInputValidator(ctx);
         ctx.status(HttpStatus.OK).json(advertService.updateById(id, input));
     }
 
     @Override
     public void deleteById(Context ctx) {
-        advertService.deleteById(getId(ctx));
+        advertService.deleteById(PathUtil.getId(ctx));
         ctx.status(HttpStatus.NO_CONTENT);
-    }
-
-    private static int getId(Context ctx) {
-        return ctx.pathParamAsClass("id", Integer.class)
-                .check(value -> value > 0, "Id must be positive")
-                .get();
     }
 
     private AdvertDTORequest advertInputValidator(Context ctx) {

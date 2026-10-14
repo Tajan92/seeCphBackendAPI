@@ -1,21 +1,23 @@
 package app.controller;
 
-import app.dto.event.EventDTOResponse;
 import app.dto.event.EventDTORequest;
+import app.dto.user.UserDTOResponse;
 import app.enums.EventCategory;
-import app.exceptions.SyncException;
+import app.exceptions.BadRequestException;
 import app.service.EventService;
+import app.utils.PathUtil;
+import app.utils.Utils;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
+import java.time.format.DateTimeParseException;
 import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class EventHandler implements IHandler {
-    EventService eventService;
+    private final EventService eventService;
 
     public EventHandler(EventService eventService) {
         this.eventService = eventService;
@@ -23,84 +25,55 @@ public class EventHandler implements IHandler {
 
     @Override
     public void create(Context ctx) {
-        EventDTORequest input = EventInputValidator(ctx);
-        EventDTOResponse eventDTOResponse = eventService.create(input);
-        if (eventDTOResponse != null) {
-            ctx.status(HttpStatus.CREATED);
-            ctx.json(eventDTOResponse);
-        }  else {
-            ctx.status(HttpStatus.BAD_REQUEST);
-            log.warn("400: Invalid event request: {}", input);
-        }
+        UserDTOResponse currentUser = ctx.attribute("user");
+        EventDTORequest input = eventInputValidator(ctx);
+        ctx.status(HttpStatus.CREATED).json(eventService.create(input, currentUser.id()));
     }
 
     @Override
     public void getById(Context ctx) {
-        int id = ctx.pathParamAsClass("id", Integer.class).check(value -> value > 0, "Id must be positive").get();
-        EventDTOResponse eventDTO = eventService.getById(id);
-        if (eventDTO == null) {
-            ctx.status(HttpStatus.NOT_FOUND);
-            log.warn("404: Event with id {} not found", id);
-            return;
-        }
-        ctx.status(HttpStatus.OK);
-        ctx.json(eventDTO);
+        ctx.status(HttpStatus.OK).json(eventService.getById(PathUtil.getId(ctx)));
     }
 
     @Override
     public void getAll(Context ctx) {
-        int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(0);
-        int pageSize = ctx.queryParamAsClass("pageSize", Integer.class).getOrDefault(20);
+        int maxPageSize = 100;
+        int page = Math.max(ctx.queryParamAsClass("page", Integer.class).getOrDefault(0), 0);
+        int pageSize = Math.clamp(ctx.queryParamAsClass("pageSize", Integer.class).getOrDefault(20), 1, maxPageSize);
+        EventCategory category = parseCategory(ctx.queryParam("category"));
+        LocalDate startDate = parseDate(ctx.queryParam("startDate"));
 
-        int pageMaxSize = 100;
-        if (pageSize > pageMaxSize) {
-            pageSize = pageMaxSize;
-        }
-        if (page < 0) {
-            page = 0;
-        }
+        ctx.status(HttpStatus.OK).json(eventService.getAllEventsBySearchAndFilter(
+                ctx.queryParam("search"), category, startDate, ctx.queryParam("postalCode"), page, pageSize));
+    }
 
-        String categoryParam = ctx.queryParam("category");
-        String startDateParam = ctx.queryParam("startDate");
-        String postalCodeParam = ctx.queryParam("postalCode");
-        String searchParam = ctx.queryParam("search");
-
-        LocalDate startDate = (startDateParam != null && !startDateParam.isBlank() ? LocalDate.parse(startDateParam) : null);
-        EventCategory eventCategory = (categoryParam != null && !categoryParam.isBlank() ? EventCategory.valueOf(categoryParam.toUpperCase()) : null);
-
-        List<EventDTOResponse> eventDTOS = eventService.getAllEventsBySearchAndFilter(searchParam, eventCategory, startDate, postalCodeParam, page, pageSize);
-
-        ctx.status(HttpStatus.OK);
-        ctx.json(eventDTOS);
+    public void getMyEvents(Context ctx) {
+        UserDTOResponse currentUser = ctx.attribute("user");
+        ctx.status(HttpStatus.OK).json(eventService.getById(currentUser.id()));
     }
 
     public void getAllActiveEventCategories(Context ctx) {
-        ctx.status(HttpStatus.OK);
-        ctx.json(eventService.getAllActiveEventCategories());
+        ctx.status(HttpStatus.OK).json(eventService.getAllActiveEventCategories());
     }
 
     @Override
     public void updateById(Context ctx) {
-        int id = ctx.pathParamAsClass("id", Integer.class).check(value -> value > 0, "Id must be positive").get();
-        EventDTORequest input = EventInputValidator(ctx);
-        eventService.updateById(id, input);
-        ctx.status(HttpStatus.OK);
+        UserDTOResponse currentUser = ctx.attribute("user");
+        int id = PathUtil.getId(ctx);
+        EventDTORequest input = eventInputValidator(ctx);
+        ctx.status(HttpStatus.OK).json(eventService.updateById(id, input, currentUser));
     }
 
     @Override
     public void deleteById(Context ctx) {
-        int id = ctx.pathParamAsClass("id", Integer.class).check(value -> value > 0, "Id must be positive").get();
-
-        boolean deleted = eventService.deleteById(id);
-        if (!deleted) {
-            ctx.status(HttpStatus.NOT_FOUND);
-        }
-        ctx.status(HttpStatus.OK);
+        UserDTOResponse currentUser = ctx.attribute("user");
+        eventService.deleteById(PathUtil.getId(ctx), currentUser);
+        ctx.status(HttpStatus.NO_CONTENT);
     }
 
     public void syncEventsFromAPI(Context ctx) {
         String authHeader = ctx.header("x-api-key");
-        String expectedSecret = System.getenv("SYNC_SECRET");
+        String expectedSecret = Utils.getOptionalConfig("SYNC_SECRET");
 
         if (expectedSecret != null && expectedSecret.equals(authHeader)) {
             CompletableFuture.runAsync(() -> {
@@ -117,30 +90,37 @@ public class EventHandler implements IHandler {
         }
     }
 
-    private EventDTORequest EventInputValidator(Context ctx) {
+    private static EventCategory parseCategory(String value) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            return EventCategory.valueOf(value.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Unknown category: " + value);
+        }
+    }
+
+    private static LocalDate parseDate(String value) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            return LocalDate.parse(value.trim());
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("startDate must be in the format yyyy-MM-dd");
+        }
+    }
+
+    private EventDTORequest eventInputValidator(Context ctx) {
         return ctx.bodyValidator(EventDTORequest.class)
-                .check(event -> event.userId() > 0, "Invalid user id")
-                .check(event -> event.title() != null && !event.title().isEmpty(), "Title must be filled out")
-                .check(event -> event.description() != null && !event.description().isEmpty(), "Description must be filled out")
-                .check(event -> event.address() != null && !event.address().isEmpty(), "Address must be filled out")
-                .check(event -> event.postalCode() != null && !event.postalCode().isEmpty(), "Zip code must be filled out")
-                .check(event -> event.city() != null && !event.city().isEmpty(), "City must be filled out")
-                .check(event -> event.url() != null && !event.url().isEmpty(), "Url for event must be filled out")
-                .check(dto -> {
-                    if (!dto.useDefaultImage()) {
-                        return dto.primaryImageUrl() != null && !dto.primaryImageUrl().isEmpty();
-                    }
-                    return true;
-                }, "Image must be provided unless you select default image")
-                .check(event -> event.category() != null && !event.category().toString().isEmpty(), "Category must be given")
-                .check(event -> !(event.price() < 0), "Price must be 0 or higher")
-                .check(event -> event.startDate() != null, "Start date must be filled out")
-                .check(event -> !event.startDate().isBefore(LocalDate.now()), "Start date cannot be in the past")
-                .check(event -> {
-                    if (event.startDate() != null && event.startDate().isEqual(LocalDate.now())) {
-                        return event.startTime() == null || !event.startTime().isBefore(LocalTime.now());
-                    }
-                    return true;
-                }, "Start time cannot be in the past").get();
+                .check(e -> e.title() != null && !e.title().isBlank(), "Title must be filled out")
+                .check(e -> e.description() != null && !e.description().isBlank(), "Description must be filled out")
+                .check(e -> e.address() != null && !e.address().isBlank(), "Address must be filled out")
+                .check(e -> e.postalCode() != null && !e.postalCode().isBlank(), "Zip code must be filled out")
+                .check(e -> e.city() != null && !e.city().isBlank(), "City must be filled out")
+                .check(e -> e.url() != null && !e.url().isBlank(), "Url for event must be filled out")
+                .check(e -> e.useDefaultImage() || (e.primaryImageUrl() != null && !e.primaryImageUrl().isBlank()), "Image must be provided unless you select default image")
+                .check(e -> e.category() != null, "Category must be given")
+                .check(e -> e.price() >= 0, "Price must be 0 or higher")
+                .check(e -> e.startDate() != null && !e.startDate().isBefore(LocalDate.now()), "Start date must be today or in the future")
+                .check(e -> e.startDate() == null || !e.startDate().isEqual(LocalDate.now()) || e.startTime() == null || !e.startTime().isBefore(LocalTime.now()), "Start time cannot be in the past")
+                .get();
     }
 }
