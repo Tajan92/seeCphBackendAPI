@@ -39,7 +39,7 @@ public class ApplicationConfig implements EndpointGroup {
         // Services
         AddressService addressService = new AddressService(addressDAO);
         UserService userService = new UserService(userDAO);
-        EventService eventService = new EventService(eventDAO, addressService, userService);
+        EventService eventService = new EventService(eventDAO, addressService, userDAO);
         AdvertService advertService = new AdvertService(advertDAO, userDAO, eventDAO);
         SecurityService securityService = new SecurityService(userDAO);
 

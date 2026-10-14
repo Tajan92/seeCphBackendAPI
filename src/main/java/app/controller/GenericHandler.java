@@ -1,7 +1,5 @@
 package app.controller;
 
-import app.service.IService;
-
 import javax.naming.Context;
 import java.util.function.Function;
 

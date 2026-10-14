@@ -25,8 +25,8 @@ public final class HibernateConfig {
     private static Properties buildProps() {
         Properties props = HibernateBaseProperties.createBase();
 
-        // Teaching-friendly default - change to update in production
-        props.put("hibernate.hbm2ddl.auto", "create");
+        // Testing-friendly default (create) - change to update in production
+        props.put("hibernate.hbm2ddl.auto", "update");
 
         if (System.getenv("DEPLOYED") != null) {
             setDeployedProperties(props);
@@ -44,9 +44,9 @@ public final class HibernateConfig {
     }
 
     private static void setDevProperties(Properties props) {
-        String dbName = Utils.getPropertyValue("DB_NAME", "config.properties");
-        String username = Utils.getPropertyValue("DB_USERNAME", "config.properties");
-        String password = Utils.getPropertyValue("DB_PASSWORD", "config.properties");
+        String dbName = Utils.getConfig("DB_NAME");
+        String username = Utils.getConfig("DB_USERNAME");
+        String password = Utils.getConfig("DB_PASSWORD");
 
         props.put("hibernate.connection.url", "jdbc:postgresql://localhost:5432/" + dbName);
         props.put("hibernate.connection.username", username);
