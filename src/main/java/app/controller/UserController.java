@@ -17,8 +17,15 @@ public class UserController implements EndpointGroup {
         post("/api/v1/users/organizer", userHandler::createPendingOrganizer, UserRole.ANYONE);
         post("/api/v1/users/admin", userHandler::createAdmin, UserRole.ADMIN);
 
-        get("/api/v1/users/me", userHandler::getMe, UserRole.ATTENDEE, UserRole.ORGANIZER, UserRole.ADMIN);
-        put("/api/v1/users/me", userHandler::updateMe, UserRole.ATTENDEE, UserRole.ORGANIZER, UserRole.ADMIN);
+        get("/api/v1/users/my/favorites", userHandler::getFavoriteEvents, UserRole.ATTENDEE);
+        post("/api/v1/users/my/favorites/{id}", userHandler::addFavoriteEvent, UserRole.ATTENDEE);
+        delete("/api/v1/users/my/favorites/{id}", userHandler::removeFavoriteEvent, UserRole.ATTENDEE);
+        get("/api/v1/users/my/liked", userHandler::getLikedEvents, UserRole.ATTENDEE);
+        post("/api/v1/users/my/liked/{id}", userHandler::addLikedEvent, UserRole.ATTENDEE);
+        delete("/api/v1/users/my/liked/{id}", userHandler::removeLikedEvent, UserRole.ATTENDEE);
+
+        get("/api/v1/users/my", userHandler::getCurrentUser, UserRole.ATTENDEE, UserRole.ORGANIZER, UserRole.ADMIN);
+        put("/api/v1/users/my", userHandler::updateCurrentUser, UserRole.ATTENDEE, UserRole.ORGANIZER, UserRole.ADMIN);
 
         get("/api/v1/users", userHandler::getAll, UserRole.ADMIN);
         get("/api/v1/users/{id}", userHandler::getById, UserRole.ADMIN);

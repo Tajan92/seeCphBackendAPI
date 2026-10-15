@@ -42,7 +42,7 @@ public class UserHandler implements IHandler {
         ctx.status(HttpStatus.CREATED).json(userService.createAdmin(input));
     }
 
-    public void getMe(Context ctx) {
+    public void getCurrentUser(Context ctx) {
         UserDTOResponse currentUser = ctx.attribute("user");
         ctx.status(HttpStatus.OK).json(userService.getById(currentUser.id()));
     }
@@ -65,7 +65,7 @@ public class UserHandler implements IHandler {
         ctx.status(HttpStatus.OK).json(userService.updateById(id, input));
     }
 
-    public void updateMe(Context ctx) {
+    public void updateCurrentUser(Context ctx) {
         UserDTOResponse currentUser = ctx.attribute("user");
         UserDTORequest input = updateValidator(ctx);
         ctx.status(HttpStatus.OK).json(userService.updateById(currentUser.id(), input));
@@ -85,6 +85,45 @@ public class UserHandler implements IHandler {
         userService.deleteById(id);
         ctx.status(HttpStatus.NO_CONTENT);
     }
+
+    public void addLikedEvent(Context ctx) {
+        int eventId = getId(ctx);
+        UserDTOResponse currentUser = ctx.attribute("user");
+        userService.addLikedEvent(currentUser.id(), eventId);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    public void getLikedEvents(Context ctx) {
+        UserDTOResponse currentUser = ctx.attribute("user");
+        ctx.status(HttpStatus.OK).json(userService.getLikedEvents(currentUser.id()));
+    }
+
+    public void removeLikedEvent(Context ctx) {
+        int eventId = getId(ctx);
+        UserDTOResponse currentUser = ctx.attribute("user");
+        userService.removeLikedEvent(currentUser.id(), eventId);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    public void addFavoriteEvent(Context ctx) {
+        int eventId = getId(ctx);
+        UserDTOResponse currentUser = ctx.attribute("user");
+        userService.addFavoriteEvent(currentUser.id(), eventId);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    public void getFavoriteEvents(Context ctx) {
+        UserDTOResponse currentUser = ctx.attribute("user");
+        ctx.status(HttpStatus.OK).json(userService.getFavoriteEvents(currentUser.id()));
+    }
+
+    public void removeFavoriteEvent(Context ctx) {
+        int eventId = getId(ctx);
+        UserDTOResponse currentUser = ctx.attribute("user");
+        userService.removeFavoriteEvent(currentUser.id(), eventId);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
 
     private UserDTORequest createValidator(Context ctx) {
         return ctx.bodyValidator(UserDTORequest.class)

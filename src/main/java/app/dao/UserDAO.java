@@ -1,7 +1,9 @@
 package app.dao;
 
-import app.dto.user.UserDTOResponse;
+import app.entities.Event;
+import app.entities.users.Attendee;
 import app.entities.users.User;
+import app.enums.FavoriteOrLikedEvent;
 import app.exceptions.DatabaseException;
 import app.exceptions.DatabaseIdException;
 import jakarta.persistence.*;
@@ -33,5 +35,73 @@ public class UserDAO extends GenericDAO<User> {
         } catch (PersistenceException e) {
             throw new DatabaseException("Reading user by email failed", e);
         }
+    }
+
+    public void addFavoriteOrLikedEvent(int userId, int eventId, FavoriteOrLikedEvent favoriteOrLiked) {
+        try (EntityManager em = emf.createEntityManager()) {
+            Attendee attendee = checkIfAttendeeExist(em, userId);
+            Event event = checkIfEventExist(em, eventId);
+            try {
+                em.getTransaction().begin();
+                switch (favoriteOrLiked) {
+                    case FAVORITE -> attendee.addFavoriteEvent(event);
+                    case LIKED -> attendee.addLikedEvent(event);
+                }
+                attendee.addLikedEvent(event);
+                em.getTransaction().commit();
+            } catch (PersistenceException e) {
+                if (em.getTransaction().isActive()) em.getTransaction().rollback();
+                throw new DatabaseException("Adding "+favoriteOrLiked.name().toLowerCase()+" event failed", e);
+            }
+        }
+    }
+
+    public List<Event> readFavoriteOrLikedEvents(int userId, FavoriteOrLikedEvent favoriteOrLiked) {
+        try (EntityManager em = emf.createEntityManager()) {
+            checkIfAttendeeExist(em, userId);
+            try {
+                String query = switch (favoriteOrLiked) {
+                    case LIKED -> "SELECT e FROM Attendee a JOIN a.likedEvents e LEFT JOIN FETCH e.location WHERE a.userId = :userId ORDER BY e.startDate";
+                    case FAVORITE -> "SELECT e FROM Attendee a JOIN a.favoriteEvents e LEFT JOIN FETCH e.location WHERE a.userId = :userId ORDER BY e.startDate";
+                };
+                return em.createQuery(query, Event.class)
+                        .setParameter("userId", userId)
+                        .getResultList();
+            } catch (PersistenceException e) {
+                throw new DatabaseException("Reading events from attendee failed", e);
+            }
+        }
+    }
+
+    public void removeFavoriteOrLikedEvent(int userId, int eventId, FavoriteOrLikedEvent favoriteOrLiked) {
+        try (EntityManager em = emf.createEntityManager()) {
+            Attendee attendee = checkIfAttendeeExist(em, userId);
+            Event event = checkIfEventExist(em, eventId);
+            try {
+                em.getTransaction().begin();
+                switch (favoriteOrLiked) {
+                    case FAVORITE -> attendee.removeFavoriteEvent(event);
+                    case LIKED -> attendee.removeLikedEvent(event);
+                }
+                em.getTransaction().commit();
+            } catch (PersistenceException e) {
+                if (em.getTransaction().isActive()) {
+                    em.getTransaction().rollback();
+                }
+                throw new DatabaseException("Removing "+favoriteOrLiked.name().toLowerCase()+ " event failed", e);
+            }
+        }
+    }
+
+    private Attendee checkIfAttendeeExist(EntityManager em, int userId) {
+        Attendee attendee = em.find(Attendee.class, userId);
+        if (attendee == null) throw new DatabaseIdException("Attendee with id " + userId + " does not exist");
+        return attendee;
+    }
+
+    private Event checkIfEventExist(EntityManager em, int eventId) {
+        Event event = em.find(Event.class, eventId);
+        if (event == null) throw new DatabaseIdException("Event with id " + eventId + " does not exist");
+        return event;
     }
 }

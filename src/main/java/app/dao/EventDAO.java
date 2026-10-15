@@ -71,26 +71,6 @@ public class EventDAO extends GenericDAO<Event> {
         }
     }
 
-    public List<Event> readFavoriteEventsByUserId(int userId) {
-        try (EntityManager em = emf.createEntityManager()) {
-            return em.createQuery("SELECT e FROM Attendee a JOIN a.favoriteEvents e WHERE a.userId = :userId ORDER BY e.startDate ASC", Event.class)
-                    .setParameter("userId", userId)
-                    .getResultList();
-        } catch (PersistenceException e) {
-            throw new DatabaseException("Reading favorite events for user " + userId + " failed", e);
-        }
-    }
-
-    public List<Event> readLikedEventsByUserId(int userId) {
-        try (EntityManager em = emf.createEntityManager()) {
-            return em.createQuery("SELECT e FROM Attendee a JOIN a.likedEvents e WHERE a.userId = :userId ORDER BY e.startDate ASC", Event.class)
-                    .setParameter("userId", userId)
-                    .getResultList();
-        } catch (PersistenceException e) {
-            throw new DatabaseException("Reading liked events for user " + userId + " failed", e);
-        }
-    }
-
     public List<EventCategory> readDistinctCategoriesInDb() {
         try (EntityManager em = emf.createEntityManager()) {
             return em.createQuery("SELECT DISTINCT e.category FROM Event e WHERE e.category IS NOT NULL",

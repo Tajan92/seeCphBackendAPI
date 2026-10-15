@@ -2,15 +2,12 @@ package app.entities.users;
 
 import app.entities.Event;
 import app.enums.UserRole;
-import app.exceptions.DatabaseException;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
@@ -23,36 +20,30 @@ public class Attendee extends User {
     @JoinTable(name = "attendee_favorite_events",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id"))
-    private Set<Event> favoriteEvents;
-
-    public void addFavoriteEvent(Event event) {
-        if (event == null) {
-            throw new DatabaseException("Event not found");
-        }
-        if (event != null) {
-            if (this.favoriteEvents == null) {
-                this.favoriteEvents = new HashSet<>();
-            }
-            this.favoriteEvents.add(event);
-        }
-    }
+    @Builder.Default
+    private Set<Event> favoriteEvents = new HashSet<>();
 
     @ManyToMany(cascade = {CascadeType.MERGE})
     @JoinTable(name = "attendee_liked_events",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id"))
-    private Set<Event> likedEvents;
+    @Builder.Default
+    private Set<Event> likedEvents = new HashSet<>();
 
     public void addLikedEvent(Event event) {
-        if (event == null) {
-            throw new DatabaseException("Event not found");
-        }
-        if (event != null) {
-            if (this.likedEvents == null) {
-                this.likedEvents = new HashSet<>();
-            }
-            this.likedEvents.add(event);
-        }
+            this.likedEvents.add(Objects.requireNonNull(event));
+    }
+
+    public void removeLikedEvent(Event event) {
+        this.likedEvents.remove(event);
+    }
+
+    public void addFavoriteEvent(Event event) {
+        this.favoriteEvents.add(Objects.requireNonNull(event));
+    }
+
+    public void removeFavoriteEvent(Event event) {
+        this.favoriteEvents.remove(event);
     }
 
     @PrePersist

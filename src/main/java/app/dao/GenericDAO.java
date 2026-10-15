@@ -99,7 +99,7 @@ public abstract class GenericDAO<T extends IGetId> implements IDAO<T, Integer> {
     }
 
     @Override
-    public boolean delete(T entity) {
+    public void delete(T entity) {
         if (entity == null) {
             throw new DatabaseException(entityName + " is required for deleting");
         }
@@ -107,15 +107,14 @@ public abstract class GenericDAO<T extends IGetId> implements IDAO<T, Integer> {
             throw new DatabaseIdException(entityName + " id is required for deleting");
         }
         try (EntityManager em = emf.createEntityManager()) {
-            em.getTransaction().begin();
             T managed = em.find(clazz, entity.getId());
             if (managed == null) {
                 throw new DatabaseIdException(entityName + " not found with id: " + entity.getId());
             }
+            em.getTransaction().begin();
             try {
                 em.remove(managed);
                 em.getTransaction().commit();
-                return true;
             } catch (RuntimeException e) {
                 if (em.getTransaction().isActive()) {
                     em.getTransaction().rollback();

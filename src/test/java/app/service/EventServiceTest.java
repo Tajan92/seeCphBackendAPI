@@ -34,7 +34,6 @@ class EventServiceTest {
     private AddressDAO addressDAO;
     private UserDAO userDAO;
     private AddressService addressService;
-    private UserService userService;
     private Map<String, User> users;
     private Map<String, Event> events;
     private int userId;
@@ -53,8 +52,7 @@ class EventServiceTest {
         users = TestDataCreator.createUsers(emf);
         events = TestDataCreator.createEvents(emf);
         addressService = new AddressService(addressDAO);
-        userService = new UserService(userDAO);
-        eventService = new EventService(eventDAO, addressService, userService);
+        eventService = new EventService(eventDAO, addressService, userDAO);
         userId = users.get("admin").getId();
     }
 

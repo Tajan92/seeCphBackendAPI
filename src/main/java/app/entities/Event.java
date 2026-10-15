@@ -1,6 +1,7 @@
 package app.entities;
 
 import app.entities.users.Admin;
+import app.entities.users.Attendee;
 import app.entities.users.Organizer;
 import app.enums.EventCategory;
 import app.enums.SourceProvider;
@@ -74,6 +75,22 @@ public class Event implements IGetId {
     @Builder.Default
     private Set<Advert> adverts = new HashSet<>();
 
+    @ManyToOne
+    @Setter
+    private Organizer organizer;
+
+    @ManyToOne
+    @Setter
+    private Admin admin;
+
+    @Builder.Default
+    @ManyToMany(mappedBy = "favoriteEvents")
+    private Set<Attendee> attendeeFavorites = new HashSet<>();
+
+    @Builder.Default
+    @ManyToMany(mappedBy = "likedEvents")
+    private Set<Attendee> attendeeLikes = new HashSet<>();
+
     public void addAdvert(Advert advert) {
         if (advert != null) {
             if (this.adverts == null) {
@@ -91,13 +108,20 @@ public class Event implements IGetId {
         }
     }
 
-    @ManyToOne
-    @Setter
-    private Organizer organizer;
+    @Override
+    public Integer getId() {
+        return eventId;
+    }
 
-    @ManyToOne
-    @Setter
-    private Admin admin;
+    @PreRemove
+    void removeFromAttendees(){
+        for (Attendee attendee : attendeeFavorites) {
+            attendee.removeFavoriteEvent(this);
+        }
+        for (Attendee attendee : attendeeLikes) {
+            attendee.removeLikedEvent(this);
+        }
+    }
 
     @PrePersist
     public void prePersist() {
@@ -107,10 +131,6 @@ public class Event implements IGetId {
     @PreUpdate
     public void preUpdate() {
         lastSyncedAt = LocalDateTime.now();
-    }
-
-    public void addDescription(String description) {
-        this.description = description;
     }
 
     @Override
@@ -134,10 +154,5 @@ public class Event implements IGetId {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer()
                 .getPersistentClass()
                 .hashCode() : getClass().hashCode();
-    }
-
-    @Override
-    public Integer getId() {
-        return eventId;
     }
 }

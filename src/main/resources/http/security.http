@@ -2,7 +2,7 @@
 POST {{url}}/login
 Content-Type: application/json
 
-{ "email": "admin@test.dk", "password": "Test1234!" }
+{ "email": "{{adminEmail}}", "password": "{{adminPassword}}" }
 
 > {% client.global.set("token", response.body.token); %}
 
