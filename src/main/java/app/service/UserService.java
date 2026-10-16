@@ -8,7 +8,6 @@ import app.entities.users.Organizer;
 import app.entities.users.User;
 import app.enums.FavoriteOrLikedEvent;
 import app.enums.Status;
-import app.exceptions.BadRequestException;
 import app.exceptions.ConflictException;
 import app.mapper.EventConverter;
 import app.mapper.UserConverter;
@@ -18,9 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserService {
-    UserDAO userDAO;
-    UserConverter userConverter;
-    EventConverter eventConverter;
+    private final UserDAO userDAO;
+    private final UserConverter userConverter;
+    private final EventConverter eventConverter;
 
     public UserService(UserDAO userDAO) {
         this.userDAO = userDAO;
@@ -74,13 +73,13 @@ public class UserService {
     }
 
     public OrganizerDTOResponse updateOrganizerStatus(int id, Status status) {
-        User user = userDAO.readById(id);
-        if (!(user instanceof Organizer organizer)) {
-            throw new BadRequestException("User with id " + id + " is not an organizer");
-        }
-        organizer.setAccountStatus(status);
-        Organizer updated = (Organizer) userDAO.update(organizer);
-        return userConverter.convertOrganizerToDTO(updated);
+        Organizer organizer = userDAO.adminChangeStatusOfOrganizer(id, status);
+        return userConverter.convertOrganizerToDTO(organizer);
+    }
+
+    public List<OrganizerDTOResponse> getAllOrganizersByStatus(Status status) {
+        List<Organizer> pendingOrganizers = userDAO.adminReadOrganizersByStatus(status);
+        return userConverter.convertEntitiesToDTOs(pendingOrganizers);
     }
 
     public UserDTOResponse getById(int id) {

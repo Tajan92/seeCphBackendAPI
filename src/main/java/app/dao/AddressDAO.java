@@ -13,7 +13,7 @@ public class AddressDAO extends GenericDAO<Address> {
     }
 
     public Address readAdressByPostalCodeAndAddress(String postalCode, String address) {
-        if (postalCode == null && address == null) {
+        if (postalCode == null || address == null) {
             throw new DatabaseIdException("Postal code and address is required");
         }
         String jpql = "SELECT a FROM Address a WHERE a.address = :address AND a.postalCode = :postalCode";

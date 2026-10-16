@@ -1,9 +1,9 @@
 package app.utils;
 
 import app.entities.Address;
-import app.exceptions.ApiException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.URI;
@@ -14,6 +14,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+@Slf4j
 public class GeoUtil {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final HttpClient httpClient = HttpClient.newBuilder()
@@ -26,12 +27,12 @@ public class GeoUtil {
 
     public static Coordinates findCoordinates(Address address) {
         if (address == null) {
-            return new Coordinates("0", "0");
+            return null;
         }
         String query = String.format("%s, %s %s",
                 address.getAddress(),
                 address.getPostalCode() != null ? address.getPostalCode() : "",
-                address.getCity()
+                address.getCity()  != null ? address.getCity() : ""
         );
         String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
         String url = String.format("https://nominatim.openstreetmap.org/search?q=%s&format=json&limit=1", encodedQuery);
@@ -52,19 +53,18 @@ public class GeoUtil {
                 if (rootNode != null && !rootNode.isEmpty() && rootNode.isArray()) {
                     JsonNode firstResult = rootNode.get(0);
 
-                    String latitude = firstResult.has("lat") ? firstResult.get("lat").asText() : "0";
-                    String longitude = firstResult.has("lon") ? firstResult.get("lon").asText() : "0";
+                    String latitude = firstResult.has("lat") ? firstResult.get("lat").asText() : null;
+                    String longitude = firstResult.has("lon") ? firstResult.get("lon").asText() : null;
 
                     return new Coordinates(latitude, longitude);
                 }
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ApiException(500, "Getting coordinates from API was interrupted",e);
+            log.warn("Getting coordinates from API was interrupted {}", query, e);
         } catch (IOException e) {
-            throw new ApiException(502, "Failed to fetch coordinates from API", e);
-
+            log.warn("Failed to fetch coordinates from API {}", query, e);
         }
-        return new Coordinates("0", "0");
+        return null;
     }
 }

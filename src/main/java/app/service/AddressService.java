@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class AddressService {
-    AddressDAO addressDAO;
+    private final AddressDAO addressDAO;
 
     public Address createOrFindAddress(String postalCode, String city, String address) {
         Address fullAddress;

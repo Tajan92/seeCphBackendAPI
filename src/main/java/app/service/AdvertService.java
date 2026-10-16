@@ -85,8 +85,8 @@ public class AdvertService {
         return advertConverter.convertEntityListToDTOList(advertDAO.readActiveAdverts(placement, LocalDate.now()));
     }
 
-    public boolean deleteById(int id) {
+    public void deleteById(int id) {
         Advert advert = advertDAO.readById(id);
-        return advertDAO.delete(advert);
+        advertDAO.delete(advert);
     }
 }

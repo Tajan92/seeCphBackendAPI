@@ -1,10 +1,9 @@
 package app.controller;
 
-import app.dto.user.OrganizerDTORequest;
-import app.dto.user.OrganizerStatusDTORequest;
-import app.dto.user.UserDTORequest;
-import app.dto.user.UserDTOResponse;
+import app.dto.user.*;
+import app.enums.Status;
 import app.service.UserService;
+import app.utils.PathUtil;
 import app.utils.UserValidator;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
@@ -49,7 +48,7 @@ public class UserHandler implements IHandler {
 
     @Override
     public void getById(Context ctx) {
-        int id = getId(ctx);
+        int id = PathUtil.getId(ctx);
         ctx.status(HttpStatus.OK).json(userService.getById(id));
     }
 
@@ -60,7 +59,7 @@ public class UserHandler implements IHandler {
 
     @Override
     public void updateById(Context ctx) {
-        int id = getId(ctx);
+        int id = PathUtil.getId(ctx);
         UserDTORequest input = updateValidator(ctx);
         ctx.status(HttpStatus.OK).json(userService.updateById(id, input));
     }
@@ -71,23 +70,15 @@ public class UserHandler implements IHandler {
         ctx.status(HttpStatus.OK).json(userService.updateById(currentUser.id(), input));
     }
 
-    public void updateOrganizerStatus(Context ctx) {
-        int id = getId(ctx);
-        OrganizerStatusDTORequest input = ctx.bodyValidator(OrganizerStatusDTORequest.class)
-                .check(r -> r.status() != null, "Status is required")
-                .get();
-        ctx.status(HttpStatus.OK).json(userService.updateOrganizerStatus(id, input.status()));
-    }
-
     @Override
     public void deleteById(Context ctx) {
-        int id = getId(ctx);
+        int id = PathUtil.getId(ctx);
         userService.deleteById(id);
         ctx.status(HttpStatus.NO_CONTENT);
     }
 
     public void addLikedEvent(Context ctx) {
-        int eventId = getId(ctx);
+        int eventId = PathUtil.getId(ctx);
         UserDTOResponse currentUser = ctx.attribute("user");
         userService.addLikedEvent(currentUser.id(), eventId);
         ctx.status(HttpStatus.NO_CONTENT);
@@ -99,14 +90,14 @@ public class UserHandler implements IHandler {
     }
 
     public void removeLikedEvent(Context ctx) {
-        int eventId = getId(ctx);
+        int eventId = PathUtil.getId(ctx);
         UserDTOResponse currentUser = ctx.attribute("user");
         userService.removeLikedEvent(currentUser.id(), eventId);
         ctx.status(HttpStatus.NO_CONTENT);
     }
 
     public void addFavoriteEvent(Context ctx) {
-        int eventId = getId(ctx);
+        int eventId = PathUtil.getId(ctx);
         UserDTOResponse currentUser = ctx.attribute("user");
         userService.addFavoriteEvent(currentUser.id(), eventId);
         ctx.status(HttpStatus.NO_CONTENT);
@@ -118,12 +109,23 @@ public class UserHandler implements IHandler {
     }
 
     public void removeFavoriteEvent(Context ctx) {
-        int eventId = getId(ctx);
+        int eventId = PathUtil.getId(ctx);
         UserDTOResponse currentUser = ctx.attribute("user");
         userService.removeFavoriteEvent(currentUser.id(), eventId);
         ctx.status(HttpStatus.NO_CONTENT);
     }
 
+    public void getAllOrganizersByStatus(Context ctx) {
+        Status status = ctx.queryParamAsClass("status", Status.class).getOrDefault(Status.PENDING);
+        ctx.status(HttpStatus.OK).json(userService.getAllOrganizersByStatus(status));
+    }
+
+    public void updateOrganizerStatus(Context ctx) {
+        int id = PathUtil.getId(ctx);
+        OrganizerStatusDTORequest organizerStatusDTORequest = ctx.bodyValidator(OrganizerStatusDTORequest.class)
+                .check(organizer -> organizer.status() != null, "Status is required").get();
+        ctx.status(HttpStatus.OK).json(userService.updateOrganizerStatus(id, organizerStatusDTORequest.status()));
+    }
 
     private UserDTORequest createValidator(Context ctx) {
         return ctx.bodyValidator(UserDTORequest.class)
@@ -143,9 +145,5 @@ public class UserHandler implements IHandler {
                 .check(u -> UserValidator.validateEmail(u.email()), "Please enter a valid email")
                 .check(u -> UserValidator.validatePhoneNumber(u.phone()), "Please enter a valid phone number")
                 .get();
-    }
-
-    private int getId(Context ctx) {
-        return ctx.pathParamAsClass("id", Integer.class).check(value -> value > 0, "Id must be positive").get();
     }
 }

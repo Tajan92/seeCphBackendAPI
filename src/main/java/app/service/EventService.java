@@ -15,6 +15,7 @@ import app.entities.users.User;
 import app.enums.EventCategory;
 import app.enums.SourceProvider;
 import app.enums.UserRole;
+import app.exceptions.ConflictException;
 import app.exceptions.SecurityValidationException;
 import app.mapper.EventConverter;
 import app.mapper.TicketMasterConverter;
@@ -29,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,6 +43,7 @@ public class EventService {
     private final TicketMasterConverter converter;
     private final EventConverter eventConverter;
     private int counter;
+    private final AtomicBoolean syncRunning = new AtomicBoolean(false);
 
     public EventService(EventDAO eventDAO, AddressService addressService, UserDAO userDAO) {
         this.eventDAO = eventDAO;
@@ -62,8 +65,8 @@ public class EventService {
                 .price(input.price())
                 .free(input.free())
                 .location(address)
-                .longitude(coordinates.longitude())
-                .latitude(coordinates.latitude())
+                .longitude(coordinates != null ? coordinates.longitude() : null)
+                .latitude(coordinates != null ? coordinates.latitude() : null)
                 .startTime(input.startTime())
                 .startDate(input.startDate())
                 .url(input.url())
@@ -95,8 +98,8 @@ public class EventService {
         event.setPrice(input.price());
         event.setFree(input.free());
         event.setLocation(address);
-        event.setLongitude(coordinates.longitude());
-        event.setLatitude(coordinates.latitude());
+        event.setLongitude(coordinates != null ? coordinates.longitude() : null);
+        event.setLatitude(coordinates != null ? coordinates.latitude() : null);
         event.setStartTime(input.startTime());
         event.setStartDate(input.startDate());
         event.setUrl(input.url());
@@ -136,13 +139,24 @@ public class EventService {
         return eventDAO.readDistinctCategoriesInDb();
     }
 
-    public boolean deleteById(int id, UserDTOResponse currentUser) {
+    public void deleteById(int id, UserDTOResponse currentUser) {
         Event event = eventDAO.readById(id);
         requireOwnerOrAdmin(event, currentUser);
-        return eventDAO.delete(event);
+        eventDAO.delete(event);
     }
 
     public void syncTmEvents() {
+        if (!syncRunning.compareAndSet(false, true)) {
+            throw new ConflictException("Ticketmaster sync is already running");
+        }
+        try {
+            runTmSync();
+        } finally {
+            syncRunning.set(false);
+        }
+    }
+
+    public void runTmSync() {
         counter = 0;
         int maxCount = 15;
 
@@ -165,13 +179,13 @@ public class EventService {
             try {
                 Event existing = existingTmEvents.get(event.getApiEventId());
                 if (existing == null) {
-                    event.addDescription(checkForDescription(event, maxCount));
+                    event.setDescription(checkForDescription(event, maxCount));
                     eventDAO.create(event);
                     existingTmEvents.put(event.getApiEventId(), event); // avoid duplicates within one sync
                     created++;
                 } else {
                     copyTicketmasterFields(event, existing);
-                    existing.addDescription(checkForDescription(existing, maxCount));
+                    existing.setDescription(checkForDescription(existing, maxCount));
                     eventDAO.update(existing);
                     updated++;
                 }

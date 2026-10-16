@@ -11,8 +11,8 @@ import app.mapper.UserConverter;
 import app.utils.SecurityUtil;
 
 public class SecurityService {
-    private UserDAO userDAO;
-    private UserConverter userConverter;
+    private final UserDAO userDAO;
+    private final UserConverter userConverter;
 
     public SecurityService(UserDAO userDAO) {
         this.userDAO = userDAO;

@@ -10,6 +10,9 @@ import app.entities.users.Organizer;
 import app.entities.users.User;
 import app.enums.UserRole;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class UserConverter {
 
     public User convertDTOToEntity(UserDTORequest attendeeDTO, String hashedPassword) {
@@ -43,6 +46,7 @@ public class UserConverter {
                 .build();
     }
 
+
     public User convertDTOToUserUpdate(UserDTORequest input, User user, int id) {
         User updatedUser = switch (user.getUserRole()){
             case ADMIN -> Admin.builder().userId(id).build();
@@ -64,5 +68,13 @@ public class UserConverter {
 
     public OrganizerDTOResponse convertOrganizerToDTO(Organizer organizer) {
         return new OrganizerDTOResponse(organizer.getUserId(), organizer.getName(), organizer.getEmail(), organizer.getPhone(), organizer.getUserRole(), organizer.getAccountStatus());
+    }
+
+    public List<OrganizerDTOResponse> convertEntitiesToDTOs(List<Organizer> organizers) {
+        List<OrganizerDTOResponse> dtos = new ArrayList<>();
+        for (Organizer organizer : organizers) {
+            dtos.add(convertOrganizerToDTO(organizer));
+        }
+        return dtos;
     }
 }
