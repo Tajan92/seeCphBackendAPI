@@ -2,8 +2,11 @@ package app.config;
 
 import app.controller.*;
 import app.dao.*;
+import app.enums.AddPlacement;
+import app.enums.Status;
 import app.exceptions.*;
 import app.service.*;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.Javalin;
 import io.javalin.apibuilder.EndpointGroup;
@@ -67,13 +70,14 @@ public class ApplicationConfig implements EndpointGroup {
     public void configuration(JavalinConfig config) {
         config.jsonMapper(new JavalinJackson().updateMapper(mapper -> {
             mapper.registerModule(new JavaTimeModule());
+            mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         }));
         config.showJavalinBanner = false;
         config.http.defaultContentType = "application/json";
         config.router.apiBuilder(this);
         config.bundledPlugins.enableCors(cors -> {
             cors.addRule(rule -> {
-                rule.allowHost("http://localhost:5173", "https://<frontend-domain>");
+                rule.allowHost("http://localhost:5173", "https://www.seecph.theisrud.dk");
             });
         });
         config.staticFiles.add(staticFiles -> {
@@ -81,6 +85,8 @@ public class ApplicationConfig implements EndpointGroup {
             staticFiles.directory = "/images";           // the folder on the classpath
             staticFiles.location = Location.CLASSPATH;   // = src/main/resources
         });
+        config.validation.register(Status.class, value -> Status.valueOf(value.trim().toUpperCase()));
+        config.validation.register(AddPlacement.class, value -> AddPlacement.valueOf(value.trim().toUpperCase()));
     }
 
     public Javalin startServer(int port) {
@@ -114,11 +120,6 @@ public class ApplicationConfig implements EndpointGroup {
         app.exception(DatabaseIdException.class, (e, ctx) -> {
             log.warn("Database Id Error: {}", e.getMessage());
             ctx.status(404).json(Map.of("error", e.getMessage()));
-        });
-
-        app.exception(SyncException.class, (e, ctx) -> {
-            log.warn("Sync Error: {}", e.getMessage());
-            ctx.status(500).json(Map.of("error", e.getMessage()));
         });
 
         app.exception(ConflictException.class, (e, ctx) -> {

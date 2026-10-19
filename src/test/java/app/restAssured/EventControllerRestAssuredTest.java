@@ -1,11 +1,8 @@
 package app.restAssured;
 
 import app.config.ApplicationConfig;
-import app.config.HibernateConfig;
 import app.config.HibernateTestConfig;
-import app.dao.UserDAO;
 import app.dto.event.EventDTORequest;
-import app.dto.event.EventDTOResponse;
 import app.entities.Event;
 import app.entities.users.User;
 import app.enums.EventCategory;
@@ -21,24 +18,27 @@ import java.time.LocalTime;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class EventControllerRestAssuredTest {
     private static Javalin app;
     private static EntityManagerFactory emf;
     private static ApplicationConfig applicationConfig;
-    private static Map<String, Event> eventMap;
-    private static Map<String, User> userMap;
-    private static UserDAO userDAO;
 
+    private Map<String, Event> eventMap;
+    private Map<String, User> userMap;
+
+    private String adminToken;
+    private String organizerToken;
+    private String attendeeToken;
 
     @BeforeAll
     static void init() {
         emf = HibernateTestConfig.getEntityManagerFactory();
         applicationConfig = new ApplicationConfig(emf);
         app = applicationConfig.startServer(7070);
-        RestAssured.baseURI = "http://localhost:7070/api/v1/events";
+        RestAssured.baseURI = "http://localhost:7070/api/v1";
     }
 
     @BeforeEach
@@ -46,7 +46,10 @@ public class EventControllerRestAssuredTest {
         TestDataCreator.clearDatabase(emf);
         eventMap = TestDataCreator.createEvents(emf);
         userMap = TestDataCreator.createUsers(emf);
-        userDAO = new UserDAO(emf);
+
+        adminToken = login(userMap.get("admin").getEmail(), "12345678");
+        organizerToken = login(userMap.get("organizer2").getEmail(), "23456789");
+        attendeeToken = login(userMap.get("attendee").getEmail(), "12345678");
     }
 
     @AfterEach
@@ -60,232 +63,381 @@ public class EventControllerRestAssuredTest {
         applicationConfig.stopServer(app);
     }
 
-    @Test
-    void createEvent() {
-        EventDTORequest eventDTORequest = new EventDTORequest(userDAO.readAll().getFirst().getUserId(), "New Event", "Description", 200, false, "Kongens Lyngby", "2800", "Hovedgaden 1", LocalTime.of(18,0), LocalDate.of(2027,6,6),"www.newEvent.dk", "www.image.dk", false, EventCategory.MUSIC);
-
-        given()
-                .when()
+    private String login(String email, String password) {
+        return given()
                 .contentType(ContentType.JSON)
-                .body(eventDTORequest)
+                .body(Map.of("email", email, "password", password))
                 .when()
-                .post("")
-                .then()
-                .statusCode(201)
-                .log().all();
-
-        given()
-                .when()
-                .get("/")
+                .post("/login")
                 .then()
                 .statusCode(200)
-                .log().all()
-                .body("size()", is(3))
                 .extract()
-                .jsonPath()
-                .getList("", EventDTOResponse.class);
+                .path("token");
+    }
+
+    private EventDTORequest validEvent(String title) {
+        return new EventDTORequest(title, "Description", 200, false, "Kongens Lyngby", "2800", "Hovedgaden 1",
+                LocalTime.of(18, 0), LocalDate.of(2027, 6, 6), "https://www.newevent.dk", "https://www.image.dk",
+                false, EventCategory.MUSIC);
+    }
+
+    private int createEvent(String token) {
+        return given()
+                .header("Authorization", "Bearer " + token)
+                .contentType(ContentType.JSON)
+                .body(validEvent("My Event"))
+                .when()
+                .post("/events")
+                .then()
+                .statusCode(201)
+                .extract()
+                .path("id");
+    }
+
+    private void assertEventCount(int expected) {
+        given()
+                .when()
+                .get("/events")
+                .then()
+                .statusCode(200)
+                .body("size()", is(expected));
     }
 
     @Test
-    void createEventFailure() {
-        EventDTORequest eventDTORequest = new EventDTORequest(userDAO.readAll().getFirst().getUserId(), "New Event", "", 200, false, "Kongens Lyngby", "2800", "Hovedgaden 1", LocalTime.of(18,0), LocalDate.of(2027,6,6),"www.newEvent.dk", "www.image.dk", false, EventCategory.MUSIC);
-
+    void readAllEventsIsPublic() {
         given()
                 .when()
-                .contentType(ContentType.JSON)
-                .body(eventDTORequest)
-                .when()
-                .post("")
-                .then()
-                .statusCode(400)
-                .log().all();
-
-        given()
-                .when()
-                .get("")
+                .get("/events")
                 .then()
                 .statusCode(200)
-                .log().all()
-                .body("size()", is(2))
-                .extract()
-                .jsonPath()
-                .getList("", EventDTOResponse.class);
+                .body("size()", is(2));
+    }
+
+    @Test
+    void readEventsFilteredByCategory() {
+        given()
+                .when()
+                .get("/events?category=Comedy")
+                .then()
+                .statusCode(200)
+                .body("size()", is(1))
+                .body("[0].title", equalTo("Stand-up Comedy Night"));
+    }
+
+    @Test
+    void readEventsWithUnknownCategoryGives400() {
+        given()
+                .when()
+                .get("/events?category=NotACategory")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    void readEventsWithWrongDateFormatGives400() {
+        given()
+                .when()
+                .get("/events?startDate=15-11-2026")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    void readActiveCategories() {
+        given()
+                .when()
+                .get("/events/active-categories")
+                .then()
+                .statusCode(200)
+                .body("size()", is(2));
     }
 
     @Test
     void readEventById() {
         given()
                 .when()
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/1")
+                .get("/events/1")
                 .then()
                 .statusCode(200)
-                .log().all();
+                .body("id", equalTo(1))
+                .body("title", equalTo("Lukas Graham"));
     }
 
     @Test
-    void readEventByIdFailure1() {
+    void readEventByIdNotFoundGives404() {
         given()
                 .when()
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/10")
+                .get("/events/10")
                 .then()
-                .statusCode(500)
-                .log().all();
+                .statusCode(404);
     }
 
     @Test
-    void readEventByIdFailure2() {
+    void readEventByIdNegativeIdGives400() {
         given()
                 .when()
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/-5")
+                .get("/events/-5")
                 .then()
                 .statusCode(400)
-                .log().all();
+                .body("error", equalTo("Id must be positive"));
     }
 
     @Test
-    void updateEvent() {
-        EventDTORequest eventDTORequest = new EventDTORequest(userDAO.readAll().getFirst().getUserId(), "New Event", "Description", 200, false, "Kongens Lyngby", "2800", "Hovedgaden 1", LocalTime.of(18,0), LocalDate.of(2027,6,6),"www.newEvent.dk", "www.image.dk", false, EventCategory.MUSIC);
-
+    void createEventAsOrganizer() {
         given()
-                .when()
+                .header("Authorization", "Bearer " + organizerToken)
                 .contentType(ContentType.JSON)
-                .body(eventDTORequest)
+                .body(validEvent("New Event"))
                 .when()
-                .put("/1")
+                .post("/events")
                 .then()
-                .statusCode(200)
-                .log().all();
+                .log().ifValidationFails()
+                .statusCode(201)
+                .body("title", equalTo("New Event"))
+                .body("id", notNullValue());
 
-        given()
-                .when()
-                .get("")
-                .then()
-                .statusCode(200)
-                .log().all()
-                .body("size()", is(2))
-                .extract()
-                .jsonPath()
-                .getList("", EventDTOResponse.class);
+        assertEventCount(3);
     }
 
     @Test
-    void updateEventFailure1() {
-        EventDTORequest eventDTORequest = new EventDTORequest(userDAO.readAll().getFirst().getUserId(), "New Event", "Description", 200, false, "Kongens Lyngby", "2800", "Hovedgaden 1", LocalTime.of(18,0), LocalDate.of(2027,6,6),"www.newEvent.dk", "www.image.dk", false, EventCategory.MUSIC);
+    void createEventWithBlankDescriptionGives400() {
+        EventDTORequest request = new EventDTORequest("New Event", "", 200, false, "Kongens Lyngby", "2800",
+                "Hovedgaden 1", LocalTime.of(18, 0), LocalDate.of(2027, 6, 6), "https://www.newevent.dk",
+                "https://www.image.dk", false, EventCategory.MUSIC);
 
         given()
-                .when()
+                .header("Authorization", "Bearer " + organizerToken)
                 .contentType(ContentType.JSON)
-                .body(eventDTORequest)
+                .body(request)
                 .when()
-                .put("/-5")
+                .post("/events")
                 .then()
                 .statusCode(400)
-                .log().all();
+                .body("error", containsString("Description must be filled out"));
 
-        given()
-                .when()
-                .get("")
-                .then()
-                .statusCode(200)
-                .log().all()
-                .body("size()", is(2))
-                .extract()
-                .jsonPath()
-                .getList("", EventDTOResponse.class);
+        assertEventCount(2);
     }
 
     @Test
-    void updateEventFailure2() {
-        EventDTORequest eventDTORequest = new EventDTORequest(userDAO.readAll().getFirst().getUserId(), "New Event", "Description", 200, false, "Kongens Lyngby", "2800", "Hovedgaden 1", LocalTime.of(18,0), LocalDate.of(2027,6,6),"www.newEvent.dk", "www.image.dk", false, EventCategory.MUSIC);
-
+    void createEventWithoutTokenGives401() {
         given()
-                .when()
                 .contentType(ContentType.JSON)
-                .body(eventDTORequest)
+                .body(validEvent("No token"))
                 .when()
-                .put("/10")
+                .post("/events")
                 .then()
-                .statusCode(500)
-                .log().all();
+                .statusCode(401);
 
-        given()
-                .when()
-                .get("")
-                .then()
-                .statusCode(200)
-                .log().all()
-                .body("size()", is(2))
-                .extract()
-                .jsonPath()
-                .getList("", EventDTOResponse.class);
+        assertEventCount(2);
     }
 
     @Test
-    void deleteEvent() {
+    void createEventAsAttendeeGives403() {
         given()
+                .header("Authorization", "Bearer " + attendeeToken)
+                .contentType(ContentType.JSON)
+                .body(validEvent("Attendee event"))
                 .when()
-                .delete("/1")
+                .post("/events")
                 .then()
-                .statusCode(200)
-                .log().all();
+                .statusCode(403);
+
+        assertEventCount(2);
+    }
+
+    @Test
+    void readMyEventsAsOrganizer() {
+        int myEventId = createEvent(organizerToken);
 
         given()
+                .header("Authorization", "Bearer " + organizerToken)
                 .when()
-                .get("")
+                .get("/events/mine")
                 .then()
                 .statusCode(200)
-                .log().all()
                 .body("size()", is(1))
-                .extract()
-                .jsonPath()
-                .getList("", EventDTOResponse.class);
+                .body("[0].id", equalTo(myEventId));
     }
 
     @Test
-    void deleteAdvertFailure1() {
+    void readMyEventsAsAttendeeGives403() {
         given()
+                .header("Authorization", "Bearer " + attendeeToken)
                 .when()
-                .delete("/-5")
+                .get("/events/mine")
                 .then()
-                .statusCode(400)
-                .log().all();
-
-        given()
-                .when()
-                .get("")
-                .then()
-                .statusCode(200)
-                .log().all()
-                .body("size()", is(2))
-                .extract()
-                .jsonPath()
-                .getList("", EventDTOResponse.class);
+                .statusCode(403);
     }
 
     @Test
-    void deleteAdvertFailure2() {
+    void updateEventAsAdmin() {
         given()
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(ContentType.JSON)
+                .body(validEvent("Updated by admin"))
                 .when()
-                .delete("/10")
+                .put("/events/1")
                 .then()
-                .statusCode(500)
-                .log().all();
+                .log().ifValidationFails()
+                .statusCode(200)
+                .body("title", equalTo("Updated by admin"));
+
+        assertEventCount(2);
+    }
+
+    @Test
+    void updateOwnEventAsOrganizer() {
+        int myEventId = createEvent(organizerToken);
 
         given()
+                .header("Authorization", "Bearer " + organizerToken)
+                .contentType(ContentType.JSON)
+                .body(validEvent("My Updated Event"))
                 .when()
-                .get("")
+                .put("/events/" + myEventId)
                 .then()
                 .statusCode(200)
-                .log().all()
-                .body("size()", is(2))
-                .extract()
-                .jsonPath()
-                .getList("", EventDTOResponse.class);
+                .body("title", equalTo("My Updated Event"));
+    }
+
+    @Test
+    void updateOthersEventAsOrganizerGives403() {
+        // Event 1 is not owned by organizer2
+        given()
+                .header("Authorization", "Bearer " + organizerToken)
+                .contentType(ContentType.JSON)
+                .body(validEvent("Hijacked"))
+                .when()
+                .put("/events/1")
+                .then()
+                .statusCode(403)
+                .body("error", equalTo("You can only change your own events"));
+    }
+
+    @Test
+    void updateEventAsAttendeeGives403() {
+        given()
+                .header("Authorization", "Bearer " + attendeeToken)
+                .contentType(ContentType.JSON)
+                .body(validEvent("Attendee edit"))
+                .when()
+                .put("/events/1")
+                .then()
+                .statusCode(403);
+    }
+
+    @Test
+    void updateEventNegativeIdGives400() {
+        given()
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(ContentType.JSON)
+                .body(validEvent("New Event"))
+                .when()
+                .put("/events/-5")
+                .then()
+                .statusCode(400);
+
+        assertEventCount(2);
+    }
+
+    @Test
+    void updateEventNotFoundGives404() {
+        given()
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(ContentType.JSON)
+                .body(validEvent("New Event"))
+                .when()
+                .put("/events/10")
+                .then()
+                .statusCode(404);
+
+        assertEventCount(2);
+    }
+
+    @Test
+    void deleteEventAsAdmin() {
+        given()
+                .header("Authorization", "Bearer " + adminToken)
+                .when()
+                .delete("/events/1")
+                .then()
+                .statusCode(204);
+
+        assertEventCount(1);
+    }
+
+    @Test
+    void deleteOwnEventAsOrganizer() {
+        int myEventId = createEvent(organizerToken);
+
+        given()
+                .header("Authorization", "Bearer " + organizerToken)
+                .when()
+                .delete("/events/" + myEventId)
+                .then()
+                .statusCode(204);
+
+        assertEventCount(2);
+    }
+
+    @Test
+    void deleteOthersEventAsOrganizerGives403() {
+        given()
+                .header("Authorization", "Bearer " + organizerToken)
+                .when()
+                .delete("/events/1")
+                .then()
+                .statusCode(403);
+
+        assertEventCount(2);
+    }
+
+    @Test
+    void deleteFavouriteEventRemovesItFromFavourites() {
+        given()
+                .header("Authorization", "Bearer " + attendeeToken)
+                .when()
+                .post("/users/my/favorites/1")
+                .then()
+                .statusCode(204);
+
+        given()
+                .header("Authorization", "Bearer " + adminToken)
+                .when()
+                .delete("/events/1")
+                .then()
+                .statusCode(204);
+
+        given()
+                .header("Authorization", "Bearer " + attendeeToken)
+                .when()
+                .get("/users/my/favorites")
+                .then()
+                .statusCode(200)
+                .body("size()", is(0));
+    }
+
+    @Test
+    void deleteEventNegativeIdGives400() {
+        given()
+                .header("Authorization", "Bearer " + adminToken)
+                .when()
+                .delete("/events/-5")
+                .then()
+                .statusCode(400);
+
+        assertEventCount(2);
+    }
+
+    @Test
+    void deleteEventNotFoundGives404() {
+        given()
+                .header("Authorization", "Bearer " + adminToken)
+                .when()
+                .delete("/events/10")
+                .then()
+                .statusCode(404);
+
+        assertEventCount(2);
     }
 }

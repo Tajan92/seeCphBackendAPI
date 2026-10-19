@@ -110,8 +110,7 @@ class AdvertDAOTest {
     void delete() {
         Advert advert = adverts.get("advert");
 
-        boolean deletedAdvert = advertDAO.delete(advert);
-        assertThat(deletedAdvert, is(true));
+        advertDAO.delete(advert);
         assertThrows(DatabaseIdException.class, () -> advertDAO.readById(advert.getAdvertId()));
     }
 

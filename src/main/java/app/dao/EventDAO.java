@@ -4,10 +4,7 @@ import app.entities.Event;
 import app.enums.EventCategory;
 import app.enums.SourceProvider;
 import app.exceptions.DatabaseException;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.TypedQuery;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -30,34 +27,35 @@ public class EventDAO extends GenericDAO<Event> {
     }
 
     public List<Event> searchAndFilterEvent(String search, EventCategory category, LocalDate startDate, String postalCode, int page, int pageSize) {
-        boolean hasSearch = search != null && !search.isBlank();
-        boolean hasPostalCode = postalCode != null && !postalCode.isBlank();
-
         try (EntityManager em = emf.createEntityManager()) {
+            if (!readDistinctCategoriesInDb().contains(category)) {
+                category = null;
+            }
             StringBuilder jpql = new StringBuilder("SELECT e FROM Event e LEFT JOIN e.location l WHERE 1=1");
-
-            if (category != null) jpql.append(" AND e.category = :category");
-            if (startDate != null) jpql.append(" AND e.startDate >= :startDate");
-            if (hasPostalCode) jpql.append(" AND l.postalCode = :postalCode");
-            if (hasSearch) jpql.append(" AND (LOWER(e.title) LIKE :search"
-                    + " OR LOWER(e.description) LIKE :search"
-                    + " OR LOWER(l.address) LIKE :search"
-                    + " OR LOWER(l.city) LIKE :search"
-                    + " OR l.postalCode LIKE :search)");
-            jpql.append(" ORDER BY e.startDate ASC, e.eventId ASC");
+            jpql.append(searchFilter(search, category, startDate, postalCode));
 
             TypedQuery<Event> query = em.createQuery(jpql.toString(), Event.class);
-
-            if (category != null) query.setParameter("category", category);
-            if (startDate != null) query.setParameter("startDate", startDate);
-            if (hasPostalCode) query.setParameter("postalCode", postalCode.trim());
-            if (hasSearch) query.setParameter("search", "%" + search.trim().toLowerCase() + "%");
-
+            setFilters(query, search, category, startDate, postalCode);
             query.setFirstResult(page * pageSize);
             query.setMaxResults(pageSize);
             return query.getResultList();
         } catch (PersistenceException e) {
             throw new DatabaseException("Search & filter failed", e);
+        }
+    }
+
+    public int getTotalPages(String search, EventCategory category, LocalDate startDate, String postalCode, int page, int pageSize){
+        try (EntityManager em = emf.createEntityManager()) {
+            StringBuilder jpql = new StringBuilder("SELECT COUNT(e) FROM Event e LEFT JOIN e.location l WHERE 1=1");
+            jpql.append(searchFilter(search, category, startDate, postalCode));
+
+            TypedQuery<Integer> query = em.createQuery(jpql.toString(), Integer.class);
+            setFilters(query, search, category, startDate, postalCode);
+            query.setFirstResult(page * pageSize);
+            query.setMaxResults(pageSize);
+            return query.getSingleResult();
+        } catch (PersistenceException e) {
+            throw new DatabaseException("Counting pages search & filter failed", e);
         }
     }
 
@@ -79,5 +77,26 @@ public class EventDAO extends GenericDAO<Event> {
         } catch (PersistenceException e) {
             throw new DatabaseException("Failed to read active categories", e);
         }
+    }
+
+    private String searchFilter(String search, EventCategory category, LocalDate startDate, String postalCode) {
+        StringBuilder jpql = new StringBuilder();
+        if (category != null) jpql.append(" AND e.category = :category");
+        if (startDate != null) jpql.append(" AND e.startDate >= :startDate");
+        if (postalCode != null && !postalCode.isBlank()) jpql.append(" AND l.postalCode = :postalCode");
+        if (search != null && !search.isBlank()) jpql.append(" AND (LOWER(e.title) LIKE :search"
+                + " OR LOWER(e.description) LIKE :search"
+                + " OR LOWER(l.address) LIKE :search"
+                + " OR LOWER(l.city) LIKE :search"
+                + " OR l.postalCode LIKE :search)");
+        jpql.append(" ORDER BY e.startDate ASC, e.eventId ASC");
+        return jpql.toString();
+    }
+
+    private void setFilters(Query query, String search, EventCategory category, LocalDate startDate, String postalCode) {
+        if (category != null) query.setParameter("category", category);
+        if (startDate != null) query.setParameter("startDate", startDate);
+        if (postalCode != null && !postalCode.isBlank()) query.setParameter("postalCode", postalCode.trim());
+        if (search != null && !search.isBlank()) query.setParameter("search", "%" + search.trim().toLowerCase() + "%");
     }
 }

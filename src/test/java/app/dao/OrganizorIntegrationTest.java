@@ -140,8 +140,7 @@ public class OrganizorIntegrationTest {
         Event fetchedEvent = eventDAO.readById(eventId);
         assertThat(fetchedEvent, notNullValue());
 
-        boolean deleted = userDAO.delete(createdOrganizer);
-        assertThat(deleted, is(true));
+        userDAO.delete(createdOrganizer);
 
         DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> advertDAO.readById(advertId));
         assertThat(ex.getMessage(), is("Advert not found with id: "+advertId));

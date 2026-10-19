@@ -10,12 +10,14 @@ import app.entities.Event;
 import app.entities.users.User;
 import app.enums.EventCategory;
 import app.exceptions.DatabaseIdException;
+import app.mapper.UserConverter;
 import app.utils.TestDataCreator;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -36,6 +38,7 @@ class EventServiceTest {
     private AddressService addressService;
     private Map<String, User> users;
     private Map<String, Event> events;
+    private UserConverter userConverter;
     private int userId;
 
     @BeforeAll
@@ -44,6 +47,7 @@ class EventServiceTest {
         eventDAO = new EventDAO(emf);
         addressDAO = new AddressDAO(emf);
         userDAO = new UserDAO(emf);
+        userConverter = new UserConverter();
     }
 
     @BeforeEach
@@ -59,7 +63,6 @@ class EventServiceTest {
     @Test
     public void create() {
         EventDTORequest eventDTORequest = new EventDTORequest(
-                userId,
                 "Copenhagen Jazz Night",
                 "A fantastic evening with live jazz music in the heart of Copenhagen.",
                 150.0,
@@ -74,7 +77,7 @@ class EventServiceTest {
                 false,
                 EventCategory.MUSIC);
 
-        EventDTOResponse eventDTOResponse = eventService.create(eventDTORequest);
+        EventDTOResponse eventDTOResponse = eventService.create(eventDTORequest, userId);
 
         assertNotNull(eventDTOResponse);
         assertThat(eventDTOResponse.title(), is("Copenhagen Jazz Night"));
@@ -85,7 +88,6 @@ class EventServiceTest {
     @Test
     public void getById() {
         EventDTORequest eventDTORequest = new EventDTORequest(
-                userId,
                 "Rock Concert",
                 "Loud rock music",
                 250.0,
@@ -100,7 +102,7 @@ class EventServiceTest {
                 false,
                 EventCategory.MUSIC);
 
-        EventDTOResponse created = eventService.create(eventDTORequest);
+        EventDTOResponse created = eventService.create(eventDTORequest, userId);
 
         EventDTOResponse fetched = eventService.getById(created.id());
 
@@ -120,7 +122,6 @@ class EventServiceTest {
     @Test
     public void updateById() {
         EventDTORequest initialRequest = new EventDTORequest(
-                userId,
                 "Old Title",
                 "Old Description",
                 100.0,
@@ -135,10 +136,9 @@ class EventServiceTest {
                 true,
                 EventCategory.ATHLETIC_RACES);
 
-        EventDTOResponse created = eventService.create(initialRequest);
+        EventDTOResponse created = eventService.create(initialRequest, userId);
 
         EventDTORequest updatedRequest = new EventDTORequest(
-                userId,
                 "Updated Jazz Festival",
                 "New updated description",
                 200.0,
@@ -153,7 +153,7 @@ class EventServiceTest {
                 false,
                 EventCategory.MUSIC);
 
-        EventDTOResponse updated = eventService.updateById(created.id(), updatedRequest);
+        EventDTOResponse updated = eventService.updateById(created.id(), updatedRequest, userConverter.convertEntityToDTO(userDAO.readById(userId)));
 
         assertNotNull(updated);
         assertThat(updated.title(), is("Updated Jazz Festival"));
@@ -165,7 +165,6 @@ class EventServiceTest {
     @Test
     public void deleteById() {
         EventDTORequest eventDTORequest = new EventDTORequest(
-                userId,
                 "Temporary Event",
                 "To be deleted",
                 50.0,
@@ -180,12 +179,13 @@ class EventServiceTest {
                 false,
                 EventCategory.CULTURAL);
 
-        EventDTOResponse created = eventService.create(eventDTORequest);
+        EventDTOResponse created = eventService.create(eventDTORequest, userId);
         int eventId = created.id();
 
-        boolean isDeleted = eventService.deleteById(eventId);
-        assertThat(isDeleted, is(true));
+        eventService.deleteById(eventId, userConverter.convertEntityToDTO(userDAO.readById(userId)));
 
-        assertThrows(DatabaseIdException.class, () -> {eventService.getById(eventId);});
+        assertThrows(DatabaseIdException.class, () -> {
+            eventService.getById(eventId);
+        });
     }
 }

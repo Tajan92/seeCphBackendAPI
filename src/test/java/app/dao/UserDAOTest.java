@@ -151,13 +151,10 @@ class UserDAOTest {
         User attendee = users.get("attendee");
         User organizer = users.get("organizer");
 
-        boolean deletedAdmin = userDAO.delete(admin);
-        boolean deletedAttendee = userDAO.delete(attendee);
-        boolean deletedOrganizer = userDAO.delete(organizer);
+        userDAO.delete(admin);
+        userDAO.delete(attendee);
+        userDAO.delete(organizer);
 
-        assertThat(deletedAdmin, is(true));
-        assertThat(deletedAttendee, is(true));
-        assertThat(deletedOrganizer, is(true));
         assertThrows(DatabaseIdException.class, () -> userDAO.readById(admin.getUserId()));
         assertThrows(DatabaseIdException.class, () -> userDAO.readById(attendee.getUserId()));
         assertThrows(DatabaseIdException.class, () -> userDAO.readById(organizer.getUserId()));

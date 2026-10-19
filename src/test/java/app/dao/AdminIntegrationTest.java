@@ -142,8 +142,7 @@ public class AdminIntegrationTest {
         Event fetchedEvent = eventDAO.readById(eventId);
         assertThat(fetchedEvent, is(event));
 
-        boolean deleted = userDAO.delete(createdAdmin);
-        assertThat(deleted, is(true));
+        userDAO.delete(createdAdmin);
 
         DatabaseIdException ex = assertThrows(DatabaseIdException.class, () -> advertDAO.readById(advertId));
         assertThat(ex.getMessage(), is("Advert not found with id: "+advertId));

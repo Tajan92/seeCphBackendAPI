@@ -100,8 +100,7 @@ class EventDAOTest {
     void delete() {
         Event event = events.get("event");
 
-        boolean deletedEvent = eventDAO.delete(event);
-        assertThat(deletedEvent, is(true));
+        eventDAO.delete(event);
         assertThrows(DatabaseIdException.class, () -> eventDAO.readById(event.getEventId()));
     }
 

@@ -82,10 +82,9 @@ class AddressDAOTest {
     @Test
     void delete() {
         Address address = addressMap.get("address");
-        boolean deleted = addressDAO.delete(address);
+        addressDAO.delete(address);
         List<Address> addressList = addressDAO.readAll();
 
-        assertThat(deleted, is(true));
         assertThat(addressList.size(), is(addressMap.size()-1));
     }
 

@@ -67,13 +67,12 @@ class AdvertServiceTest {
     public void create() {
         AdvertDTORequest request = new AdvertDTORequest(
                 eventId,
-                userId,
                 AddPlacement.FRONTPAGE_HEADER,
                 LocalDate.of(2026, 11, 1),
                 LocalDate.of(2026, 11, 15)
         );
 
-        AdvertDTOResponse response = advertService.create(request);
+        AdvertDTOResponse response = advertService.create(request, userId);
 
         assertNotNull(response);
         assertThat(response.addPlacement(), is(AddPlacement.FRONTPAGE_HEADER));
@@ -85,13 +84,12 @@ class AdvertServiceTest {
     public void getById() {
         AdvertDTORequest request = new AdvertDTORequest(
                 eventId,
-                userId,
                 AddPlacement.FRONTPAGE_HEADER,
                 LocalDate.of(2026, 12, 1),
                 LocalDate.of(2026, 12, 10)
         );
 
-        AdvertDTOResponse created = advertService.create(request);
+        AdvertDTOResponse created = advertService.create(request, userId);
         AdvertDTOResponse fetched = advertService.getById(created.id());
 
         assertNotNull(fetched);
@@ -111,17 +109,15 @@ class AdvertServiceTest {
     public void updateById() {
         AdvertDTORequest initialRequest = new AdvertDTORequest(
                 eventId,
-                userId,
                 AddPlacement.FRONTPAGE_HIGHLIGHT,
                 LocalDate.of(2026, 11, 1),
                 LocalDate.of(2026, 11, 5)
         );
 
-        AdvertDTOResponse created = advertService.create(initialRequest);
+        AdvertDTOResponse created = advertService.create(initialRequest, userId);
 
         AdvertDTORequest updatedRequest = new AdvertDTORequest(
                 eventId,
-                userId,
                 AddPlacement.FRONTPAGE_HEADER,
                 LocalDate.of(2026, 11, 2),
                 LocalDate.of(2026, 11, 10)
@@ -139,18 +135,15 @@ class AdvertServiceTest {
     public void deleteById() {
         AdvertDTORequest request = new AdvertDTORequest(
                 eventId,
-                userId,
                 AddPlacement.FRONTPAGE_HEADER,
                 LocalDate.of(2026, 11, 1),
                 LocalDate.of(2026, 11, 5)
         );
 
-        AdvertDTOResponse created = advertService.create(request);
+        AdvertDTOResponse created = advertService.create(request, userId);
         int advertId = created.id();
 
-        boolean isDeleted = advertService.deleteById(advertId);
-        assertThat(isDeleted, is(true));
-
+        advertService.deleteById(advertId);
         assertThrows(DatabaseIdException.class, () -> {advertService.getById(advertId);});
     }
 }

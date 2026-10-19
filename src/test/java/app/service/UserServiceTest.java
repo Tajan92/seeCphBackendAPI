@@ -172,8 +172,7 @@ class UserServiceTest {
         UserDTOResponse created = userService.create(request);
         int userId = created.id();
 
-        boolean isDeleted = userService.deleteById(userId);
-        assertThat(isDeleted, is(true));
+        userService.deleteById(userId);
 
         assertThrows(DatabaseIdException.class, () -> {
             userService.getById(userId);
