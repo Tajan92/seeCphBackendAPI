@@ -1,0 +1,117 @@
+### Create attendee
+POST {{url}}/users/attendee
+Content-Type: application/json
+
+{
+  "name" : "Anna Attendee",
+  "email" : "attendee@test.dk",
+  "phone" : "12345678",
+  "password" : "Test1234!",
+  "passwordCheck" : "Test1234!"
+}
+
+### Create organizer
+POST {{url}}/users/organizer
+Content-Type: application/json
+
+{
+  "organizerName" : "Skate CPH ApS",
+  "input" : {
+    "name" : "Oliver Organizer",
+    "email" : "organizer@test.dk",
+    "phone" : "87654321",
+    "password" : "Test1234!",
+    "passwordCheck" : "Test1234!"
+  }
+}
+
+### Create admin (admin only)
+POST {{url}}/users/admin
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name" : "Alan Admin",
+  "email" : "admin2@test.dk",
+  "phone" : "11223344",
+  "password" : "Test1234!",
+  "passwordCheck" : "Test1234!"
+}
+
+
+### Get my own user (all logged-in roles)
+GET {{url}}/users/my
+Authorization: Bearer {{token}}
+
+### Update my own user (all logged-in roles)
+PUT {{url}}/users/my
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name" : "Anna Updated",
+  "email" : "anna@test.dk",
+  "phone" : "12345678"
+}
+
+
+### My favourites (attendee only)
+GET {{url}}/users/my/favorites
+Authorization: Bearer {{token}}
+
+### Add event 1 to favourites (attendee only)
+POST {{url}}/users/my/favorites/1
+Authorization: Bearer {{token}}
+
+### Remove event 1 from favourites (attendee only)
+DELETE {{url}}/users/my/favorites/1
+Authorization: Bearer {{token}}
+
+### My liked events (attendee only)
+GET {{url}}/users/my/liked
+Authorization: Bearer {{token}}
+
+### Like event 1 (attendee only)
+POST {{url}}/users/my/liked/1
+Authorization: Bearer {{token}}
+
+### Unlike event 1 (attendee only)
+DELETE {{url}}/users/my/liked/1
+Authorization: Bearer {{token}}
+
+### Get organizers by status
+GET {{url}}/users/organizers?status=ACTIVE
+Authorization: Bearer {{token}}
+
+### Approve organizer (admin only)
+PUT {{url}}/users/3/status
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "status" : "ACTIVE"
+}
+
+
+### Get all users (admin only)
+GET {{url}}/users
+Authorization: Bearer {{token}}
+
+### Get user by id (admin only)
+GET {{url}}/users/2
+Authorization: Bearer {{token}}
+
+### Update user by id (admin only)
+PUT {{url}}/users/2
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name" : "Updated Name",
+  "email" : "updated@test.dk",
+  "phone" : "12345678"
+}
+
+### Delete user by id (admin only)
+DELETE {{url}}/users/4
+Authorization: Bearer {{token}}

@@ -9,7 +9,7 @@ import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
 public class UserHandler implements IHandler {
-    UserService userService;
+    private final UserService userService;
 
     public UserHandler(UserService userService) {
         this.userService = userService;

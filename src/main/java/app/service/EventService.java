@@ -156,7 +156,7 @@ public class EventService {
         }
     }
 
-    public void runTmSync() {
+    private void runTmSync() {
         counter = 0;
         int maxCount = 15;
 

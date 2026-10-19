@@ -18,7 +18,7 @@ public class UserConverter {
     public User convertDTOToEntity(UserDTORequest attendeeDTO, String hashedPassword) {
         return Attendee.builder()
                 .name(attendeeDTO.name())
-                .email(attendeeDTO.email())
+                .email(attendeeDTO.email().toLowerCase().trim())
                 .phone(attendeeDTO.phone())
                 .hashedPassword(hashedPassword)
                 .userRole(UserRole.ATTENDEE)
@@ -28,7 +28,7 @@ public class UserConverter {
     public User convertDTOToOrganizer(OrganizerDTORequest organizerDTO, String hashedPassword) {
         return Organizer.builder()
                 .name(organizerDTO.input().name())
-                .email(organizerDTO.input().email())
+                .email(organizerDTO.input().email().toLowerCase().trim())
                 .phone(organizerDTO.input().phone())
                 .organizerName(organizerDTO.organizerName())
                 .hashedPassword(hashedPassword)
@@ -39,7 +39,7 @@ public class UserConverter {
     public User convertDTOToAdmin(UserDTORequest adminDTORequest, String hashedPassword) {
         return Admin.builder()
                 .name(adminDTORequest.name())
-                .email(adminDTORequest.email())
+                .email(adminDTORequest.email().toLowerCase().trim())
                 .phone(adminDTORequest.phone())
                 .hashedPassword(hashedPassword)
                 .userRole(UserRole.ADMIN)
@@ -47,20 +47,20 @@ public class UserConverter {
     }
 
 
-    public User convertDTOToUserUpdate(UserDTORequest input, User user, int id) {
-        User updatedUser = switch (user.getUserRole()){
-            case ADMIN -> Admin.builder().userId(id).build();
-            case ATTENDEE -> Attendee.builder().userId(id).build();
-            case ORGANIZER  -> Organizer.builder().userId(id).build();
-            case ANYONE -> null;
-        };
-        assert updatedUser != null;
-        updatedUser.setName(input.name());
-        updatedUser.setEmail(input.email());
-        updatedUser.setPhone(input.phone());
-
-        return updatedUser;
-    }
+//    public User convertDTOToUserUpdate(UserDTORequest input, User user, int id) {
+//        User updatedUser = switch (user.getUserRole()){
+//            case ADMIN -> Admin.builder().userId(id).build();
+//            case ATTENDEE -> Attendee.builder().userId(id).build();
+//            case ORGANIZER  -> Organizer.builder().userId(id).build();
+//            case ANYONE -> null;
+//        };
+//        assert updatedUser != null;
+//        updatedUser.setName(input.name());
+//        updatedUser.setEmail(input.email().toLowerCase().trim());
+//        updatedUser.setPhone(input.phone());
+//
+//        return updatedUser;
+//    }
 
     public UserDTOResponse convertEntityToDTO(User user) {
         return new UserDTOResponse(user.getUserId(), user.getName(), user.getEmail(), user.getPhone(), user.getUserRole());

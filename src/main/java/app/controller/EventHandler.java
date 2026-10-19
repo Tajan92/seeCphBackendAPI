@@ -49,7 +49,7 @@ public class EventHandler implements IHandler {
 
     public void getMyEvents(Context ctx) {
         UserDTOResponse currentUser = ctx.attribute("user");
-        ctx.status(HttpStatus.OK).json(eventService.getById(currentUser.id()));
+        ctx.status(HttpStatus.OK).json(eventService.getByUserId(currentUser.id()));
     }
 
     public void getAllActiveEventCategories(Context ctx) {
@@ -90,13 +90,14 @@ public class EventHandler implements IHandler {
         }
     }
 
-    private static EventCategory parseCategory(String value) {
-        if (value == null || value.isBlank()) return null;
-        try {
-            return EventCategory.valueOf(value.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new BadRequestException("Unknown category: " + value);
+    private static EventCategory parseCategory(String categoryInput) {
+        if (categoryInput == null || categoryInput.isBlank()) return null;
+
+        EventCategory category = EventCategory.findByLabelOrName(categoryInput.trim());
+        if (category == null) {
+            throw new BadRequestException("Unknown category: " + categoryInput);
         }
+        return category;
     }
 
     private static LocalDate parseDate(String value) {

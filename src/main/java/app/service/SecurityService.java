@@ -20,7 +20,7 @@ public class SecurityService {
     }
 
     public UserDTOResponse login(UserLoginDTORequest userLoginDTORequest) {
-        User user = userDAO.readUserByEmail(userLoginDTORequest.email());
+        User user = userDAO.readUserByEmail(userLoginDTORequest.email().toLowerCase().trim());
         SecurityUtil.verifyUserPassword(user, userLoginDTORequest);
 
         if (user instanceof Organizer organizer && organizer.getAccountStatus() != Status.ACTIVE) {

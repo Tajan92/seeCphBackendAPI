@@ -121,6 +121,12 @@ public class Event implements IGetId {
         for (Attendee attendee : attendeeLikes) {
             attendee.removeLikedEvent(this);
         }
+        if (organizer != null && organizer.getEvents() != null) {
+            organizer.getEvents().remove(this);
+        }
+        if (admin != null && admin.getEvents() != null) {
+            admin.getEvents().remove(this);
+        }
     }
 
     @PrePersist

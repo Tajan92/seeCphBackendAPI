@@ -28,7 +28,7 @@ public class UserService {
     }
 
     public UserDTOResponse create(UserDTORequest input) {
-        if (userDAO.checkIfEmailExist(input.email())) {
+        if (userDAO.checkIfEmailExist(input.email().toLowerCase().trim())) {
             throw new ConflictException("Email is already in use");
         }
         String hashedPassword = PasswordUtil.hashPassword(input.password());
@@ -37,7 +37,7 @@ public class UserService {
     }
 
     public OrganizerDTOResponse createPendingOrganizer(OrganizerDTORequest organizer) {
-        if (userDAO.checkIfEmailExist(organizer.input().email())) {
+        if (userDAO.checkIfEmailExist(organizer.input().email().toLowerCase().trim())) {
             throw new ConflictException("Email is already in use");
         }
         String hashedPassword = PasswordUtil.hashPassword(organizer.input().password());
@@ -49,7 +49,7 @@ public class UserService {
     }
 
     public UserDTOResponse createAdmin(UserDTORequest input) {
-        if (userDAO.checkIfEmailExist(input.email())) {
+        if (userDAO.checkIfEmailExist(input.email().toLowerCase().trim())) {
             throw new ConflictException("Email is already in use");
         }
         String hashedPassword = PasswordUtil.hashPassword(input.password());
@@ -61,12 +61,12 @@ public class UserService {
         User user = userDAO.readById(id);
 
         boolean emailChanged = !user.getEmail().equalsIgnoreCase(input.email());
-        if (emailChanged && userDAO.checkIfEmailExist(input.email())) {
+        if (emailChanged && userDAO.checkIfEmailExist(input.email().toLowerCase().trim())) {
             throw new ConflictException("Email is already in use");
         }
 
         user.setName(input.name());
-        user.setEmail(input.email());
+        user.setEmail(input.email().toLowerCase().trim());
         user.setPhone(input.phone());
 
         return userConverter.convertEntityToDTO(userDAO.update(user));

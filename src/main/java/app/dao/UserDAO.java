@@ -21,7 +21,7 @@ public class UserDAO extends GenericDAO<User> {
     public boolean checkIfEmailExist(String email) {
         try (EntityManager em = emf.createEntityManager()) {
             long count = em.createQuery("SELECT COUNT(u) FROM User u WHERE u.email = :email", Long.class)
-                    .setParameter("email", email)
+                    .setParameter("email", email.toLowerCase().trim())
                     .getSingleResult();
             return count > 0;
         }
@@ -30,7 +30,7 @@ public class UserDAO extends GenericDAO<User> {
     public User readUserByEmail(String email) {
         try (EntityManager em = emf.createEntityManager()) {
             return em.createQuery("SELECT u FROM User u WHERE u.email = :email", User.class)
-                    .setParameter("email", email)
+                    .setParameter("email", email.toLowerCase().trim())
                     .getResultStream()
                     .findFirst()
                     .orElse(null);
@@ -49,7 +49,6 @@ public class UserDAO extends GenericDAO<User> {
                     case FAVORITE -> attendee.addFavoriteEvent(event);
                     case LIKED -> attendee.addLikedEvent(event);
                 }
-                attendee.addLikedEvent(event);
                 em.getTransaction().commit();
             } catch (PersistenceException e) {
                 if (em.getTransaction().isActive()) em.getTransaction().rollback();

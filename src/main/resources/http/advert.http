@@ -1,32 +1,45 @@
-### GET request to example server
+### Active adverts
+GET {{url}}/adverts/active
+
+### Active adverts for one placement
+GET {{url}}/adverts/active?placement=FRONTPAGE_HEADER
+
+### My adverts as organizer/admin (attendee should not have access)
+GET {{url}}/adverts/my-adverts
+Authorization: Bearer {{token}}
+
+### Create advert as organizer/admin (attendee should not have access)
 POST {{url}}/adverts
+Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
-    "eventId" : "1",
-    "userId" : "1",
-    "addPlacement" : "FRONTPAGE_HEADER",
-    "startDate" : "2026-11-11",
-    "endDate" : "2026-12-12"
+  "eventId" : 2,
+  "addPlacement" : "FRONTPAGE_HEADER",
+  "startDate" : "2026-11-11",
+  "endDate" : "2026-12-12"
 }
-###
 
-GET {{url}}/adverts/1
-
-###
-
+### Get all adverts (admin only)
 GET {{url}}/adverts
+Authorization: Bearer {{token}}
 
-###
+### Get advert by id (admin only)
+GET {{url}}/adverts/1
+Authorization: Bearer {{token}}
 
+### Update advert (admin only)
 PUT {{url}}/adverts/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
-    "eventId" : "1",
-    "userId" : "1",
-    "addPlacement" : "FRONTPAGE_HIGHLIGHT",
-    "startDate" : "2026-11-16",
-    "endDate" : "2026-12-12"
+  "eventId" : 1,
+  "addPlacement" : "FRONTPAGE_HIGHLIGHT",
+  "startDate" : "2026-11-16",
+  "endDate" : "2026-12-12"
 }
-###
 
+### Delete advert (admin only)
 DELETE {{url}}/adverts/1
+Authorization: Bearer {{token}}

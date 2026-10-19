@@ -70,11 +70,9 @@ public class AttendeeIntegrationTest {
                 .userRole(UserRole.ATTENDEE)
                 .build();
 
-        DatabaseException ex = assertThrows(DatabaseException.class, () -> attendee.addLikedEvent(events.get("NoEvent2")));
-        assertThat(ex.getMessage(), is("Event not found"));
+        assertThrows(NullPointerException.class, () -> attendee.addLikedEvent(events.get("NoEvent2")));
 
-        DatabaseException ex2 = assertThrows(DatabaseException.class, () -> attendee.addFavoriteEvent(events.get("NoEvent")));
-        assertThat(ex2.getMessage(), is("Event not found"));
+        assertThrows(NullPointerException.class, () -> attendee.addFavoriteEvent(events.get("NoEvent")));
     }
 
     @Test

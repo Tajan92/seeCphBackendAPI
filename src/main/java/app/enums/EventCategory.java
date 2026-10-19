@@ -162,4 +162,17 @@ public enum EventCategory {
         if (label == null) return OTHERS;
         return events.getOrDefault(label.toLowerCase(), OTHERS);
     }
+
+    public static EventCategory findByLabelOrName(String categoryInput) {
+        if (categoryInput == null) return null;
+
+        EventCategory byLabel = events.get(categoryInput.toLowerCase());
+        if (byLabel != null) return byLabel;
+
+        try {
+            return EventCategory.valueOf(categoryInput.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 }

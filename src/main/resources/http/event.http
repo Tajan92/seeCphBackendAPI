@@ -1,54 +1,67 @@
-### GET request to example server
-POST {{url}}/events
+### Get all events
+GET {{url}}/events?page=0&pageSize=20
 
-{
-    "userId" : "1",
-    "title" : "SLS CPH",
-    "description" : "Skating in copenhagen",
-    "price" : "150.00",
-    "free" : "false",
-    "city" : "Lyngby",
-    "postalCode" : "2800",
-    "address" : "Hovedgaden 1",
-    "startTime" : "12:30",
-    "startDate" : "2026-12-12",
-    "url" : "sls.com",
-    "primaryImageUrl" : "slsurl.com",
-    "useDefaultImage" : "false",
-    "category" : "skate"
-}
-###
+### Search and filter
+GET {{url}}/events?search=copenhagen&category=Extreme&startDate=2026-11-01
 
+### Active categories
+GET {{url}}/events/active-categories
+
+### Get event by id
 GET {{url}}/events/1
 
-###
+### My events as organizer/admin (attendee should not have access)
+GET {{url}}/events/mine
+Authorization: Bearer {{token}}
 
-GET {{url}}/events/
-
-###
-
-PUT {{url}}/events/1
+### Create event as organizer/admin (attendee should not have access)
+POST {{url}}/events
+Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
-    "userId" : "1",
-    "title" : "X-Games Cph",
-    "description" : "Skating in copenhagen",
-    "price" : "150.00",
-    "free" : "false",
-    "city" : "Lyngby",
-    "postalCode" : "2800",
-    "address" : "Hovedgaden 1",
-    "startTime" : "12:30",
-    "startDate" : "2026-12-12",
-    "url" : "sls.com",
-    "primaryImageUrl" : "slsurl.com",
-    "useDefaultImage" : "false",
-    "category" : "skate"
+  "title" : "SLS CPH",
+  "description" : "Skating in Copenhagen",
+  "price" : 150.00,
+  "free" : false,
+  "city" : "Lyngby",
+  "postalCode" : "2800",
+  "address" : "Hovedgaden 1",
+  "startTime" : "12:30",
+  "startDate" : "2027-06-12",
+  "url" : "https://sls.com",
+  "primaryImageUrl" : "https://sls.com/image.jpg",
+  "useDefaultImage" : false,
+  "category" : "Extreme"
 }
-###
 
+### Update event as organizer/admin (attendee should not have access)
+PUT {{url}}/events/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title" : "X-Games CPH",
+  "description" : "Skating in Copenhagen",
+  "price" : 175.00,
+  "free" : false,
+  "city" : "Lyngby",
+  "postalCode" : "2800",
+  "address" : "Hovedgaden 1",
+  "startTime" : "13:00",
+  "startDate" : "2027-06-12",
+  "url" : "https://xgames.com",
+  "primaryImageUrl" : "https://xgames.com/image.jpg",
+  "useDefaultImage" : false,
+  "category" : "Extreme"
+}
+
+
+### Delete event as organizer/admin (attendee should not have access)
 DELETE {{url}}/events/1
+Authorization: Bearer {{token}}
 
-###
 
+### Ticketmaster sync
 POST {{url}}/events/ticketmaster
+x-api-key: {{syncSecret}}
