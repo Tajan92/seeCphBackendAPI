@@ -11,5 +11,5 @@ jobs:
     steps:
       - name: Ticket Master Endpoint Trigger
         run: |
-          curl -X POST https://seecph.theisrud.dk/api/v1/events/ticketmaster \
+          curl --fail -X POST https://seecph.theisrud.dk/api/v1/events/ticketmaster \
           -H "x-api-key: ${{ secrets.SYNC_SECRET }}"

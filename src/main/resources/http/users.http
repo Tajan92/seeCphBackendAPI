@@ -39,11 +39,11 @@ Authorization: Bearer {{token}}
 }
 
 
-### Get my own user (all logged-in roles)
+### Get my own user
 GET {{url}}/users/my
 Authorization: Bearer {{token}}
 
-### Update my own user (all logged-in roles)
+### Update my own user
 PUT {{url}}/users/my
 Content-Type: application/json
 Authorization: Bearer {{token}}

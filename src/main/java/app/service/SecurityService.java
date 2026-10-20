@@ -8,7 +8,7 @@ import app.entities.users.User;
 import app.enums.Status;
 import app.exceptions.SecurityValidationException;
 import app.mapper.UserConverter;
-import app.utils.SecurityUtil;
+import app.security.SecurityUtil;
 
 public class SecurityService {
     private final UserDAO userDAO;

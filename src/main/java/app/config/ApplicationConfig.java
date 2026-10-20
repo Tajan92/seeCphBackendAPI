@@ -81,9 +81,9 @@ public class ApplicationConfig implements EndpointGroup {
             });
         });
         config.staticFiles.add(staticFiles -> {
-            staticFiles.hostedPath = "/images";          // the URL path
-            staticFiles.directory = "/images";           // the folder on the classpath
-            staticFiles.location = Location.CLASSPATH;   // = src/main/resources
+            staticFiles.hostedPath = "/images";
+            staticFiles.directory = "/images";
+            staticFiles.location = Location.CLASSPATH;
         });
         config.validation.register(Status.class, value -> Status.valueOf(value.trim().toUpperCase()));
         config.validation.register(AddPlacement.class, value -> AddPlacement.valueOf(value.trim().toUpperCase()));
