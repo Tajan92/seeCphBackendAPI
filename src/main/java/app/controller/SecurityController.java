@@ -4,6 +4,7 @@ import app.enums.UserRole;
 import io.javalin.apibuilder.EndpointGroup;
 import lombok.AllArgsConstructor;
 
+import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.post;
 
 @AllArgsConstructor
@@ -13,5 +14,6 @@ public class SecurityController implements EndpointGroup {
     @Override
     public void addEndpoints() {
         post("/api/v1/login", securityHandler::login, UserRole.ANYONE);
+        get("/api/v1/auth/healthcheck", securityHandler::healthCheck, UserRole.ANYONE);
     }
 }

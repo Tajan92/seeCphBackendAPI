@@ -10,6 +10,7 @@ import app.service.SecurityService;
 import app.utils.Utils;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -43,6 +44,10 @@ public class SecurityHandler {
 
     private String createToken(UserDTOResponse user) {
         return tokenSecurity.createToken(user, issuer, tokenExpireMillis, secretKey);
+    }
+
+    public void healthCheck(@NotNull Context ctx) {
+        ctx.status(200).json("{\"msg\": \"API is up and running\"}");
     }
 
     public void authenticate(Context ctx) {
