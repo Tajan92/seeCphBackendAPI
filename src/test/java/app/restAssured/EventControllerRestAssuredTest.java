@@ -48,7 +48,7 @@ public class EventControllerRestAssuredTest {
         userMap = TestDataCreator.createUsers(emf);
 
         adminToken = login(userMap.get("admin").getEmail(), "12345678");
-        organizerToken = login(userMap.get("organizer2").getEmail(), "23456789");
+        organizerToken = login(userMap.get("organizer2").getEmail(), "12345678");
         attendeeToken = login(userMap.get("attendee").getEmail(), "12345678");
     }
 
@@ -104,7 +104,7 @@ public class EventControllerRestAssuredTest {
     }
 
     @Test
-    void readAllEventsIsPublic() {
+    void readAllEventsIsOpenForEveryone() {
         given()
                 .when()
                 .get("/events")
@@ -439,5 +439,35 @@ public class EventControllerRestAssuredTest {
                 .statusCode(404);
 
         assertEventCount(2);
+    }
+
+    @Test
+    void deleteOwnAccountAttendee(){
+        given()
+        .header("Authorization", "Bearer " + attendeeToken)
+                .when()
+                .delete("/users/my")
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    void deleteOwnAccountOrganizer(){
+        given()
+                .header("Authorization", "Bearer " + organizerToken)
+                .when()
+                .delete("/users/my")
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    void deleteOwnAccountAdminGives403(){
+        given()
+                .header("Authorization", "Bearer " + adminToken)
+                .when()
+                .delete("/users/my")
+                .then()
+                .statusCode(403);
     }
 }

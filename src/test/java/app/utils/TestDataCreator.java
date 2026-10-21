@@ -11,13 +11,13 @@ import app.enums.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 
 public final class TestDataCreator {
-
     public static void clearDatabase(EntityManagerFactory emf) {
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
@@ -39,26 +39,28 @@ public final class TestDataCreator {
     }
 
     public static Map<String, User> createUsers(EntityManagerFactory emf) {
+        final String password = BCrypt.hashpw("12345678", BCrypt.gensalt(4));
+
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
 
-            User admin = Admin.builder().name("John").email("john@mail.dk").phone("12345678").hashedPassword(PasswordUtil.hashPassword("12345678")).userRole(UserRole.ADMIN).build();
-            User admin2 = Admin.builder().name("Mette").email("mette@mail.dk").phone("23456789").hashedPassword(PasswordUtil.hashPassword("23456789")).userRole(UserRole.ADMIN).build();
-            User admin3 = Admin.builder().name("Lars").email("lars@mail.dk").phone("34567890").hashedPassword(PasswordUtil.hashPassword("34567890")).userRole(UserRole.ADMIN).build();
-            User admin4 = Admin.builder().name("Sofie").email("sofie@mail.dk").phone("45678901").hashedPassword(PasswordUtil.hashPassword("45678901")).userRole(UserRole.ADMIN).build();
-            User admin5 = Admin.builder().name("Anders").email("anders@mail.dk").phone("56789012").hashedPassword(PasswordUtil.hashPassword("56789012")).userRole(UserRole.ADMIN).build();
+            User admin = Admin.builder().name("John").email("john@mail.dk").phone("12345678").hashedPassword(password).userRole(UserRole.ADMIN).build();
+            User admin2 = Admin.builder().name("Mette").email("mette@mail.dk").phone("23456789").hashedPassword(password).userRole(UserRole.ADMIN).build();
+            User admin3 = Admin.builder().name("Lars").email("lars@mail.dk").phone("34567890").hashedPassword(password).userRole(UserRole.ADMIN).build();
+            User admin4 = Admin.builder().name("Sofie").email("sofie@mail.dk").phone("45678901").hashedPassword(password).userRole(UserRole.ADMIN).build();
+            User admin5 = Admin.builder().name("Anders").email("anders@mail.dk").phone("56789012").hashedPassword(password).userRole(UserRole.ADMIN).build();
 
-            User attendee = Attendee.builder().name("Bo").email("bo@mail.dk").phone("12345678").hashedPassword(PasswordUtil.hashPassword("12345678")).userRole(UserRole.ATTENDEE).build();
-            User attendee2 = Attendee.builder().name("Freja").email("freja@mail.dk").phone("23456789").hashedPassword(PasswordUtil.hashPassword("23456789")).userRole(UserRole.ATTENDEE).build();
-            User attendee3 = Attendee.builder().name("Emil").email("emil@mail.dk").phone("34567890").hashedPassword(PasswordUtil.hashPassword("34567890")).userRole(UserRole.ATTENDEE).build();
-            User attendee4 = Attendee.builder().name("Ida").email("ida@mail.dk").phone("45678901").hashedPassword(PasswordUtil.hashPassword("45678901")).userRole(UserRole.ATTENDEE).build();
-            User attendee5 = Attendee.builder().name("Magnus").email("magnus@mail.dk").phone("56789012").hashedPassword(PasswordUtil.hashPassword("56789012")).userRole(UserRole.ATTENDEE).build();
+            User attendee = Attendee.builder().name("Bo").email("bo@mail.dk").phone("12345678").hashedPassword(password).userRole(UserRole.ATTENDEE).build();
+            User attendee2 = Attendee.builder().name("Freja").email("freja@mail.dk").phone("23456789").hashedPassword(password).userRole(UserRole.ATTENDEE).build();
+            User attendee3 = Attendee.builder().name("Emil").email("emil@mail.dk").phone("34567890").hashedPassword(password).userRole(UserRole.ATTENDEE).build();
+            User attendee4 = Attendee.builder().name("Ida").email("ida@mail.dk").phone("45678901").hashedPassword(password).userRole(UserRole.ATTENDEE).build();
+            User attendee5 = Attendee.builder().name("Magnus").email("magnus@mail.dk").phone("56789012").hashedPassword(password).userRole(UserRole.ATTENDEE).build();
 
-            User organizer = Organizer.builder().organizerName("Nike").accountStatus(Status.PENDING).name("Nike").email("nike@mail.dk").phone("12345678").hashedPassword(PasswordUtil.hashPassword("12345678")).userRole(UserRole.ORGANIZER).build();
-            User organizer2 = Organizer.builder().organizerName("Adidas").accountStatus(Status.ACTIVE).name("Adidas").email("adidas@mail.dk").phone("23456789").hashedPassword(PasswordUtil.hashPassword("23456789")).userRole(UserRole.ORGANIZER).build();
-            User organizer3 = Organizer.builder().organizerName("Puma").accountStatus(Status.PENDING).name("Puma").email("puma@mail.dk").phone("34567890").hashedPassword(PasswordUtil.hashPassword("34567890")).userRole(UserRole.ORGANIZER).build();
-            User organizer4 = Organizer.builder().organizerName("Carlsberg").accountStatus(Status.REJECTED).name("Carlsberg").email("carlsberg@mail.dk").phone("45678901").hashedPassword(PasswordUtil.hashPassword("45678901")).userRole(UserRole.ORGANIZER).build();
-            User organizer5 = Organizer.builder().organizerName("Lego").accountStatus(Status.ACTIVE).name("Lego").email("lego@mail.dk").phone("56789012").hashedPassword(PasswordUtil.hashPassword("56789012")).userRole(UserRole.ORGANIZER).build();
+            User organizer = Organizer.builder().organizerName("Nike").accountStatus(Status.PENDING).name("Nike").email("nike@mail.dk").phone("12345678").hashedPassword(password).userRole(UserRole.ORGANIZER).build();
+            User organizer2 = Organizer.builder().organizerName("Adidas").accountStatus(Status.ACTIVE).name("Adidas").email("adidas@mail.dk").phone("23456789").hashedPassword(password).userRole(UserRole.ORGANIZER).build();
+            User organizer3 = Organizer.builder().organizerName("Puma").accountStatus(Status.PENDING).name("Puma").email("puma@mail.dk").phone("34567890").hashedPassword(password).userRole(UserRole.ORGANIZER).build();
+            User organizer4 = Organizer.builder().organizerName("Carlsberg").accountStatus(Status.REJECTED).name("Carlsberg").email("carlsberg@mail.dk").phone("45678901").hashedPassword(password).userRole(UserRole.ORGANIZER).build();
+            User organizer5 = Organizer.builder().organizerName("Lego").accountStatus(Status.ACTIVE).name("Lego").email("lego@mail.dk").phone("56789012").hashedPassword(password).userRole(UserRole.ORGANIZER).build();
 
             try {
                 List<User> users = List.of(

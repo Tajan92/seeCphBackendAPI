@@ -35,12 +35,16 @@ public class AdvertControllerRestAssuredTest {
     private String attendeeToken;
 
     @BeforeAll
-    static void init() {
+    void init() {
         emf = HibernateTestConfig.getEntityManagerFactory();
         applicationConfig = new ApplicationConfig(emf);
         app = applicationConfig.startServer(7070);
         RestAssured.baseURI = "http://localhost:7070/api/v1";
+        resetData();
         eventDAO = new EventDAO(emf);
+        adminToken = login(userMap.get("admin").getEmail(), "12345678");
+        organizerToken = login(userMap.get("organizer2").getEmail(), "12345678");
+        attendeeToken = login(userMap.get("attendee").getEmail(), "12345678");
     }
 
     @BeforeEach
@@ -49,9 +53,7 @@ public class AdvertControllerRestAssuredTest {
         advertMap = TestDataCreator.createAdverts(emf);
         eventMap = TestDataCreator.createEvents(emf);
         userMap = TestDataCreator.createUsers(emf);
-        adminToken = login(userMap.get("admin").getEmail(), "12345678");
-        organizerToken = login(userMap.get("organizer2").getEmail(), "23456789");
-        attendeeToken = login(userMap.get("attendee").getEmail(), "12345678");
+
     }
 
     @AfterEach
@@ -371,6 +373,13 @@ public class AdvertControllerRestAssuredTest {
                 .statusCode(403);
 
         assertAdvertCount(2);
+    }
+
+    private void resetData() {
+        TestDataCreator.clearDatabase(emf);
+        advertMap = TestDataCreator.createAdverts(emf);
+        eventMap = TestDataCreator.createEvents(emf);
+        userMap = TestDataCreator.createUsers(emf);
     }
 }
 

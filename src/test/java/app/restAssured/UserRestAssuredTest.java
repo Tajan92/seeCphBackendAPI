@@ -44,7 +44,7 @@ public class UserRestAssuredTest {
         userMap = TestDataCreator.createUsers(emf);
 
         adminToken = login(userMap.get("admin").getEmail(), "12345678");
-        organizerToken = login(userMap.get("organizer2").getEmail(), "23456789");
+        organizerToken = login(userMap.get("organizer2").getEmail(), "12345678");
         attendeeToken = login(userMap.get("attendee").getEmail(), "12345678");
     }
 
@@ -69,24 +69,6 @@ public class UserRestAssuredTest {
                 .statusCode(200)
                 .extract()
                 .path("token");
-    }
-
-    private int idOf(String key) {
-        return userMap.get(key).getId();
-    }
-
-    private int firstEventId() {
-        return eventMap.get("event").getId();
-    }
-
-    private Map<String, String> newUser(String email) {
-        return Map.of(
-                "name", "Test Person",
-                "email", email,
-                "phone", "87654321",
-                "password", "Test1234!",
-                "passwordCheck", "Test1234!"
-        );
     }
 
     @Test
@@ -136,6 +118,89 @@ public class UserRestAssuredTest {
                 .then()
                 .statusCode(403)
                 .body("error", equalTo("Organizer account is not active"));
+    }
+
+    @Test
+    void changePassword() {
+        given()
+                .header("Authorization", "Bearer " + organizerToken)
+                .contentType(ContentType.JSON)
+                .body(Map.of("email","adidas@mail.dk",
+                        "password", "12345678",
+                        "newPassword", "NewPassword1#",
+                        "newPasswordCheck", "NewPassword1#"))
+                .when()
+                .put("/users/my/password")
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    void changePasswordNewPasswordMismatch() {
+        given()
+                .header("Authorization", "Bearer " + organizerToken)
+                .contentType(ContentType.JSON)
+                .body(Map.of("email","adidas@mail.dk",
+                        "password", "12345678",
+                        "newPassword", "NewPassword1#",
+                        "newPasswordCheck", "NewWrongPassword1#"))
+                .when()
+                .put("/users/my/password")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
+    void changePasswordPasswordNotValid() {
+        given()
+                .header("Authorization", "Bearer " + organizerToken)
+                .contentType(ContentType.JSON)
+                .body(Map.of("email","adidas@mail.dk",
+                        "password", "12345678",
+                        "newPassword", "Password",
+                        "newPasswordCheck", "Password"))
+                .when()
+                .put("/users/my/password")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    void changePasswordWrongPassword() {
+        given()
+                .header("Authorization", "Bearer " + organizerToken)
+                .contentType(ContentType.JSON)
+                .body(Map.of("email","adidas@mail.dk",
+                        "password", "Wrong",
+                        "newPassword", "NewPassword1#",
+                        "newPasswordCheck", "NewPassword1#"))
+                .when()
+                .put("/users/my/password")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    void changePasswordNoAccessToUserGives403() {
+        given()
+                .header("Authorization", "Bearer " + organizerToken)
+                .contentType(ContentType.JSON)
+                .body(Map.of("email", "12345678", "newPassword1#", "newPassword1#"))
+                .when()
+                .put("/users/my/password")
+                .then()
+                .statusCode(403);
+    }
+
+    @Test
+    void changePasswordWithoutTokenGives401() {
+        given()
+                .contentType(ContentType.JSON)
+                .body(Map.of("email", "12345678", "newPassword1#", "newPassword1#"))
+                .when()
+                .put("/users/my/password")
+                .then()
+                .statusCode(401);
     }
 
     @Test
@@ -602,5 +667,23 @@ public class UserRestAssuredTest {
                 .get("/users/my/favorites")
                 .then()
                 .statusCode(403);
+    }
+
+    private int idOf(String key) {
+        return userMap.get(key).getId();
+    }
+
+    private int firstEventId() {
+        return eventMap.get("event").getId();
+    }
+
+    private Map<String, String> newUser(String email) {
+        return Map.of(
+                "name", "Test Person",
+                "email", email,
+                "phone", "87654321",
+                "password", "Test1234!",
+                "passwordCheck", "Test1234!"
+        );
     }
 }
