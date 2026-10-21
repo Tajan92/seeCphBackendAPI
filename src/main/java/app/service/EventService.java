@@ -17,6 +17,7 @@ import app.enums.SourceProvider;
 import app.enums.UserRole;
 import app.exceptions.ConflictException;
 import app.exceptions.SecurityValidationException;
+import app.exceptions.SyncException;
 import app.mapper.EventConverter;
 import app.mapper.TicketMasterConverter;
 import app.utils.APIReader;
@@ -144,8 +145,6 @@ public class EventService {
     }
 
     public void syncEvents() {
-
-
         if (!syncRunning.compareAndSet(false, true)) {
             throw new ConflictException("Ticketmaster sync is already running");
         }
@@ -158,10 +157,11 @@ public class EventService {
 
             // Delete expired events
             runDeleteExpiredEventsSync();
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
-        } finally {
-            syncRunning.set(false);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new SyncException(500, "Synchronization was interrupted", e);
+        } catch (ExecutionException e) {
+            throw new SyncException(502, "Synchronization failed", e);
         }
     }
 

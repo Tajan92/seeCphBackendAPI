@@ -132,6 +132,11 @@ public class ApplicationConfig implements EndpointGroup {
             ctx.status(400).json(Map.of("error", e.getMessage()));
         });
 
+        app.exception(SyncException.class, (e, ctx) -> {
+            log.error("Sync failed", e);
+            ctx.status(e.getCode());
+        });
+
         app.exception(Exception.class, (e, ctx) -> {
             log.error("Unexpected server error: {}", e.getMessage(), e);
             ctx.status(500).json(Map.of("error", "An unexpected internal server error occurred"));
