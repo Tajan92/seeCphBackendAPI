@@ -19,7 +19,6 @@ import java.util.Objects;
 @Slf4j
 @AllArgsConstructor
 public class TicketMasterConverter {
-    private final AddressService addressService;
 
     public List<Event> ticketMasterDtoToEvent(TicketMasterDTO ticketMasterDTO) {
         List<Event> events = new ArrayList<>();
@@ -85,7 +84,11 @@ public class TicketMasterConverter {
             return null;
         }
         String city = venue.city() != null ? venue.city().name() : null;
-        return addressService.createOrFindAddress(venue.postalCode(), city, venue.address().address());
+        return Address.builder()
+                .postalCode(venue.postalCode())
+                .city(city)
+                .address(venue.address().address())
+                .build();
     }
 
     private String findImageUrl(TmEvent tmEvent) {

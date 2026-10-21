@@ -26,10 +26,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -49,7 +47,7 @@ public class EventService {
         this.eventDAO = eventDAO;
         this.addressService = addressService;
         this.apiReader = new APIReader();
-        this.converter = new TicketMasterConverter(addressService);
+        this.converter = new TicketMasterConverter();
         this.eventConverter = new EventConverter();
         this.userDAO = userDAO;
     }
@@ -146,12 +144,22 @@ public class EventService {
     }
 
     public void syncEvents() {
+
+
         if (!syncRunning.compareAndSet(false, true)) {
             throw new ConflictException("Ticketmaster sync is already running");
         }
-        try {
-            runTmSync();
+        try (ExecutorService executorService = Executors.newFixedThreadPool(1)){ // NB! only 1 thread
+            // Fetch from API
+            Future<List<Event>> futures = executorService.submit(this::fetchTmEvents);
+
+            // Save to database
+            saveTmEventsToDB(futures.get());
+
+            // Delete expired events
             runDeleteExpiredEventsSync();
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
         } finally {
             syncRunning.set(false);
         }
@@ -166,27 +174,33 @@ public class EventService {
         }
     }
 
-    private void runTmSync() {
-        counter = 0;
-        int maxCount = 15;
-
-        Map<String, Event> existingTmEvents = eventDAO.readAllTmEvents().stream()
-                .filter(e -> e.getApiEventId() != null)
-                .collect(Collectors.toMap(Event::getApiEventId, e -> e, (a, b) -> a));
-
+    private List<Event> fetchTmEvents(){
         List<Event> events = new ArrayList<>();
         for (TicketMasterDTO dto : apiReader.getApiAsTmDTO()) {
             if (dto != null && dto.embedded() != null && dto.embedded().events() != null) {
                 events.addAll(converter.ticketMasterDtoToEvent(dto));
             }
         }
+        return events;
+    }
 
+    private void saveTmEventsToDB(List<Event> events) {
+        Map<String, Event> existingTmEvents = eventDAO.readAllTmEvents().stream()
+                .filter(e -> e.getApiEventId() != null)
+                .collect(Collectors.toMap(Event::getApiEventId, e -> e, (a, b) -> a));
+
+        counter = 0;
+        int maxCount = 15;
         int created = 0;
         int updated = 0;
         int failed = 0;
 
         for (Event event : events) {
             try {
+                Address a = event.getLocation();
+                if (a != null) {
+                    event.setLocation(addressService.createOrFindAddress(a.getPostalCode(), a.getCity(), a.getAddress()));
+                }
                 Event existing = existingTmEvents.get(event.getApiEventId());
                 if (existing == null) {
                     event.setDescription(checkForDescription(event, maxCount));
