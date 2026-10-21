@@ -2,6 +2,7 @@ package app.entities.users;
 
 import app.entities.IGetId;
 import app.enums.UserRole;
+import app.utils.PasswordUtil;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -37,6 +38,11 @@ public abstract class User implements IGetId {
     @Enumerated(EnumType.STRING)
     @Column(name = "user_role")
     private UserRole userRole;
+
+
+    public void changePassword(String newPlainPassword) {
+        this.hashedPassword = PasswordUtil.hashPassword(newPlainPassword);
+    }
 
     // ===== EQUALS & HASHCODE =====
     @Override

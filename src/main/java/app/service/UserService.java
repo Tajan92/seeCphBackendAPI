@@ -103,6 +103,10 @@ public class UserService {
         userDAO.delete(user);
     }
 
+    public void deleteOwnAccount(int id) {
+       deleteById(id);
+    }
+
     public void addLikedEvent(int userId, int eventId) {
         userDAO.addFavoriteOrLikedEvent(userId, eventId, FavoriteOrLikedEvent.LIKED);
     }

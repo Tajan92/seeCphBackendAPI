@@ -11,6 +11,4 @@ public class SecurityUtil {
             throw new SecurityValidationException(401, "Invalid user or password");
         }
     }
-
-
 }

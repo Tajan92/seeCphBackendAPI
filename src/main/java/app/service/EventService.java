@@ -145,14 +145,24 @@ public class EventService {
         eventDAO.delete(event);
     }
 
-    public void syncTmEvents() {
+    public void syncEvents() {
         if (!syncRunning.compareAndSet(false, true)) {
             throw new ConflictException("Ticketmaster sync is already running");
         }
         try {
             runTmSync();
+            runDeleteExpiredEventsSync();
         } finally {
             syncRunning.set(false);
+        }
+    }
+
+    private void runDeleteExpiredEventsSync(){
+        List<Event> events = eventDAO.readAll();
+        for (Event event : events) {
+            if (event.getStartDate().isBefore(LocalDate.now().minusDays(3))) {
+                eventDAO.delete(event);
+            }
         }
     }
 

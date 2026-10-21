@@ -78,7 +78,7 @@ public class EventHandler implements IHandler {
         if (expectedSecret != null && expectedSecret.equals(authHeader)) {
             CompletableFuture.runAsync(() -> {
                 try {
-                    eventService.syncTmEvents();
+                    eventService.syncEvents();
                     log.info("Background sync completed successfully.");
                 } catch (Exception e) {
                     log.error("Error during background sync: {}", e.getMessage(), e);

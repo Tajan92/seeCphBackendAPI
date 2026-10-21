@@ -1,5 +1,6 @@
 package app.controller;
 
+import app.dto.user.ChangePasswordDTORequest;
 import app.dto.user.UserDTOResponse;
 import app.dto.user.UserLoginDTORequest;
 import app.dto.user.UserLoginDTOResponse;
@@ -7,6 +8,7 @@ import app.enums.UserRole;
 import app.exceptions.SecurityValidationException;
 import app.security.TokenSecurity;
 import app.service.SecurityService;
+import app.utils.UserValidator;
 import app.utils.Utils;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
@@ -42,8 +44,18 @@ public class SecurityHandler {
         ctx.status(HttpStatus.OK).json(new UserLoginDTOResponse(token, user));
     }
 
-    private String createToken(UserDTOResponse user) {
-        return tokenSecurity.createToken(user, issuer, tokenExpireMillis, secretKey);
+    public void changePassword(Context ctx) {
+        UserDTOResponse currentUser = ctx.attribute("user");
+        ChangePasswordDTORequest dto = ctx.bodyValidator(ChangePasswordDTORequest.class)
+                .check(u -> u.password() != null && !u.password().isBlank(), "Current password is required")
+                .check(u -> !u.newPassword().equals(u.password()), "New password must be different from the current password")
+                .check(u -> UserValidator.passwordsMustMatch(u.newPassword(), u.newPasswordCheck()), "Passwords do not match")
+                .check(u -> UserValidator.isPasswordLongEnough(u.newPassword()), "Password must be at least 8 characters long")
+                .check(u -> UserValidator.passwordMustContainNumber(u.newPassword()), "Password must contain a number")
+                .check(u -> UserValidator.shouldRejectPasswordWithoutSpecialCharacter(u.newPassword()), "Password must contain a special character")
+                .get();
+        securityService.changePassword(currentUser.id(), dto);
+        ctx.status(HttpStatus.NO_CONTENT);
     }
 
     public void healthCheck(@NotNull Context ctx) {
@@ -60,6 +72,10 @@ public class SecurityHandler {
 
         String token = getUsersToken(ctx);
         ctx.attribute("user", tokenSecurity.verifyAndGetUser(token, issuer, secretKey));
+    }
+
+    private String createToken(UserDTOResponse user) {
+        return tokenSecurity.createToken(user, issuer, tokenExpireMillis, secretKey);
     }
 
     private static String getUsersToken(Context ctx) {

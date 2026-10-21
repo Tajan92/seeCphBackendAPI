@@ -26,6 +26,7 @@ public class UserController implements EndpointGroup {
 
         get("/api/v1/users/my", userHandler::getCurrentUser, UserRole.ATTENDEE, UserRole.ORGANIZER, UserRole.ADMIN);
         put("/api/v1/users/my", userHandler::updateCurrentUser, UserRole.ATTENDEE, UserRole.ORGANIZER, UserRole.ADMIN);
+        delete("/api/v1/users/my", userHandler::deleteOwnAccount, UserRole.ATTENDEE, UserRole.ORGANIZER);
 
         get("/api/v1/users/organizers", userHandler::getAllOrganizersByStatus, UserRole.ADMIN);
         get("/api/v1/users", userHandler::getAll, UserRole.ADMIN);

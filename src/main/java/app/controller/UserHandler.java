@@ -70,10 +70,17 @@ public class UserHandler implements IHandler {
         ctx.status(HttpStatus.OK).json(userService.updateById(currentUser.id(), input));
     }
 
+
     @Override
-    public void deleteById(Context ctx) {
+    public void  deleteById(Context ctx) {
         int id = PathUtil.getId(ctx);
         userService.deleteById(id);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    public void deleteOwnAccount(Context ctx) {
+        UserDTOResponse userDTOResponse = ctx.attribute("user");
+        userService.deleteOwnAccount(userDTOResponse.id());
         ctx.status(HttpStatus.NO_CONTENT);
     }
 
