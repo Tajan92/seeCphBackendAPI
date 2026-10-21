@@ -34,11 +34,15 @@ public class EventControllerRestAssuredTest {
     private String attendeeToken;
 
     @BeforeAll
-    static void init() {
+    void init() {
         emf = HibernateTestConfig.getEntityManagerFactory();
         applicationConfig = new ApplicationConfig(emf);
         app = applicationConfig.startServer(7070);
         RestAssured.baseURI = "http://localhost:7070/api/v1";
+        resetData();
+        adminToken = login(userMap.get("admin").getEmail(), "12345678");
+        organizerToken = login(userMap.get("organizer2").getEmail(), "12345678");
+        attendeeToken = login(userMap.get("attendee").getEmail(), "12345678");
     }
 
     @BeforeEach
@@ -46,10 +50,6 @@ public class EventControllerRestAssuredTest {
         TestDataCreator.clearDatabase(emf);
         eventMap = TestDataCreator.createEvents(emf);
         userMap = TestDataCreator.createUsers(emf);
-
-        adminToken = login(userMap.get("admin").getEmail(), "12345678");
-        organizerToken = login(userMap.get("organizer2").getEmail(), "12345678");
-        attendeeToken = login(userMap.get("attendee").getEmail(), "12345678");
     }
 
     @AfterEach
@@ -469,5 +469,11 @@ public class EventControllerRestAssuredTest {
                 .delete("/users/my")
                 .then()
                 .statusCode(403);
+    }
+
+    private void resetData() {
+        TestDataCreator.clearDatabase(emf);
+        eventMap = TestDataCreator.createEvents(emf);
+        userMap = TestDataCreator.createUsers(emf);
     }
 }

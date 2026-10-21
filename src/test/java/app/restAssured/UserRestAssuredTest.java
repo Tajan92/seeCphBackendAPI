@@ -30,11 +30,15 @@ public class UserRestAssuredTest {
     private String attendeeToken;
 
     @BeforeAll
-    static void init() {
+    void init() {
         emf = HibernateTestConfig.getEntityManagerFactory();
         applicationConfig = new ApplicationConfig(emf);
         app = applicationConfig.startServer(7070);
         RestAssured.baseURI = "http://localhost:7070/api/v1";
+        resetData();
+        adminToken = login(userMap.get("admin").getEmail(), "12345678");
+        organizerToken = login(userMap.get("organizer2").getEmail(), "12345678");
+        attendeeToken = login(userMap.get("attendee").getEmail(), "12345678");
     }
 
     @BeforeEach
@@ -43,9 +47,7 @@ public class UserRestAssuredTest {
         eventMap = TestDataCreator.createEvents(emf);
         userMap = TestDataCreator.createUsers(emf);
 
-        adminToken = login(userMap.get("admin").getEmail(), "12345678");
-        organizerToken = login(userMap.get("organizer2").getEmail(), "12345678");
-        attendeeToken = login(userMap.get("attendee").getEmail(), "12345678");
+
     }
 
     @AfterEach
@@ -136,7 +138,7 @@ public class UserRestAssuredTest {
     }
 
     @Test
-    void changePasswordNewPasswordMismatch() {
+    void changePasswordNewPasswordMismatchGives400() {
         given()
                 .header("Authorization", "Bearer " + organizerToken)
                 .contentType(ContentType.JSON)
@@ -147,11 +149,11 @@ public class UserRestAssuredTest {
                 .when()
                 .put("/users/my/password")
                 .then()
-                .statusCode(401);
+                .statusCode(400);
     }
 
     @Test
-    void changePasswordPasswordNotValid() {
+    void changePasswordPasswordNotValidGives400() {
         given()
                 .header("Authorization", "Bearer " + organizerToken)
                 .contentType(ContentType.JSON)
@@ -166,7 +168,7 @@ public class UserRestAssuredTest {
     }
 
     @Test
-    void changePasswordWrongPassword() {
+    void changePasswordWrongPasswordGives401() {
         given()
                 .header("Authorization", "Bearer " + organizerToken)
                 .contentType(ContentType.JSON)
@@ -177,7 +179,7 @@ public class UserRestAssuredTest {
                 .when()
                 .put("/users/my/password")
                 .then()
-                .statusCode(400);
+                .statusCode(401);
     }
 
     @Test
@@ -189,7 +191,7 @@ public class UserRestAssuredTest {
                 .when()
                 .put("/users/my/password")
                 .then()
-                .statusCode(403);
+                .statusCode(400);
     }
 
     @Test
@@ -685,5 +687,11 @@ public class UserRestAssuredTest {
                 "password", "Test1234!",
                 "passwordCheck", "Test1234!"
         );
+    }
+
+    private void resetData() {
+        TestDataCreator.clearDatabase(emf);
+        eventMap = TestDataCreator.createEvents(emf);
+        userMap = TestDataCreator.createUsers(emf);
     }
 }
