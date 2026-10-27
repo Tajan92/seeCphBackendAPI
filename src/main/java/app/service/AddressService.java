@@ -17,7 +17,7 @@ public class AddressService {
             return null;
         }
 
-        Address addressExisting = addressDAO.readAdressByPostalCodeAndAddress(checkedPostalCode, checkedAddress);
+        Address addressExisting = addressDAO.readAddressByPostalCodeAndAddress(checkedPostalCode, checkedAddress);
         if (addressExisting != null) {
             return addressExisting;
         }

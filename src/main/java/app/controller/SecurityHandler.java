@@ -74,6 +74,21 @@ public class SecurityHandler {
         ctx.attribute("user", tokenSecurity.verifyAndGetUser(token, issuer, secretKey));
     }
 
+    public void authorize(Context ctx) {
+        if (isStaticFile(ctx)) return;
+
+        Set<UserRole> allowedRoles = getAllowedRoles(ctx);
+        if (isEndpointOpenForAnyone(allowedRoles)) return;
+
+        UserDTOResponse user = ctx.attribute("user");
+        if (user == null) {
+            throw new SecurityValidationException(401, "Not authenticated");
+        }
+        if (!allowedRoles.contains(user.userRole())) {
+            throw new SecurityValidationException(403, "You do not have access to this resource");
+        }
+    }
+
     private String createToken(UserDTOResponse user) {
         return tokenSecurity.createToken(user, issuer, tokenExpireMillis, secretKey);
     }
@@ -88,21 +103,6 @@ public class SecurityHandler {
             throw new SecurityValidationException(401, "Missing Authorization");
         }
         return token;
-    }
-
-    public void authorize(Context ctx) {
-        if (isStaticFile(ctx)) return;
-
-        Set<UserRole> allowedRoles = getAllowedRoles(ctx);
-        if (isEndpointOpenForAnyone(allowedRoles)) return;
-
-        UserDTOResponse user = ctx.attribute("user");
-        if (user == null) {
-            throw new SecurityValidationException(401, "Not authenticated");
-        }
-        if (!allowedRoles.contains(user.userRole())) {
-            throw new SecurityValidationException(403, "You do not have access to this resource");
-        }
     }
 
     private static Set<UserRole> getAllowedRoles(Context ctx) {

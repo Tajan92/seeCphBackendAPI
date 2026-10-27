@@ -12,6 +12,7 @@ skinparam package {
 BackgroundColor grey
 BorderColor darkgrey
 }
+package app{
 abstract class User{
 - name
 - phone
@@ -59,4 +60,5 @@ class Advert{
 - status
 }
 Organizer -- Advert
+}
 @enduml

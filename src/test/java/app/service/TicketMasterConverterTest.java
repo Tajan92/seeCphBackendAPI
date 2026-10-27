@@ -36,7 +36,7 @@ class TicketMasterConverterTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        ticketMasterConverter = new TicketMasterConverter(addressService);
+        ticketMasterConverter = new TicketMasterConverter();
     }
 
     @Test

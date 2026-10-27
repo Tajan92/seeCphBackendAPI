@@ -151,7 +151,7 @@ public class EventService {
         try (ExecutorService executorService = Executors.newFixedThreadPool(1)){ // NB! only 1 thread
             // Fetch from API
             Future<List<Event>> futures = executorService.submit(this::fetchTmEvents);
-
+            
             // Save to database
             saveTmEventsToDB(futures.get());
 
@@ -161,7 +161,9 @@ public class EventService {
             Thread.currentThread().interrupt();
             throw new SyncException(500, "Synchronization was interrupted", e);
         } catch (ExecutionException e) {
-            throw new SyncException(502, "Synchronization failed", e);
+            throw new SyncException(502, "Synchronization failed", e.getCause());
+        } finally {
+            syncRunning.set(false);
         }
     }
 

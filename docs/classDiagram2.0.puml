@@ -1,0 +1,284 @@
+@startuml
+!pragma layout smetana
+!theme reddress-lightblue
+set separator none
+skinparam backgroundColor none
+skinparam ArrowColor white
+skinparam ArrowThickness 1
+skinparam roundcorner 20
+skinparam ArrowFontColor White
+skinparam ArrowFontSize 18
+skinparam dpi 130
+skinparam package {
+BackgroundColor grey
+BorderColor darkgrey
+}
+
+'https://plantuml.com/class-diagram
+package app {
+class Main {
+}
+
+package config {
+class ApplicationConfig {
++ ApplicationConfig(emf)
++ configuration(config)
++ startServer(port) : Javalin
++ stopServer(app)
+}
+class HibernateConfig {
++ {static} getEntityManagerFactory() : EntityManagerFactory
+}
+class AdminCreator {
++ {static} createAdminIfMissing(userDAO)
+}
+}
+package controller {
+interface IHandler {
++ create(ctx)
++ getById(ctx)
++ getAll(ctx)
++ updateById(ctx)
++ deleteById(ctx)
+}
+class EventController {
++ addEndpoints()
+}
+class UserController {
++ addEndpoints()
+}
+class AdvertController {
++ addEndpoints()
+}
+class SecurityController {
++ addEndpoints()
+}
+class EventHandler implements IHandler {
++ getMyEvents(ctx)
++ getAllActiveEventCategories(ctx)
++ syncEventsFromAPI(ctx)
+}
+class UserHandler implements IHandler {
++ createPendingOrganizer(ctx)
++ createAdmin(ctx)
++ getCurrentUser(ctx)
++ updateCurrentUser(ctx)
++ deleteOwnAccount(ctx)
++ add/get/removeFavoriteEvent(ctx)
++ add/get/removeLikedEvent(ctx)
++ getAllOrganizersByStatus(ctx)
++ updateOrganizerStatus(ctx)
+}
+class AdvertHandler implements IHandler {
++ getMyAdverts(ctx)
++ getActiveAdverts(ctx)
+}
+class SecurityHandler {
++ login(ctx)
++ changePassword(ctx)
++ authenticate(ctx)
++ authorize(ctx)
+}
+EventController --> EventHandler
+UserController --> UserHandler
+AdvertController --> AdvertHandler
+SecurityController --> SecurityHandler
+}
+package service {
+class EventService {
+- AtomicBoolean syncRunning
++ create(input, userId) : EventDTOResponse
++ updateById(id, input, currentUser) : EventDTOResponse
++ getById(id) : EventDTOResponse
++ getByUserId(id) : List<EventDTOResponse>
++ getAllEventsBySearchAndFilter(...) : List<EventDTOResponse>
++ getAllActiveEventCategories() : List<EventCategory>
++ deleteById(id, currentUser)
++ syncEvents()
+- fetchTmEvents() : List<Event>
+- saveTmEventsToDB(events)
+- runDeleteExpiredEventsSync()
+}
+class UserService {
++ create(input) : UserDTOResponse
++ createPendingOrganizer(dto) : OrganizerDTOResponse
++ createAdmin(input) : UserDTOResponse
++ updateById(id, input) : UserDTOResponse
++ updateOrganizerStatus(id, status) : OrganizerDTOResponse
++ getAllOrganizersByStatus(status) : List<OrganizerDTOResponse>
++ deleteById(id)
++ add/removeFavoriteEvent(userId, eventId)
++ add/removeLikedEvent(userId, eventId)
++ getFavoriteEvents(userId) : List<EventDTOResponse>
++ getLikedEvents(userId) : List<EventDTOResponse>
+}
+class AdvertService {
++ create(input, userId) : AdvertDTOResponse
++ updateById(id, input) : AdvertDTOResponse
++ getByUserId(userId) : List<AdvertDTOResponse>
++ getActive(placement) : List<AdvertDTOResponse>
++ deleteById(id)
+}
+class SecurityService {
++ login(dto) : UserDTOResponse
++ changePassword(userId, dto)
+}
+class AddressService {
++ createOrFindAddress(postalCode, city, address) : Address
+}
+EventService --> AddressService
+}
+package dao {
+interface "IDAO<T, I>" as IDAO {
++ create(t) : T
++ readById(id) : T
++ readAll() : List<T>
++ update(t) : T
++ delete(t)
+}
+abstract class "GenericDAO<T extends IGetId>" as GenericDAO implements IDAO {
+- Class<T> clazz
+}
+class EventDAO extends GenericDAO {
++ readAllTmEvents() : List<Event>
++ searchAndFilterEvent(...) : List<Event>
++ getTotalPages(...) : int
++ readEventsByUserId(userId) : List<Event>
++ readDistinctCategoriesInDb() : List<EventCategory>
+}
+class UserDAO extends GenericDAO {
++ checkIfEmailExist(email) : boolean
++ readUserByEmail(email) : User
++ addFavoriteOrLikedEvent(userId, eventId, type)
++ removeFavoriteOrLikedEvent(userId, eventId, type)
++ readFavoriteOrLikedEvents(userId, type) : List<Event>
++ adminReadOrganizersByStatus(status) : List<Organizer>
++ adminChangeStatusOfOrganizer(organizerId, status) : Organizer
+}
+class AdvertDAO extends GenericDAO {
++ readAdvertsByUserId(userId) : List<Advert>
++ readActiveAdverts(placement, today) : List<Advert>
+}
+class AddressDAO extends GenericDAO {
++ readAdressByPostalCodeAndAddress(postalCode, address) : Address
+}
+}
+package mapper {
+interface "IConverter<Entity, Response, Request>" as IConverter {
++ convertDTOToEntity(dto) : Entity
++ convertEntityToDTO(entity) : Response
+}
+class EventConverter implements IConverter {
++ convertEntityListToDTOList(events) : List<EventDTOResponse>
+}
+class UserConverter {
++ convertDTOToEntity(dto, hashedPassword) : User
++ convertDTOToOrganizer(dto, hashedPassword) : User
++ convertEntityToDTO(user) : UserDTOResponse
++ convertOrganizerToDTO(organizer) : OrganizerDTOResponse
+}
+class AdvertConverter {
++ convertEntityToDTO(advert) : AdvertDTOResponse
+}
+class TicketMasterConverter {
++ ticketMasterDtoToEvent(dto) : List<Event>
+}
+}
+package security {
+class TokenSecurity {
++ createToken(user, issuer, expirationTime, secret) : String
++ verifyAndGetUser(token, issuer, secret) : UserDTOResponse
+}
+class SecurityUtil {
++ {static} verifyUserPassword(user, dto)
+}
+}
+package utils {
+class APIReader {
++ getApiAsTmDTO() : List<TicketMasterDTO>
++ geminiDescriptionCreator(event) : String
+}
+class GeoUtil {
++ {static} findCoordinates(address) : Coordinates
+}
+class PasswordUtil {
++ {static} hashPassword(password) : String
++ {static} verifyPassword(password, user) : boolean
+}
+class Utils {
++ {static} getConfig(key) : String
++ {static} getOptionalConfig(key) : String
+}
+}
+package entities {
+interface IGetId
+abstract class User implements IGetId
+class Event implements IGetId
+class Advert implements IGetId
+class Address implements IGetId
+}
+package dto {
+record "Event/User/Advert DTOs" as DTOs
+record "Ticketmaster DTOs" as TmDTOs
+}
+package exceptions {
+class RuntimeException
+class ApiException extends RuntimeException {
+}
+class BadRequestException extends RuntimeException
+class ConflictException extends RuntimeException
+class DatabaseException extends RuntimeException
+class DatabaseIdException extends RuntimeException
+class SecurityValidationException extends RuntimeException {
+}
+class SyncException extends RuntimeException {
+}
+}
+
+Main --> ApplicationConfig
+Main --> HibernateConfig
+Main --> AdminCreator
+ApplicationConfig --> EventController
+ApplicationConfig --> UserController
+ApplicationConfig --> AdvertController
+ApplicationConfig --> SecurityController
+
+EventHandler --> EventService
+UserHandler --> UserService
+AdvertHandler --> AdvertService
+SecurityHandler --> SecurityService
+SecurityHandler --> TokenSecurity
+
+EventService --> EventDAO
+EventService --> UserDAO
+EventService --> APIReader
+EventService --> TicketMasterConverter
+EventService --> EventConverter
+UserService --> UserDAO
+UserService --> UserConverter
+AdvertService --> AdvertDAO
+AdvertService --> AdvertConverter
+SecurityService --> UserDAO
+SecurityService --> SecurityUtil
+AddressService --> AddressDAO
+AddressService --> GeoUtil
+SecurityUtil --> PasswordUtil
+
+EventDAO ..> Event
+UserDAO ..> User
+AdvertDAO ..> Advert
+AddressDAO ..> Address
+GenericDAO ..> IGetId
+EventConverter ..> DTOs
+UserConverter ..> DTOs
+AdvertConverter ..> DTOs
+TicketMasterConverter ..> TmDTOs
+APIReader ..> TmDTOs
+
+EventService -[hidden]down- IDAO
+UserService -[hidden]down- IConverter
+SecurityService -[hidden]down- SecurityUtil
+EventConverter -[hidden]down- IGetId
+UserConverter -[hidden]down- RuntimeException
+}
+@enduml

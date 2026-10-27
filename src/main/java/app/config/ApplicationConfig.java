@@ -93,7 +93,16 @@ public class ApplicationConfig implements EndpointGroup {
         var app = Javalin.create(this::configuration);
         app.beforeMatched(securityHandler::authenticate);
         app.beforeMatched(securityHandler::authorize);
+        exceptionHandling(app);
+        app.start(port);
+        return app;
+    }
 
+    public void stopServer(Javalin app) {
+        app.stop();
+    }
+
+    private static void exceptionHandling(Javalin app) {
         app.exception(ValidationException.class, (e, ctx) -> {
             String messages = e.getErrors().values().stream()
                     .flatMap(List::stream)
@@ -141,11 +150,5 @@ public class ApplicationConfig implements EndpointGroup {
             log.error("Unexpected server error: {}", e.getMessage(), e);
             ctx.status(500).json(Map.of("error", "An unexpected internal server error occurred"));
         });
-        app.start(port);
-        return app;
-    }
-
-    public void stopServer(Javalin app) {
-        app.stop();
     }
 }

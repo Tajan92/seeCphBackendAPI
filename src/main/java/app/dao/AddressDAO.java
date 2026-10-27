@@ -12,7 +12,7 @@ public class AddressDAO extends GenericDAO<Address> {
         super(emf, Address.class, Address.class.getSimpleName());
     }
 
-    public Address readAdressByPostalCodeAndAddress(String postalCode, String address) {
+    public Address readAddressByPostalCodeAndAddress(String postalCode, String address) {
         if (address == null) {
             throw new IllegalArgumentException("Address is required");
         }
