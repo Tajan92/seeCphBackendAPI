@@ -3,6 +3,7 @@
 seeCph is a REST API that gathers events in Copenhagen in one place. Events are fetched automatically from API every night and can also be created by approved organizers and admins. Users can search and filter events, save favourites and like events, and organizers can advertise their events on the front page.
 
 **Live API:** https://seecph.theisrud.dk/api/v1/events
+**Project Blog:** https://theisrud.dk/blog/seecph-blog/
 
 ---
 
@@ -59,7 +60,3 @@ The domain model, user stories and class diagram can be found in the [`docs`](do
 #### By
 
 Theis Rud Halkjær – Datamatiker at EK Lyngby (AP Graduate in Computer Science), 3rd semester, autumn 2026.
-
----
-
-See my blog from the project here: https://theisrud.dk/blog/seecph-blog/
