@@ -109,7 +109,7 @@ public class ApplicationConfig implements EndpointGroup {
                     .map(ValidationError::getMessage)
                     .collect(Collectors.joining(", "));
             log.warn("Validation failed: {}", messages);
-            ctx.status(400).json(Map.of("error", messages));
+            ctx.status(HttpStatus.BAD_REQUEST).json(Map.of("error", messages));
         });
         app.exception(ApiException.class, (e, ctx) -> {
             log.error("External API error ({}): {}", e.getCode(), e.getMessage(), e);
@@ -123,12 +123,12 @@ public class ApplicationConfig implements EndpointGroup {
 
         app.exception(DatabaseException.class, (e, ctx) -> {
             log.warn("Database Error: {}", e.getMessage());
-            ctx.status(500).json(Map.of("error", "An unexpected internal server error occurred"));
+            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR).json(Map.of("error", "An unexpected internal server error occurred"));
         });
 
         app.exception(DatabaseIdException.class, (e, ctx) -> {
             log.warn("Database Id Error: {}", e.getMessage());
-            ctx.status(404).json(Map.of("error", e.getMessage()));
+            ctx.status(HttpStatus.FORBIDDEN).json(Map.of("error", e.getMessage()));
         });
 
         app.exception(ConflictException.class, (e, ctx) -> {
@@ -138,7 +138,7 @@ public class ApplicationConfig implements EndpointGroup {
 
         app.exception(BadRequestException.class, (e, ctx) -> {
             log.warn("Bad request: {}", e.getMessage());
-            ctx.status(400).json(Map.of("error", e.getMessage()));
+            ctx.status(HttpStatus.BAD_REQUEST).json(Map.of("error", e.getMessage()));
         });
 
         app.exception(SyncException.class, (e, ctx) -> {
@@ -148,7 +148,7 @@ public class ApplicationConfig implements EndpointGroup {
 
         app.exception(Exception.class, (e, ctx) -> {
             log.error("Unexpected server error: {}", e.getMessage(), e);
-            ctx.status(500).json(Map.of("error", "An unexpected internal server error occurred"));
+            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR).json(Map.of("error", "An unexpected internal server error occurred"));
         });
     }
 }

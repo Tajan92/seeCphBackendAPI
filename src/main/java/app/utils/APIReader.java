@@ -5,6 +5,7 @@ import app.entities.Event;
 import app.exceptions.ApiException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.javalin.http.HttpStatus;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -27,14 +28,12 @@ public class APIReader {
     private final String geminiApiKey = System.getenv("GEMINI_API_KEY");
     private final String ticketMasterApiKey = System.getenv("TICKETMASTER_API_KEY");
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final HttpClient httpClient = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(10))
-            .build();
+    private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
     // ===== TICKETMASTER =====
     public List<TicketMasterDTO> getApiAsTmDTO() {
         if (ticketMasterApiKey == null || ticketMasterApiKey.isBlank()) {
-            throw new ApiException(500, "TICKETMASTER_API_KEY is not configured");
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR.getCode(), "TICKETMASTER_API_KEY is not configured");
         }
 
         List<TicketMasterDTO> ticketMasterDTOs = new ArrayList<>();
@@ -48,10 +47,10 @@ public class APIReader {
                 ticketMasterDTOs.add(objectMapper.treeToValue(fetchTmPage(i), TicketMasterDTO.class));
             }
         } catch (IOException e) {
-            throw new ApiException(502, "Failed to fetch Ticket Master API", e);
+            throw new ApiException(HttpStatus.BAD_GATEWAY.getCode(), "Failed to fetch Ticket Master API", e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ApiException(500, "Ticketmaster thread was interrupted", e);
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR.getCode(), "Ticketmaster thread was interrupted", e);
         }
         return ticketMasterDTOs;
     }
@@ -65,14 +64,13 @@ public class APIReader {
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() != 200) {
+        if (response.statusCode() != HttpStatus.OK.getCode()) {
             throw new IOException("Ticketmaster returned status " + response.statusCode() + " for page " + page);
         }
         return objectMapper.readTree(response.body());
     }
 
     // ===== GEMINI =====
-
     public String geminiDescriptionCreator(Event event) {
         if (geminiApiKey == null || geminiApiKey.isBlank()) {
             return DefaultDescription.generateDefaultDescription(event);
@@ -95,7 +93,7 @@ public class APIReader {
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() != 200) {
+            if (response.statusCode() != HttpStatus.OK.getCode()) {
                 log.warn("Gemini returned status {} for event '{}'", response.statusCode(), event.getTitle());
                 return DefaultDescription.generateDefaultDescription(event);
             }

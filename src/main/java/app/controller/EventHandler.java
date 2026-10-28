@@ -4,6 +4,7 @@ import app.dto.event.EventDTORequest;
 import app.dto.user.UserDTOResponse;
 import app.enums.EventCategory;
 import app.exceptions.BadRequestException;
+import app.exceptions.SecurityValidationException;
 import app.service.EventService;
 import app.utils.PathUtil;
 import app.utils.Utils;
@@ -14,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.concurrent.CompletableFuture;
+
 @Slf4j
 public class EventHandler implements IHandler {
     private final EventService eventService;
@@ -75,19 +76,11 @@ public class EventHandler implements IHandler {
         String authHeader = ctx.header("x-api-key");
         String expectedSecret = Utils.getOptionalConfig("SYNC_SECRET");
 
-        if (expectedSecret != null && expectedSecret.equals(authHeader)) {
-            CompletableFuture.runAsync(() -> {
-                try {
-                    eventService.syncEvents();
-                    log.info("Background sync completed successfully.");
-                } catch (Exception e) {
-                    log.error("Error during background sync: {}", e.getMessage(), e);
-                }
-            });
-            ctx.status(200).result("Ticketmaster sync started successfully.");
-        } else {
-            ctx.status(401).result("Unauthorized");
+        if (expectedSecret == null || !expectedSecret.equals(authHeader)) {
+            throw new SecurityValidationException(HttpStatus.UNAUTHORIZED.getCode(), "Unauthorized");
         }
+        eventService.syncEvents();
+        ctx.status(HttpStatus.ACCEPTED).result("Ticketmaster sync started successfully.");
     }
 
     private static EventCategory parseCategory(String categoryInput) {

@@ -3,6 +3,7 @@ package app.utils;
 import app.entities.Address;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.javalin.http.HttpStatus;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -47,7 +48,7 @@ public class GeoUtil {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-            if (response.statusCode() == 200) {
+            if (response.statusCode() == HttpStatus.OK.getCode()) {
                 JsonNode rootNode = objectMapper.readTree(response.body());
 
                 if (rootNode != null && !rootNode.isEmpty() && rootNode.isArray()) {

@@ -23,6 +23,7 @@ import app.mapper.TicketMasterConverter;
 import app.utils.APIReader;
 import app.utils.DefaultDescription;
 import app.utils.GeoUtil;
+import io.javalin.http.HttpStatus;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -148,23 +149,29 @@ public class EventService {
         if (!syncRunning.compareAndSet(false, true)) {
             throw new ConflictException("Ticketmaster sync is already running");
         }
-        try (ExecutorService executorService = Executors.newFixedThreadPool(1)){ // NB! only 1 thread
-            // Fetch from API
-            Future<List<Event>> futures = executorService.submit(this::fetchTmEvents);
-            
-            // Save to database
-            saveTmEventsToDB(futures.get());
+        CompletableFuture.runAsync(() -> {
+            try (ExecutorService executorService = Executors.newFixedThreadPool(1)) { // NB! only 1 thread
+                // Fetch from API
+                Future<List<Event>> futures = executorService.submit(this::fetchTmEvents);
 
-            // Delete expired events
-            runDeleteExpiredEventsSync();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new SyncException(500, "Synchronization was interrupted", e);
-        } catch (ExecutionException e) {
-            throw new SyncException(502, "Synchronization failed", e.getCause());
-        } finally {
-            syncRunning.set(false);
-        }
+                // Save to database
+                saveTmEventsToDB(futures.get());
+
+                // Delete expired events
+                runDeleteExpiredEventsSync();
+
+                log.info("Background sync completed successfully.");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("Synchronization was interrupted", e);
+            } catch (ExecutionException e) {
+                log.error("Synchronization failed", e.getCause());
+            } catch (Exception e) {
+                log.error("Error during background sync", e);
+            }finally {
+                syncRunning.set(false);
+            }
+        });
     }
 
     private void runDeleteExpiredEventsSync(){
@@ -207,7 +214,7 @@ public class EventService {
                 if (existing == null) {
                     event.setDescription(checkForDescription(event, maxCount));
                     eventDAO.create(event);
-                    existingTmEvents.put(event.getApiEventId(), event); // avoid duplicates within one sync
+                    existingTmEvents.put(event.getApiEventId(), event);
                     created++;
                 } else {
                     copyTicketmasterFields(event, existing);
@@ -228,7 +235,7 @@ public class EventService {
 
         boolean isOwner = event.getOrganizer() != null && Objects.equals(event.getOrganizer().getUserId(), currentUser.id());
         if (!isOwner) {
-            throw new SecurityValidationException(403, "You can only change your own events");
+            throw new SecurityValidationException(HttpStatus.FORBIDDEN.getCode(), "You can only change your own events");
         }
     }
 

@@ -46,22 +46,6 @@ public class UserConverter {
                 .build();
     }
 
-
-//    public User convertDTOToUserUpdate(UserDTORequest input, User user, int id) {
-//        User updatedUser = switch (user.getUserRole()){
-//            case ADMIN -> Admin.builder().userId(id).build();
-//            case ATTENDEE -> Attendee.builder().userId(id).build();
-//            case ORGANIZER  -> Organizer.builder().userId(id).build();
-//            case ANYONE -> null;
-//        };
-//        assert updatedUser != null;
-//        updatedUser.setName(input.name());
-//        updatedUser.setEmail(input.email().toLowerCase().trim());
-//        updatedUser.setPhone(input.phone());
-//
-//        return updatedUser;
-//    }
-
     public UserDTOResponse convertEntityToDTO(User user) {
         return new UserDTOResponse(user.getUserId(), user.getName(), user.getEmail(), user.getPhone(), user.getUserRole());
     }

@@ -288,7 +288,7 @@ Token still exist after password change if still valid.
   "text": "Ticketmaster sync started successfully"
 }
 ```
-With response code `200`
+With response code `202`
 
 ---
 

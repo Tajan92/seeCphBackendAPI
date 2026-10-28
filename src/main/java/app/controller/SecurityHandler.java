@@ -63,10 +63,6 @@ public class SecurityHandler {
     }
 
     public void authenticate(Context ctx) {
-        if (ctx.method().toString().equals("OPTIONS")) {
-            ctx.status(200);
-            return;
-        }
         if (isStaticFile(ctx)) return;
         if (isEndpointOpenForAnyone(getAllowedRoles(ctx))) return;
 
@@ -82,10 +78,10 @@ public class SecurityHandler {
 
         UserDTOResponse user = ctx.attribute("user");
         if (user == null) {
-            throw new SecurityValidationException(401, "Not authenticated");
+            throw new SecurityValidationException(HttpStatus.UNAUTHORIZED.getCode(), "Not authenticated");
         }
         if (!allowedRoles.contains(user.userRole())) {
-            throw new SecurityValidationException(403, "You do not have access to this resource");
+            throw new SecurityValidationException(HttpStatus.FORBIDDEN.getCode(), "You do not have access to this resource");
         }
     }
 
@@ -96,11 +92,11 @@ public class SecurityHandler {
     private static String getUsersToken(Context ctx) {
         String header = ctx.header("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
-            throw new SecurityValidationException(401, "Missing Authorization");
+            throw new SecurityValidationException(HttpStatus.UNAUTHORIZED.getCode(), "Missing Authorization");
         }
         String token = header.substring("Bearer ".length()).trim();
         if (token.isEmpty()) {
-            throw new SecurityValidationException(401, "Missing Authorization");
+            throw new SecurityValidationException(HttpStatus.UNAUTHORIZED.getCode(), "Missing Authorization");
         }
         return token;
     }

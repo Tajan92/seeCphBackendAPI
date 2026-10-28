@@ -13,6 +13,7 @@ import app.entities.users.User;
 import app.enums.AddPlacement;
 import app.exceptions.SecurityValidationException;
 import app.mapper.AdvertConverter;
+import io.javalin.http.HttpStatus;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -37,7 +38,7 @@ public class AdvertService {
         if (user instanceof Organizer organizer) {
             boolean ownsEvent = event.getOrganizer() != null && Objects.equals(event.getOrganizer().getUserId(), organizer.getUserId());
             if (!ownsEvent) {
-                throw new SecurityValidationException(403, "You can only advertise your own events");
+                throw new SecurityValidationException(HttpStatus.FORBIDDEN.getCode(), "You can only advertise your own events");
             }
         }
         Advert advert = Advert.builder()

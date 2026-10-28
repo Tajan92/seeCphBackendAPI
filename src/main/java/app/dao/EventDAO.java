@@ -44,21 +44,6 @@ public class EventDAO extends GenericDAO<Event> {
         }
     }
 
-    public int getTotalPages(String search, EventCategory category, LocalDate startDate, String postalCode, int page, int pageSize){
-        try (EntityManager em = emf.createEntityManager()) {
-            StringBuilder jpql = new StringBuilder("SELECT COUNT(e) FROM Event e LEFT JOIN e.location l WHERE 1=1");
-            jpql.append(searchFilter(search, category, startDate, postalCode));
-
-            TypedQuery<Integer> query = em.createQuery(jpql.toString(), Integer.class);
-            setFilters(query, search, category, startDate, postalCode);
-            query.setFirstResult(page * pageSize);
-            query.setMaxResults(pageSize);
-            return query.getSingleResult();
-        } catch (PersistenceException e) {
-            throw new DatabaseException("Counting pages search & filter failed", e);
-        }
-    }
-
     public List<Event> readEventsByUserId(int userId) {
         try (EntityManager em = emf.createEntityManager()) {
             return em.createQuery("SELECT e FROM Event e LEFT JOIN e.organizer o LEFT JOIN e.admin a WHERE o.userId = :userId OR a.userId = :userId ORDER BY e.startDate ASC", Event.class)

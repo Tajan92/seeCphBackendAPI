@@ -27,16 +27,6 @@ public class Address implements IGetId {
     @OneToMany(mappedBy = "location", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Set<Event> events;
 
-    public void addEvent(Event event) {
-        if (event != null) {
-            if (this.events == null) {
-                this.events = new HashSet<>();
-            }
-            this.events.add(event);
-            event.setLocation(this);
-        }
-    }
-
     @Override
     public final boolean equals(Object o) {
         if (this == o)
