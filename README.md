@@ -1,8 +1,9 @@
 # seeCph - REST API
 
-seeCph is a REST API that gathers events in Copenhagen in one place. Events are fetched automatically from API every night and can also be created by approved organizers and admins. Users can search and filter events, save favourites and like events, and organizers can advertise their events on the front page.
+seeCph is a REST API that gathers events in Copenhagen in one place. Events are fetched automatically from API every night and can also be created by approved organizers and admins. Users can search and filter events, save favourites and like events, and organizers can advertise their events on the front page. Searching events is also possible without registration, to make the interaction for users easier.
 
-**Live API:** https://seecph.theisrud.dk/api/v1/events
+**Live API:** https://seecph.theisrud.dk/api/v1/events?page1
+
 **Project Blog:** https://theisrud.dk/blog/seecph-blog/
 
 ---
