@@ -128,7 +128,7 @@ public class ApplicationConfig implements EndpointGroup {
 
         app.exception(DatabaseIdException.class, (e, ctx) -> {
             log.warn("Database Id Error: {}", e.getMessage());
-            ctx.status(HttpStatus.FORBIDDEN).json(Map.of("error", e.getMessage()));
+            ctx.status(HttpStatus.NOT_FOUND).json(Map.of("error", e.getMessage()));
         });
 
         app.exception(ConflictException.class, (e, ctx) -> {
