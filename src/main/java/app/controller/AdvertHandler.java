@@ -36,13 +36,11 @@ public class AdvertHandler implements IHandler {
         ctx.status(HttpStatus.OK).json(advertService.getAll());
     }
 
-    /** Adverts owned by the logged-in organizer/admin. */
     public void getMyAdverts(Context ctx) {
         UserDTOResponse currentUser = ctx.attribute("user");
         ctx.status(HttpStatus.OK).json(advertService.getByUserId(currentUser.id()));
     }
 
-    /** Public: adverts running today, optionally for one placement (?placement=FRONTPAGE_HEADER). */
     public void getActiveAdverts(Context ctx) {
         AddPlacement placement = ctx.queryParamAsClass("placement", AddPlacement.class).allowNullable().get();
         ctx.status(HttpStatus.OK).json(advertService.getActive(placement));
