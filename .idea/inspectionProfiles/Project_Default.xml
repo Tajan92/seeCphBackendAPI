@@ -1,0 +1,32 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="VulnerableLibrariesLocal" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="isIgnoringEnabled" value="true" />
+      <option name="ignoredModules">
+        <list>
+          <option value="seeCphBackendAPI" />
+          <option value="seeCphBackendAPI" />
+          <option value="seeCphBackendAPI" />
+          <option value="seeCphBackendAPI" />
+        </list>
+      </option>
+      <option name="ignoredPackages">
+        <list>
+          <option value="com.fasterxml.jackson.core:jackson-databind:2.18.3" />
+          <option value="com.fasterxml.jackson.core:jackson-core:2.18.3" />
+          <option value="org.eclipse.jetty:jetty-server:11.0.25" />
+          <option value="org.eclipse.jetty:jetty-http:11.0.25" />
+        </list>
+      </option>
+      <option name="ignoredReasons">
+        <list>
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
