@@ -128,8 +128,8 @@ public class EventService {
         return eventConverter.convertEntityListToDTOList(events);
     }
 
-    public List<EventDTOResponse> getAllEventsBySearchAndFilter(String search, EventCategory category, LocalDate startDate, String postalCode, int page, int pageSize) {
-        List<Event> events = eventDAO.searchAndFilterEvent(search, category, startDate, postalCode, page, pageSize);
+    public List<EventDTOResponse> getAllEventsBySearchAndFilter(String search, EventCategory category, LocalDate startDate, String postalCode, int page, int pageSize, String city) {
+        List<Event> events = eventDAO.searchAndFilterEvent(search, category, startDate, postalCode, page, pageSize, city);
         if (events == null) {
             return List.of();
         }
@@ -199,6 +199,10 @@ public class EventService {
 
         highlights.addAll(fill);
         return eventConverter.convertEntityListToDTOList(highlights);
+    }
+
+    public List<String> getAllActiveAreas() {
+        return eventDAO.readDistinctCities(LocalDate.now());
     }
 
     private static long weekSeed(LocalDate date) {

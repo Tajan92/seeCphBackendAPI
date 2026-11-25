@@ -519,4 +519,18 @@ public class EventControllerRestAssuredTest {
                 .then()
                 .statusCode(200);
     }
+
+    @Test
+    void readAreasIsPublicAndOnlyHasUpcomingCities() {
+        TestDataCreator.clearDatabase(emf);
+        TestDataCreator.createHighlightEvents(emf);   // all events are in "København K"
+
+        given()
+                .when()
+                .get("/events/areas")
+                .then()
+                .statusCode(200)
+                .body("size()", is(1))
+                .body("[0]", equalTo("København K"));
+    }
 }

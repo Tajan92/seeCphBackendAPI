@@ -45,7 +45,7 @@ public class EventHandler implements IHandler {
         LocalDate startDate = parseDate(ctx.queryParam("startDate"));
 
         ctx.status(HttpStatus.OK).json(eventService.getAllEventsBySearchAndFilter(
-                ctx.queryParam("search"), category, startDate, ctx.queryParam("postalCode"), page, pageSize));
+                ctx.queryParam("search"), category, startDate, ctx.queryParam("postalCode"), page, pageSize, ctx.queryParam("city")));
     }
 
     public void getMyEvents(Context ctx) {
@@ -74,6 +74,10 @@ public class EventHandler implements IHandler {
 
     public void getHighlights(Context ctx) {
         ctx.status(HttpStatus.OK).json(eventService.getHighlights());
+    }
+
+    public void getAllActiveAreas(Context ctx) {
+        ctx.status(HttpStatus.OK).json(eventService.getAllActiveAreas());
     }
 
     public void syncEventsFromAPI(Context ctx) {

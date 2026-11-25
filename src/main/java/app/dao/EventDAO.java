@@ -27,16 +27,16 @@ public class EventDAO extends GenericDAO<Event> {
             }
     }
 
-    public List<Event> searchAndFilterEvent(String search, EventCategory category, LocalDate startDate, String postalCode, int page, int pageSize) {
+    public List<Event> searchAndFilterEvent(String search, EventCategory category, LocalDate startDate, String postalCode, int page, int pageSize, String city) {
         try (EntityManager em = emf.createEntityManager()) {
             if (!readDistinctCategoriesInDb().contains(category)) {
                 category = null;
             }
             StringBuilder jpql = new StringBuilder("SELECT e FROM Event e LEFT JOIN e.location l WHERE 1=1");
-            jpql.append(searchFilter(search, category, startDate, postalCode));
+            jpql.append(searchFilter(search, category, startDate, postalCode, city));
 
             TypedQuery<Event> query = em.createQuery(jpql.toString(), Event.class);
-            setFilters(query, search, category, startDate, postalCode);
+            setFilters(query, search, category, startDate, postalCode, city);
             query.setFirstResult(page * pageSize);
             query.setMaxResults(pageSize);
             return query.getResultList();
@@ -65,11 +65,12 @@ public class EventDAO extends GenericDAO<Event> {
         }
     }
 
-    private String searchFilter(String search, EventCategory category, LocalDate startDate, String postalCode) {
+    private String searchFilter(String search, EventCategory category, LocalDate startDate, String postalCode, String city) {
         StringBuilder jpql = new StringBuilder();
         if (category != null) jpql.append(" AND e.category = :category");
         if (startDate != null) jpql.append(" AND e.startDate >= :startDate");
         if (postalCode != null && !postalCode.isBlank()) jpql.append(" AND l.postalCode = :postalCode");
+        if (city != null && !city.isBlank()) jpql.append(" AND LOWER(l.city) = :city");
         if (search != null && !search.isBlank()) jpql.append(" AND (LOWER(e.title) LIKE :search"
                 + " OR LOWER(e.description) LIKE :search"
                 + " OR LOWER(l.address) LIKE :search"
@@ -79,11 +80,12 @@ public class EventDAO extends GenericDAO<Event> {
         return jpql.toString();
     }
 
-    private void setFilters(Query query, String search, EventCategory category, LocalDate startDate, String postalCode) {
+    private void setFilters(Query query, String search, EventCategory category, LocalDate startDate, String postalCode, String city) {
         if (category != null) query.setParameter("category", category);
         if (startDate != null) query.setParameter("startDate", startDate);
         if (postalCode != null && !postalCode.isBlank()) query.setParameter("postalCode", postalCode.trim());
         if (search != null && !search.isBlank()) query.setParameter("search", "%" + search.trim().toLowerCase() + "%");
+        if (city != null && !city.isBlank()) query.setParameter("city", city.trim().toLowerCase());
     }
 
     public List<Event> readHighlightedEvents(LocalDate today) {
@@ -114,6 +116,21 @@ public class EventDAO extends GenericDAO<Event> {
                     .getResultList();
         } catch (PersistenceException e) {
             throw new DatabaseException("Finding events between " + from + " and " + to + " failed", e);
+        }
+    }
+
+    public List<String> readDistinctCities(LocalDate today) {
+        try (EntityManager em = emf.createEntityManager()) {
+            return em.createQuery("""
+                SELECT DISTINCT l.city FROM Event e JOIN e.location l
+                WHERE l.city IS NOT NULL
+                  AND e.startDate >= :today
+                ORDER BY l.city
+                """, String.class)
+                    .setParameter("today", today)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            throw new DatabaseException("Failed to read event areas", e);
         }
     }
 }
