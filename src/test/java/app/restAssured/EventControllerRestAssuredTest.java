@@ -15,9 +15,11 @@ import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -475,5 +477,46 @@ public class EventControllerRestAssuredTest {
         TestDataCreator.clearDatabase(emf);
         eventMap = TestDataCreator.createEvents(emf);
         userMap = TestDataCreator.createUsers(emf);
+    }
+
+    @Test
+    void readHighlightsIsPublic() {
+        TestDataCreator.clearDatabase(emf);
+        TestDataCreator.createHighlightEvents(emf);
+
+        given()
+                .when()
+                .get("/events/highlights")
+                .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .body("size()", is(9))
+                .body("[0].title", equalTo("Highlighted Event"))
+                .body("[1].title", equalTo("Highlighted Far Event"))
+                .body("title", not(hasItem("Past Event")))
+                .body("title", not(hasItem("Far Future Event")));
+    }
+
+    @Test
+    void readHighlightsReturnsSameEventsTwiceInARow() {
+        TestDataCreator.clearDatabase(emf);
+        TestDataCreator.createHighlightEvents(emf);
+
+        List<Integer> first = given().when().get("/events/highlights")
+                .then().statusCode(200).extract().path("id");
+        List<Integer> second = given().when().get("/events/highlights")
+                .then().statusCode(200).extract().path("id");
+
+        assertThat(second, is(first));
+    }
+
+    @Test
+    void readHighlightsIsNotTreatedAsAnId() {
+        // Fails with 400 ("highlights" is not a number) if the route is registered after /events/{id}
+        given()
+                .when()
+                .get("/events/highlights")
+                .then()
+                .statusCode(200);
     }
 }

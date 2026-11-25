@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.proxy.HibernateProxy;
-import org.mindrot.jbcrypt.BCrypt;
-
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 @Getter

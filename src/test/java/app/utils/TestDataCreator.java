@@ -269,4 +269,72 @@ public final class TestDataCreator {
             return addressMap;
         }
     }
+
+    public static Map<String, Event> createHighlightEvents(EntityManagerFactory emf) {
+        LocalDate today = LocalDate.now();
+
+        try (EntityManager em = emf.createEntityManager()) {
+            em.getTransaction().begin();
+
+            Address address = Address.builder()
+                    .postalCode("1050")
+                    .city("København K")
+                    .address("Kongens Nytorv 2")
+                    .build();
+            em.persist(address);
+
+            Map<String, Event> events = new LinkedHashMap<>();
+
+            for (int i = 1; i <= 12; i++) {
+                events.put("upcoming" + i, highlightEvent("Upcoming " + i, today.plusDays(i), address));
+            }
+            events.put("past", highlightEvent("Past Event", today.minusDays(1), address));
+            events.put("farFuture", highlightEvent("Far Future Event", today.plusDays(30), address));
+            events.put("highlighted", highlightEvent("Highlighted Event", today.plusDays(3), address));
+            events.put("highlightedFar", highlightEvent("Highlighted Far Event", today.plusDays(20), address));
+            events.put("expiredAdvert", highlightEvent("Expired Advert Event", today.plusDays(4), address));
+            events.put("headerAdvert", highlightEvent("Header Advert Event", today.plusDays(5), address));
+
+            try {
+                events.values().forEach(em::persist);
+
+                // Active paid highlights
+                em.persist(advert(AddPlacement.FRONTPAGE_HIGHLIGHT, today.minusDays(2), today.plusDays(5), events.get("highlighted")));
+                em.persist(advert(AddPlacement.FRONTPAGE_HIGHLIGHT, today.minusDays(1), today.plusDays(10), events.get("highlightedFar")));
+                // Highlight advert that has ended: must not be prioritized
+                em.persist(advert(AddPlacement.FRONTPAGE_HIGHLIGHT, today.minusDays(10), today.minusDays(1), events.get("expiredAdvert")));
+                // Active advert, but in another placement: must not be prioritized
+                em.persist(advert(AddPlacement.FRONTPAGE_HEADER, today.minusDays(1), today.plusDays(5), events.get("headerAdvert")));
+
+                em.flush();
+            } catch (PersistenceException e) {
+                if (em.getTransaction().isActive()) em.getTransaction().rollback();
+                throw e;
+            }
+
+            em.getTransaction().commit();
+            return events;
+        }
+    }
+
+    private static Event highlightEvent(String title, LocalDate startDate, Address address) {
+        return Event.builder()
+                .title(title)
+                .description("Test event for highlights")
+                .category(EventCategory.MUSIC)
+                .startTime(LocalTime.of(20, 0))
+                .startDate(startDate)
+                .price(100.0)
+                .location(address)
+                .build();
+    }
+
+    private static Advert advert(AddPlacement placement, LocalDate start, LocalDate end, Event event) {
+        return Advert.builder()
+                .addPlacement(placement)
+                .startDate(start)
+                .endDate(end)
+                .event(event)
+                .build();
+    }
 }

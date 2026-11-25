@@ -72,6 +72,10 @@ public class EventHandler implements IHandler {
         ctx.status(HttpStatus.NO_CONTENT);
     }
 
+    public void getHighlights(Context ctx) {
+        ctx.status(HttpStatus.OK).json(eventService.getHighlights());
+    }
+
     public void syncEventsFromAPI(Context ctx) {
         String authHeader = ctx.header("x-api-key");
         String expectedSecret = Utils.getOptionalConfig("SYNC_SECRET");

@@ -1,6 +1,7 @@
 package app.dao;
 
 import app.entities.Event;
+import app.enums.AddPlacement;
 import app.enums.EventCategory;
 import app.enums.SourceProvider;
 import app.exceptions.DatabaseException;
@@ -83,5 +84,36 @@ public class EventDAO extends GenericDAO<Event> {
         if (startDate != null) query.setParameter("startDate", startDate);
         if (postalCode != null && !postalCode.isBlank()) query.setParameter("postalCode", postalCode.trim());
         if (search != null && !search.isBlank()) query.setParameter("search", "%" + search.trim().toLowerCase() + "%");
+    }
+
+    public List<Event> readHighlightedEvents(LocalDate today) {
+        try (EntityManager em = emf.createEntityManager()) {
+            return em.createQuery("""
+                SELECT DISTINCT e FROM Advert a JOIN a.event e
+                WHERE a.addPlacement = :placement
+                  AND a.startDate <= :today AND a.endDate >= :today
+                  AND e.startDate >= :today
+                ORDER BY e.startDate ASC
+                """, Event.class)
+                    .setParameter("placement", AddPlacement.FRONTPAGE_HIGHLIGHT)
+                    .setParameter("today", today)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            throw new DatabaseException("Finding highlighted events failed", e);
+        }
+    }
+
+    public List<Event> readEventsBetween(LocalDate from, LocalDate to) {
+        try (EntityManager em = emf.createEntityManager()) {
+            return em.createQuery("""
+                SELECT e FROM Event e LEFT JOIN FETCH e.location
+                WHERE e.startDate BETWEEN :from AND :to
+                """, Event.class)
+                    .setParameter("from", from)
+                    .setParameter("to", to)
+                    .getResultList();
+        } catch (PersistenceException e) {
+            throw new DatabaseException("Finding events between " + from + " and " + to + " failed", e);
+        }
     }
 }

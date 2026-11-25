@@ -28,6 +28,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
+import java.time.temporal.IsoFields;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -172,6 +173,41 @@ public class EventService {
                 syncRunning.set(false);
             }
         });
+    }
+
+    private static final int HIGHLIGHT_COUNT = 9;
+    private static final int HIGHLIGHT_DAYS = 14;
+
+    public List<EventDTOResponse> getHighlights() {
+        LocalDate today = LocalDate.now();
+
+        List<Event> highlights = new ArrayList<>(eventDAO.readHighlightedEvents(today));
+        if (highlights.size() >= HIGHLIGHT_COUNT) {
+            return eventConverter.convertEntityListToDTOList(highlights.subList(0, HIGHLIGHT_COUNT));
+        }
+
+        Set<Integer> usedIds = highlights.stream()
+                .map(Event::getEventId)
+                .collect(Collectors.toSet());
+        long weekSeed = weekSeed(today);
+
+        List<Event> fill = eventDAO.readEventsBetween(today, today.plusDays(HIGHLIGHT_DAYS)).stream()
+                .filter(e -> !usedIds.contains(e.getEventId()))
+                .sorted(Comparator.comparingLong(e -> weeklyRank(e.getEventId(), weekSeed)))
+                .limit(HIGHLIGHT_COUNT - highlights.size())
+                .toList();
+
+        highlights.addAll(fill);
+        return eventConverter.convertEntityListToDTOList(highlights);
+    }
+
+    private static long weekSeed(LocalDate date) {
+        return date.get(IsoFields.WEEK_BASED_YEAR) * 100L
+                + date.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+    }
+
+    private static long weeklyRank(int eventId, long weekSeed) {
+        return new SplittableRandom(weekSeed * 1_000_003L + eventId).nextLong();
     }
 
     private void runDeleteExpiredEventsSync(){

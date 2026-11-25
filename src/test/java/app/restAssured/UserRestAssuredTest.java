@@ -94,7 +94,7 @@ public class UserRestAssuredTest {
                 .post("/login")
                 .then()
                 .statusCode(401)
-                .body("error", equalTo("Invalid user or password"));
+                .body("error", equalTo("Invalid email or password"));
     }
 
     @Test
